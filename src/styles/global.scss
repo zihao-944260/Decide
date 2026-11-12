@@ -1,0 +1,16 @@
+// 全局样式规则 —— 仅由 App.vue 引入一次，不会被自动注入到组件
+// Skyline 约束见 技术方案.md §2.2：
+// 1. 文字必须包在 <text> 内，否则不渲染
+// 2. 仅支持类/ID/标签选择器，不支持后代与子代组合选择器
+// 3. 页面本身不滚动，滚动交给 scroll-view
+
+page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background-color: $color-bg-page;
+  color: $color-text-1;
+  font-size: $font-md;
+  line-height: $line-normal;
+}

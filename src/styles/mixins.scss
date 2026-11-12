@@ -1,0 +1,41 @@
+// 通用 SCSS mixin —— 经 uni.scss 自动注入，组件内可直接使用
+// 规范见 技术方案.md §9.1
+
+// 单行省略
+@mixin ellipsis-1 {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+// 多行省略（Skyline 下 -webkit-line-clamp 支持度见验证结论）
+@mixin ellipsis-n($n: 2) {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: $n;
+}
+
+// 卡片外观
+@mixin card {
+  display: flex;
+  flex-direction: column;
+  padding: $space-3;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg;
+}
+
+// 可点击行（最小高度 88rpx）
+@mixin tappable {
+  display: flex;
+  align-items: center;
+  min-height: $tap-min-height;
+}
+
+// 页面根节点：Skyline 下页面不滚动，根节点必须 flex 纵向 + overflow hidden
+@mixin page-root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}

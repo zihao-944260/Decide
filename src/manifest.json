@@ -1,0 +1,32 @@
+{
+  "name": "Decide",
+  "appid": "",
+  "description": "计划公示与群体表决小程序",
+  "versionName": "0.1.0",
+  "versionCode": "1",
+  "transformPx": false,
+  "vueVersion": "3",
+  "mp-weixin": {
+    "appid": "wx93aa8833f25d90b0",
+    "setting": {
+      "urlCheck": false,
+      "es6": true,
+      "enhance": true,
+      "postcss": true,
+      "minified": true
+    },
+    "usingComponents": true,
+    "nativeTags": ["list-item", "grid-item"],
+    "renderer": "skyline",
+    "componentFramework": "glass-easel",
+    "lazyCodeLoading": "requiredComponents",
+    "rendererOptions": {
+      "skyline": {
+        "defaultDisplayBlock": true,
+        "disableABTest": true,
+        "sdkVersionBegin": "3.0.0",
+        "sdkVersionEnd": "15.255.255"
+      }
+    }
+  }
+}
