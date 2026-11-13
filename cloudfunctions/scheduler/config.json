@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "openapi": []
+  },
+  "timeout": 15,
+  "memorySize": 256,
+  "triggers": [
+    {
+      "name": "expirePlans",
+      "type": "timer",
+      "config": "0 * * * * * *"
+    },
+    {
+      "name": "reconcileCounts",
+      "type": "timer",
+      "config": "0 0 4 * * * *"
+    }
+  ]
+}

@@ -56,6 +56,8 @@ export interface PlanOption {
   name: string
   image: string
   order: number
+  /** 该选项的支持票数（选项表决模式的比例条来源；简单表决模式恒 0） */
+  count: number
 }
 
 export interface PlanSummary {
@@ -66,7 +68,11 @@ export interface PlanSummary {
   deadline: number
   optionsEnabled: boolean
   optionCount: number
+  /** 选项表决模式的逐选项票数（首页卡片每选项一行进度条，#61）；简单表决模式为 [] */
+  options: PlanOption[]
   votes: VoteCounts
+  /** 我投的选项 id（'' = 未投）；选项模式的锁定/高亮依据（#60） */
+  myOption: string
   commentCount: number
   status: number
   author: UserInfo

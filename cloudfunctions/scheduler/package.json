@@ -1,0 +1,10 @@
+{
+  "name": "scheduler",
+  "version": "1.0.0",
+  "private": true,
+  "description": "众议云函数 · scheduler 域",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "^4.0.2"
+  }
+}

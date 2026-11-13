@@ -7,6 +7,11 @@ unpackage/
 .vscode/
 cloudfunctions/**/node_modules/
 cloudfunctions/**/*.js.map
+# 云函数源码只有 .ts：任何 .js / .d.ts 都是旧 emit 残留，部署产物只认 dist-cloud/
+cloudfunctions/*/**/*.js
+cloudfunctions/*/**/*.d.ts
+# 云函数部署目录：npm run build:cloud 生成，只放 bundle 与部署配置
+dist-cloud/
 
 # 验证证据归档（含 OPENID 与云存储签名 URL），只留本地不入库
 docs/spike-evidence/

@@ -65,8 +65,9 @@ export interface CloudContract {
     res: PageResult<PlanSummary>
   }
   'vote.submit': {
-    req: { planId: string; type: VoteTypeValue }
-    res: { votes: VoteCounts; myVote: VoteTypeValue }
+    // 二选一：optionId 非空 = 选项表决（type 忽略）；否则 type=1|2 简单表决。投过即锁定，改票回 3003
+    req: { planId: string; type?: VoteTypeValue; optionId?: string }
+    res: { votes: VoteCounts; myVote: number; options: PlanOption[]; myOption: string }
   }
   'comment.create': {
     req: { planId: string; content: string }

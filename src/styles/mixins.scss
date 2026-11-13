@@ -8,13 +8,8 @@
   text-overflow: ellipsis;
 }
 
-// 多行省略（Skyline 下 -webkit-line-clamp 支持度见验证结论）
-@mixin ellipsis-n($n: 2) {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: $n;
-}
+// 注意：Skyline 下 -webkit-line-clamp 不生效（兼容清单 §2.2），多行截断只能 JS 截字，
+// 因此不提供 ellipsis-n mixin。
 
 // 卡片外观
 @mixin card {
@@ -38,4 +33,62 @@
   flex-direction: column;
   flex: 1;
   overflow: hidden;
+}
+
+// WebView 渲染页的文档级滚动根节点：不设 height/overflow，让 page 文档自己滚。
+// page-root 的 height:100%+overflow:hidden 高度链在真机 WKWebView 与 devtools 表现不一致，
+// 超出部分会被裁掉致滚不到底（#79）；文档级滚动是 webview 的原生滚动，不依赖任何高度链。
+// 配套：页级非 scoped wxss 放开 page 的 height/overflow，导航/置底栏 fixed + 占位。
+@mixin page-root-doc {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+// flex 快捷
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+// 编辑页四模块（标题/配图/截止时间/添加选项）标题行统一规格（用户裁定 2026-11-13，同日追加）：
+// 不设 min-height，行高由内容撑开，padding-bottom $space-3 提供标题→内容间距；
+// 标题 30rpx semibold 主文本色；卡内衬统一 $space-3。
+@mixin section-head {
+  @include flex-between;
+  width: 100%;
+  padding: 0 0 $space-3;
+}
+
+@mixin section-title {
+  font-size: $font-md;
+  font-weight: $font-weight-semibold;
+  line-height: $line-tight;
+  color: $color-text-1;
+}
+
+// 底部安全区（全面屏 Home 指示条）；$extra 为叠加的常规间距
+@mixin safe-area-bottom($extra: 0rpx) {
+  padding-bottom: calc(#{$extra} + env(safe-area-inset-bottom));
+}
+
+// 1px 细线：Skyline 无伪元素，直接用物理像素 border（勿用 rpx，缩放后不可见）
+@mixin hairline-bottom {
+  border-bottom: 1px solid $color-border;
+}
+
+@mixin hairline-top {
+  border-top: 1px solid $color-border;
 }

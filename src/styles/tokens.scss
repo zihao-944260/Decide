@@ -28,6 +28,9 @@ $space-3: 24rpx;
 $space-4: 32rpx;
 $space-5: 48rpx;
 
+// 卡片与卡片之间的统一纵向间距（用户裁定：所有页面一致 40rpx）
+$card-gap: 40rpx;
+
 // 圆角
 $radius-sm: 8rpx;
 $radius-md: 16rpx;
@@ -48,3 +51,61 @@ $line-loose: 1.7;
 
 // 可点击元素最小高度（技术方案 §9.1 第 8 条）
 $tap-min-height: 88rpx;
+
+// 比例条轨道高度（VoteRatioBar 三档；刻意不共用间距 token，避免间距体系调整时误改视觉尺寸）
+$ratio-bar-sm: 8rpx;
+$ratio-bar-md: 16rpx;
+$ratio-bar-lg: 24rpx;
+
+// 字重
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+
+// 填充与特殊背景
+$color-fill: #f2f3f5; // 骨架屏 / 图片占位
+$color-fill-light: #f7f8fa; // 编辑器工具栏浅底（比 fill 更浅一档）
+$color-fill-deep: #e6e8ec;
+$color-toast-bg: rgba(0, 0, 0, 0.75);
+
+// 阴影
+$shadow-card: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
+$shadow-popup: 0 -4rpx 24rpx rgba(0, 0, 0, 0.06);
+
+// 动效时长（Skyline 实测仅 CSS transition/animation 可用，见兼容清单 §2.5）
+$duration-fast: 150ms;
+$duration-base: 250ms;
+$duration-slow: 350ms;
+
+// 层级
+$z-navbar: 100; // 吸顶导航 / 置底栏：内容之上、弹层之下
+$z-popup: 1000;
+$z-toast: 2000;
+
+// 描边与图标尺寸（Skyline 无伪元素，细线/箭头一律真实节点 + border）
+$border-width-thin: 2rpx;
+$border-width-thick: 4rpx;
+$icon-arrow-size: 20rpx;
+$icon-close-size: 32rpx;
+
+// 组件尺寸
+$navbar-back-size: 88rpx; // 等于最小可点击尺寸
+$button-height-lg: 96rpx;
+// 评论输入条字段/发送按钮高度（用户裁定 2026-11-13 降高）：低于 $tap-min-height，
+// 详情页 tail 让位与 rows 上限都由它算，改这里三处一起动
+$comment-field-height: 60rpx;
+$fab-size: 96rpx; // 悬浮按钮直径：与列表页 FAB 的让位区 padding-bottom 同源，改这里两处一起动
+$avatar-sm: 56rpx;
+$avatar-md: 80rpx;
+$avatar-lg: 112rpx;
+$empty-icon-size: 160rpx;
+$empty-action-width: 320rpx;
+$load-more-line-width: 64rpx;
+$cell-icon-size: 48rpx;
+$spinner-sm: 28rpx;
+$spinner-md: 40rpx;
+$modal-width: 600rpx;
+$toast-max-width: 480rpx;
+$skeleton-bar-height: 32rpx;
+$skeleton-bar-height-lg: 44rpx;
+$toast-icon-size: 44rpx;
+$toast-offset-top: 45%;

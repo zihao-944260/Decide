@@ -23,12 +23,19 @@ export interface RequestOptions {
 export class ApiError extends Error {
   readonly code: number
   readonly action: string
+  /**
+   * 传输层原文（`wx.cloud.callFunction` 的 errMsg、被抛出的非 ApiError 值）。
+   * 里面有 callId / trace / 文档链接，长度和措辞都不适合上屏，只供日志与排查；
+   * `message` 才是可以给用户看的那句。
+   */
+  readonly detail: string
 
-  constructor(code: number, message: string, action: string) {
+  constructor(code: number, message: string, action: string, detail = '') {
     super(message)
     this.name = 'ApiError'
     this.code = code
     this.action = action
+    this.detail = detail
   }
 }
 
@@ -77,7 +84,10 @@ function rawCall<A extends CloudAction>(
         resolve(result)
       },
       fail: (err: { errMsg?: string }) => {
-        reject(new ApiError(ErrorCode.SERVER_ERROR, err.errMsg || '网络异常', action))
+        const detail = err.errMsg || ''
+        // 原文进日志，页面上只给这一句：否则用户会在重试态里读到 callId 和 trace
+        logger.error(TAG, `${action} 传输失败`, detail)
+        reject(new ApiError(ErrorCode.SERVER_ERROR, '网络异常，请稍后重试', action, detail))
       },
     }
     wx.cloud.callFunction(param as unknown as CallFunctionParam)
@@ -125,7 +135,10 @@ async function callOnce<A extends CloudAction>(
     if (!options.silent) toast(error.message)
     throw error
   } catch (err) {
-    const apiError = err instanceof ApiError ? err : new ApiError(ErrorCode.SERVER_ERROR, String(err), action)
+    const apiError =
+      err instanceof ApiError
+        ? err
+        : new ApiError(ErrorCode.SERVER_ERROR, '网络异常，请稍后重试', action, String(err))
     const retriable =
       apiError.code === ErrorCode.SERVER_ERROR && allowTimeoutRetry && IDEMPOTENT_ACTIONS.includes(action)
     if (retriable) {

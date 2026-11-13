@@ -1,0 +1,9 @@
+{
+  "name": "common",
+  "version": "1.0.0",
+  "private": true,
+  "description": "云函数公共层：路由 / 鉴权 / 校验 / DAO / 限流 / 内容安全。各业务函数的 tsconfig paths 直读 src/index.ts，部署时由 esbuild 内联，不作为 npm 包安装",
+  "dependencies": {
+    "wx-server-sdk": "^4.0.2"
+  }
+}

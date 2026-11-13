@@ -4,7 +4,7 @@
       "path": "pages/home/index",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "众议"
+        "navigationBarTitleText": "点子商量局"
       }
     },
     {
@@ -12,6 +12,23 @@
       "style": {
         "navigationStyle": "custom",
         "navigationBarTitleText": "我的"
+      }
+    },
+    {
+      "path": "pages/plan/detail/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "计划详情",
+        "renderer": "webview",
+        "onReachBottomDistance": 120
+      }
+    },
+    {
+      "path": "pages/plan/edit/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "发布计划",
+        "renderer": "webview"
       }
     }
   ],
@@ -27,8 +44,8 @@
     "backgroundColor": "#FFFFFF",
     "borderStyle": "white",
     "list": [
-      { "pagePath": "pages/home/index", "text": "首页" },
-      { "pagePath": "pages/mine/index", "text": "我的" }
+      { "pagePath": "pages/home/index", "text": "首页", "iconPath": "static/tabbar/home.png", "selectedIconPath": "static/tabbar/home-active.png" },
+      { "pagePath": "pages/mine/index", "text": "我的", "iconPath": "static/tabbar/user.png", "selectedIconPath": "static/tabbar/user-active.png" }
     ]
   }
 }

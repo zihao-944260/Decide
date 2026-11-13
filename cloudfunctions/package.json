@@ -1,0 +1,10 @@
+{
+  "name": "decide-cloudfunctions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "云函数共享类型解析层：仅供各函数目录的 tsc 向上解析 wx-server-sdk 与 @types/node，不参与部署",
+  "devDependencies": {
+    "@types/node": "^16.18.0",
+    "wx-server-sdk": "4.0.2"
+  }
+}

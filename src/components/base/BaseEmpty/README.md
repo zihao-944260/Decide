@@ -1,0 +1,34 @@
+# BaseEmpty
+
+空态：图形 + 文案 + 可选主操作按钮。`icon` 为空时用内置「空文档」图形（真实节点叠出，Skyline 无伪元素），业务侧无需为每个列表准备一张占位图。
+
+## Props
+
+| prop | 类型 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `icon` | `string` | `''` | 占位图地址（fileID / https / 本地），空则用内置图形 |
+| `text` | `string` | `'暂无内容'` | 主文案 |
+| `actionText` | `string` | `''` | 主操作按钮文案，空则不渲染按钮 |
+
+## Emits
+
+| 事件 | 说明 |
+| --- | --- |
+| `action` | 点击主操作按钮（内部复用 `BaseButton`，高度 88rpx） |
+
+## Slots
+
+| slot | 说明 |
+| --- | --- |
+| `icon` | 覆盖整个图形区域（如换成业务插画）；外层是 160rpx 居中方盒，保证三种图形下空态等高 |
+| default | `text` 下方的补充说明区，放次要文案或次级操作 |
+
+## 示例
+
+```vue
+<BaseEmpty text="还没有发起过计划" action-text="去发起" @action="goCreate" />
+
+<BaseEmpty text="搜索不到相关计划">
+  <text class="page__empty-tip">换个关键词试试</text>
+</BaseEmpty>
+```
