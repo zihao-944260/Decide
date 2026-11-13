@@ -32,11 +32,18 @@ const myVote = computed(() => planStore.myVotes[planId])
 我投的那一行主色加粗），透传 `:options="summary.options"` `:my-option="summary.myOption"`；
 `< 2` 时仍是原来的赞同/反对双色条。闸门在 `VoteRatioBar` 内部，卡片只负责透传。
 `applyVoteResult` 会把权威 `options`/`myOption` patch 回缓存的 summary，所以直接绑快照字段也能投票后即时同步。
-首次入视口上升动画（`plan-card--rise` + IntersectionObserver）与其余卡片内容不受影响。
+首次出现上升动画（`plan-card--rise`）与其余卡片内容不受影响：入场前只挂一段
+`transform: translateY(64rpx)`，挂载后 50ms 起按**挂载顺序错峰 100ms 逐张开播**（第一张先起、第二张随后，
+不再同时动），由 800ms `transition` 缓慢回到原位；批次 120ms 内没有新卡挂载就归零，
+所以「加载更多」追加的一批会重新从头错峰。批次序号存在模块作用域的 `<script>` 块里
+（`<script setup>` 的变量是每实例一份，放那里序号恒为 0，会退化成「一起做动画」）。
+`type="list"` 会虚拟化视口外节点，卡片挂载 ≈ 首次接近视口，因此不用 IntersectionObserver
+（上一版真机上回调未触发，卡片会停在偏移态）；每张卡各自持有状态与一次性定时器（闭包不共享），播完必摘类，
+不会残留位移。不拿 `opacity: 0` 起步，动画期间卡片始终可见；不改 padding / margin 等基础样式。
 
 ## 性能
 
-- 卡片不挂任何定时器：倒计时经 `CountDown → useCountdown → utils/ticker`，全局最多一个 `setInterval`，且按档位分级降频（>7 天与已截止两档根本不订阅）。
+- 不挂常驻定时器：倒计时经 `CountDown → useCountdown → utils/ticker`，全局最多一个 `setInterval`，且按档位分级降频（>7 天与已截止两档根本不订阅）；入场动画每卡只用一个一次性定时器（错峰开播），卸载即清理；另有模块级一个批次计数定时器（120ms 归零）。
 - 封面 `BaseImage` 预设 `ratio = 16/9` + `lazy-load`（§11.1 防抖动）。
 - 无 SelectorQuery / boundingClientRect。
 

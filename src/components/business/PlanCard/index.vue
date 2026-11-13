@@ -1,5 +1,15 @@
+<script lang="ts">
+/**
+ * 错峰批次计数**必须**在模块作用域：<script setup> 里的每个声明都是「每实例一份」，
+ * 放在那里每张卡都会从 0 开始，序号恒为 0 → 全部同时开播。
+ * 这里只负责给同一批挂载的卡片排序，120ms 内没有新卡挂载就归零。
+ */
+let batchSeq = 0
+let batchResetTimer: ReturnType<typeof setTimeout> | null = null
+</script>
+
 <script setup lang="ts">
-import { computed, getCurrentInstance, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import BaseAvatar from '@/components/base/BaseAvatar/index.vue'
 import BaseImage from '@/components/base/BaseImage/index.vue'
 import CountDown from '@/components/business/CountDown/index.vue'
@@ -42,27 +52,57 @@ const hasOptions = computed(() => options.value.length >= 2)
 const expired = ref(false)
 
 /**
- * 首次入视口上升动画（#63）：IntersectionObserver 命中一次即 disconnect 解绑，之后不再触发。
- * observer / entered 都是**本卡片实例**setup 里的局部量，回调闭包只捕获自己这份，
- * 不共享 v-for 循环变量 —— 虚拟列表复用实例时 entered 保持 true，不会重播。
+ * 首次出现上升（#63）：首页列表是 scroll-view type="list"（Skyline 虚拟列表），
+ * 卡片被挂载就说明它正在接近视口，因此「挂载后隔一帧开始播」≈「首次出现时开始播」。
+ * 上一版用 IntersectionObserver，真机上回调没有触发，卡片一直停在偏移态（看起来像边距变大），故弃用。
+ *
+ * 错峰：同一批挂载的卡片按挂载顺序依次开播（第一张先起、第二张随后），不一起动。
+ * batchSeq 是这里唯一的模块级共享量，且只按时间窗口计数：120ms 内没有新卡挂载就归零，
+ * 因此「加载更多」追加的新一批会重新从头错峰，而不是接着上一批的序号继续等。
+ *
+ * 闭包边界（v-for 安全的关键）：序号在挂载时就固化进本实例，riseState 与定时器都只属于本卡片，
+ * 各卡互不串扰；定时器只做「摘类」这一件事，并在卸载时清理。
+ * 不管 transition 有没有执行，类最终都会被摘掉 —— 样式必然回到常规，
+ * 绝不会像观察器方案那样把卡片永久停在偏移位置（表现成「边距变大」）。
+ *
+ * 起点只有 transform：卡片全程可见，不用 opacity 起步（真机曾出现「数据在、卡片全透明」），
+ * 也不改 padding / margin / 圆角 / 阴影这些基础样式。
  */
-const entered = ref(false)
-const instance = getCurrentInstance()
-let riseObserver: ReturnType<typeof uni.createIntersectionObserver> | null = null
+const RISE_START_DELAY = 50
+/** 相邻两张卡的开播间隔：100ms，肉眼能看出「一张接一张」，又不会等到最后才动 */
+const RISE_STAGGER_STEP = 100
+/** 序号封顶：批次很长时最后一张最多晚 1s 开播，避免尾部卡片等到天荒地老 */
+const RISE_STAGGER_MAX_INDEX = 10
+const RISE_BATCH_RESET = 120
+
+/** ready：先以起点位移渲染，错峰到点后摘类开播；done：已入场（或整屏降级） */
+const riseState = ref<'ready' | 'done'>(props.animated ? 'ready' : 'done')
+let riseTimer: ReturnType<typeof setTimeout> | null = null
+
 onMounted(() => {
-  if (!instance) return
-  riseObserver = uni.createIntersectionObserver(instance.proxy, { thresholds: [0.15] })
-  riseObserver.relativeToViewport().observe('.plan-card', (res) => {
-    if (res.intersectionRatio > 0) {
-      entered.value = true
-      riseObserver?.disconnect()
-      riseObserver = null
-    }
-  })
+  if (riseState.value !== 'ready') return
+  const seq = Math.min(batchSeq++, RISE_STAGGER_MAX_INDEX)
+  if (batchResetTimer) clearTimeout(batchResetTimer)
+  batchResetTimer = setTimeout(() => {
+    batchSeq = 0
+    batchResetTimer = null
+  }, RISE_BATCH_RESET)
+
+  // 先让起点位移真正画出一帧，再摘类，transition 才有可动的起点；seq 决定这一帧落在第几拍
+  riseTimer = setTimeout(
+    () => {
+      riseTimer = null
+      riseState.value = 'done'
+    },
+    RISE_START_DELAY + seq * RISE_STAGGER_STEP,
+  )
 })
+
 onBeforeUnmount(() => {
-  riseObserver?.disconnect()
-  riseObserver = null
+  if (riseTimer) {
+    clearTimeout(riseTimer)
+    riseTimer = null
+  }
 })
 
 const closed = computed(() => {
@@ -73,7 +113,7 @@ const closed = computed(() => {
 const rootClass = computed(() => {
   const cls = ['plan-card']
   if (closed.value) cls.push('plan-card--closed')
-  if (entered.value) cls.push('plan-card--rise')
+  if (riseState.value === 'ready') cls.push('plan-card--rise')
   return cls
 })
 
@@ -149,28 +189,21 @@ function onExpire(): void {
 </template>
 
 <style lang="scss" scoped>
-// 首次入视口缓慢上升（#63）：backwards 只在播放期间生效，播完回到常规样式（不压 --closed 的置灰），
-// 配合 observer 命中即 disconnect，保证一生只播一次
-@keyframes plan-card-rise {
-  from {
-    opacity: 0;
-    transform: translateY(32rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+// 首次出现上升（#63）：起点只有一段位移 —— 不参与布局、不改任何可见样式（卡片始终可见）；
+// 摘类后由 .plan-card 的 transition 在 800ms 内缓慢回到原位。
+// 64rpx = 卡间距 40rpx + 卡内底 padding 24rpx：起点最多压到下一张卡的背景，不遮挡正文。
 .plan-card--rise {
-  animation: plan-card-rise 420ms ease-out backwards;
+  transform: translateY(64rpx);
 }
 
 .plan-card {
   @include card;
   width: 100%;
   box-shadow: $shadow-card;
-  transition: opacity $duration-fast;
+  // 只补一条 transform 过渡作为动画入口，opacity 仍是原来的快档；不改任何间距/尺寸样式
+  transition:
+    opacity $duration-fast,
+    transform 800ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .plan-card--hover {
