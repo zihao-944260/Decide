@@ -62,8 +62,11 @@ node -e "require('miniprogram-automator').connect({wsEndpoint:'ws://localhost:92
 | `page.$('.x')` 想拿自定义组件内部节点 | ❌ 不跨组件边界；✅ 两级：先 `page.$('plan-list')` 拿宿主，再 `host.$('.plan-list')` 进组件内部（Skyline 页实测，`offset()` 可量间距） |
 | 页面级 `createSelectorQuery` 看组件内部 | ❌；✅ `>>>` 跨组件选择器，**一个 `>>>` 只穿一层边界**：page→OptionsSection→BaseButton 要链两个（`.plan-edit__section >>> .options-section >>> .base-button--block`，WebView 页 mp.evaluate 内实测） |
 | `page.callMethod('setupFn')` | ❌ uni-app vue3 的 setup 函数不是页面方法（"this.xxx is not a function"）；状态级验证改走草稿种子 + 真导航，种子键带 `decide:` 前缀（`decide:plan_draft_<openId>`，漏前缀不恢复） |
-| `ScrollViewElement.scrollTo(x, y)` | ✅ WebView 页 scroll-view 可用（`page.$('.plan-edit__scroll')` 拿句柄后直调）；`.context()` 的 ScrollViewContext scrollTo ❌ 不滚 |
+| `ScrollViewElement.scrollTo(x, y)` | ✅ WebView 页 scroll-view 可用（`page.$('.plan-edit__scroll')` 拿句柄后直调）；`.context()` 的 ScrollViewContext scrollTo ❌ 不滚；❌ **Skyline `type="list"` 页不滚**（2026-11-18 复测：调用不报错、前后截图逐像素相同）→ 滚到底让位只能几何判定（§2.2） |
 | `sv.trigger('refresherrefresh')` + `sv.attribute('refresher-triggered')` | ✅ 下拉刷新状态机验收口径：mid `{triggered:true, skeleton:true, items:false}` → after `{triggered:false, skeleton:false, items:true}` |
+| `c.switchTab()` / `c.reLaunch()` 切页 | ❌ 本构建（Skyline + `tabBar.custom:true`）抛 `Uncaught [object Object]` 且页面不动；✅ 切 tab 用 `Element.tap()` 点 `.base-tabbar__item`，`wx.switchTab` 从 service 侧调用也不动高亮（高亮归 store，由 tap 驱动）。**教训**：给导航调用套 `.catch(() => {})` 会把「没切页」伪装成「切了页」——上一轮三条一模一样的 tab 数据就是这么来的 |
+| 切页后继续用旧页面的元素句柄 | ❌ 页面隐藏后句柄失效（"no frames"）；✅ tap 之后重新 `currentPage()` + 重新 `host.$()` 取句柄 |
+| 进页面即测 `.plan-list__item` 数量 | ⚠️ 首页首屏是骨架屏，`.plan-list__item` 为 0 不是空列表；轮询到真卡出现再量（骨架与真卡同宽同距，见 #64） |
 
 **2026-11-13 增补（#35，watcher 缓存 + WebView 合成 tap 边界 + 事件槽直调）**：
 
@@ -249,6 +252,15 @@ weixinSkyline(config) === config.renderer === 'skyline' && config.lazyCodeLoadin
 | `rpx` | ✅ 实测 104.1 vs 理论 104.0 | 测量 |
 | `vw` | ✅ 50vw = 195 | 测量 |
 | `transform: translateX` | ✅ left=176.5 | 测量 |
+| `transform: translateX(格数 * 100%)`（百分比相对自身宽） | ✅ 118.9px 槽位逐格 left 30.1 / 149.1 / 268.1 | 2026-11-18 逐帧测量（BaseTabBar 滑块） |
+| `transition` + 过冲 bezier（控制点 >1） | ✅ 峰值输出 1.0204 → 跳两格越过终点约 8px 再回落（27←30.3、364→362）；旧参数 `.34,1.56,.64,1` 峰值 1.0978，越过 23px | 同上，峰值由 bezier 数值解算 + 逐帧实测互校 |
+| `@keyframes` 动画 `transform: scale()` | ✅ 92×50 → 96×48（拉长）→ 87×53（压扁）→ 94×49（反冲）→ 收住，逐帧与关键帧表一致 | 同上（动画临时拉到 3000ms 提高采样密度） |
+| 同段 keyframes 换动画名重启 | ✅ `--odd`/`--even` 两类轮换，四个方向连跳每跳都重播同一段形变 | 同上 |
+| `overflow:hidden` 裁剪绝对定位 + transform 的子节点 | ✅ 旧参数下布局盒 left 冲到 −5，红色探针像素最左仍止于胶囊沿 17 | 探针（临时涂红 + 动画放慢到 4s）+ 截图 |
+| automator `Element.offset()/size()` 是否含动画进行中的 transform | ✅ 含（静置与逐帧数值不同，据此可逐帧采样动效） | 逐帧测量 |
+| `position: fixed` 全宽**无底色**悬浮层（只让子盒画胶囊） | ✅ 外层盒 402×66.5 铺满宽但透明，列表从胶囊左右与下方带里透出；`bottom: calc(16rpx + env(safe-area-inset-bottom))` 实测胶囊顶 765.0 / 离屏底 42.5 | 2026-11-18 测量（BaseTabBar 去底色）+ 三 tab 截图 |
+| 悬浮层不占流 → 滚动内容尾部垫让位 | ✅ 视口铺到窗口底（`.plan-list` bottom 874.0 = windowHeight），尾部垫实测高 182.0 = 276rpx(147.9) + 安全区 34.1，逐项对上公式 | 同上 |
+| automator `ScrollViewElement.scrollTo` 在 **Skyline `type="list"`** | ❌ 调用不报错但视口不动（前后截图逐像素相同）→ 滚到底只能几何判定（同 §0.2 WebView 那条相反） | 测量 + 前后截图对比 |
 | margin 折叠 | 不折叠（20+20=40） | 测量 |
 | 后代选择器 `.a .b` | ✅ 模拟器生效（红字） | 截图 |
 | 子代选择器 `.a > .b` | ✅ 模拟器生效（蓝字） | 截图 |

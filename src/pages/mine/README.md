@@ -18,8 +18,15 @@ view.mine                                 ← @include page-root（Skyline 下�
 │   ├─ StatCards  :active="activeFilter"  三张卡（created/joined/ongoing）
 │   └─ FilterTabs :active="activeFilter"  四条 tab（+ ended）
 ├─ PlanList（v-if=isLoggedIn）            ← ★ 全页唯一的 scroll-view type="list"，flex:1
-└─ BaseEmpty（v-else）                    未登录出口（点它 = 同一条登录链路）
+├─ BaseEmpty（v-else）                    未登录出口（点它 = 同一条登录链路）
+└─ BaseTabBar(active=mine)                底部悬浮胶囊导航；原生条由 custom:true + 空壳关掉（组件 README）
 ```
+
+`mine__logout` 与首页发布 pill 同一条让位口径：`@include above-tabbar($space-3)`（胶囊带 + 安全区 + 12pt 间距，
+胶囊长高到 124rpx 后带高多 12rpx，间距同步抬一档），
+不再写 `bottom: 0` + `safe-area-bottom`，否则会压在胶囊上。
+`BaseTabBar` 是 fixed 悬浮层、不占普通流，所以列表铺到视口底从胶囊四周透出；
+末卡不被胶囊/登出 pill 永久盖住靠 `PlanList` 的 `:float-clearance="true"`（与首页同款，登出 pill 与发布 pill 同位同高）。
 
 §8.7 的结构图把四块都画在同一个 `scroll-view` 里，**这张图与已验收的组件源码冲突**：
 `PlanList/index.vue` 的模板根节点自己就是一个 `scroll-view type="list"`（还带 `refresher-enabled` + `scrolltolower`）。

@@ -84,6 +84,13 @@
   padding-bottom: calc(#{$extra} + env(safe-area-inset-bottom));
 }
 
+// 置底浮层让位给悬浮胶囊导航（BaseTabBar）：让出「胶囊带 + 安全区」，$extra 是胶囊与浮层之间的间距。
+// 用在 fixed/absolute 的 bottom 上，替代原来的 bottom: 0 + safe-area-bottom —— 两者都算的是
+// 「距视口底边」，胶囊在视口底部占掉了 $tabbar-band + 安全区，不让位就会压在一起。
+@mixin above-tabbar($extra: 0rpx) {
+  bottom: calc(#{$extra} + #{$tabbar-band} + env(safe-area-inset-bottom));
+}
+
 // 1px 细线：Skyline 无伪元素，直接用物理像素 border（勿用 rpx，缩放后不可见）
 @mixin hairline-bottom {
   border-bottom: 1px solid $color-border;

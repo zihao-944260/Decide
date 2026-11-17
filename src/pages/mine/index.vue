@@ -29,6 +29,7 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import BaseEmpty from '@/components/base/BaseEmpty/index.vue'
 import BaseNavbar from '@/components/base/BaseNavbar/index.vue'
+import BaseTabBar from '@/components/base/BaseTabBar/index.vue'
 import FilterTabs from '@/components/business/FilterTabs/index.vue'
 import PlanList from '@/components/business/PlanList/index.vue'
 import StatCards from '@/components/business/StatCards/index.vue'
@@ -452,6 +453,7 @@ function dropPlanEverywhere(planId: string): void {
       :empty-text="emptyText"
       :empty-action-text="emptyActionText"
       :empty-action-owned="emptyActionOwned"
+      :float-clearance="true"
       @click="onCardClick"
       @long-press="onLongPress"
       @expire="onExpire"
@@ -469,6 +471,9 @@ function dropPlanEverywhere(planId: string): void {
         <text class="mine__logout-text">退出登录</text>
       </view>
     </view>
+
+    <!-- 底部导航：fixed 悬浮，不占这一列的空间；滚动到底的让位由 PlanList 在内容尾部垫（float-clearance） -->
+    <BaseTabBar active="mine" />
   </view>
 </template>
 
@@ -518,14 +523,15 @@ function dropPlanEverywhere(planId: string): void {
 }
 
 // 退出登录浮层（用户裁定 2026-11-13）：absolute 钉在页底， wrapper 透明无底色，
-// 列表延伸到页底从按钮四周透出（「被遮住的列表」）；不再占普通流，故列表 flex:1 吃满到页底
+// 列表延伸到页底从按钮四周透出（「被遮住的列表」）；不再占普通流，故列表 flex:1 吃满到页底。
+// 置底让位给悬浮胶囊（above-tabbar），否则按钮正好压在胶囊上。
+// $extra 与首页发布浮层同口径 $space-3（胶囊长高后带高多 12rpx，间距跟着抬）。
 .mine__logout {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
   @include flex-center;
-  @include safe-area-bottom($space-3);
+  @include above-tabbar($space-3);
 }
 
 // 紧凑 pill 按钮（非通栏色块）：白底 + 投影保证红字在任意列表内容上可读，四周透出列表

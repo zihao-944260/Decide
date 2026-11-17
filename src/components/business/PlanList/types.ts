@@ -39,11 +39,12 @@ export interface Props {
   /** 触底预加载距离（px，透传 scroll-view lower-threshold） */
   lowerThreshold?: number
   /**
-   * 滚动内容尾部垫 FAB 让位（首页悬浮发布按钮）。让位必须放在**滚动内容里**而不是页面兄弟节点：
-   * 兄弟节点会压矮 scroll-view 视口，末卡在视口底被裁、下方却留一条死空间（#45）。
-   * 垫在内容里则视口吃满全高，末卡靠这段 padding 滚过 FAB。我的页无 FAB，默认 false。
+   * 滚动内容尾部垫「底部悬浮层」让位：悬浮胶囊导航 + 页底那颗 pill（首页发布 / 我的退出登录，同款同位）。
+   * 让位必须放在**滚动内容里**而不是页面兄弟节点：兄弟节点会压矮 scroll-view 视口，
+   * 末卡在视口底被裁、下方却留一条死空间（#45）。
+   * 导航改成 fixed 悬浮之后这条更吃紧：视口铺到屏幕底边，末卡不垫就直接永久藏在胶囊下面。
    */
-  fabClearance?: boolean
+  floatClearance?: boolean
   /**
    * 顶部留白放在滚动内容**内部**（首卡之上垫一格 $card-gap），容器本身不上外边距。
    * 首页用 true（容器顶贴导航、圆角从导航下沿开始）；我的页默认 false（留白走容器 margin-top）。

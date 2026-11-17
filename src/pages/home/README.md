@@ -27,13 +27,23 @@
 
 - 根节点 `@include page-root`：Skyline 下页面不滚动，flex 纵向 + `overflow: hidden`，否则列表拿不到高度。
 - `BaseNavbar` 用 `:backable="false"`：首页是 tabBar 页，没有返回箭头；「消息」走 `right` 插槽，点击只给未开放提示。
+- 底部是 `BaseTabBar`（**fixed 悬浮**，不画底色、不占普通流）：原生 tabBar 画不出悬浮胶囊，
+  改由 `pages.json → tabBar.custom: true` + `src/custom-tab-bar/` 的 0×0 空壳把原生条整块关掉、视口整块还给页面
+  （组件 README 记了 `hideTabBar` 为什么不行）；`tabBar` 段仍保留，它决定本页是 tab 页、`switchTab` 可用。
+  列表因此铺到视口底、从胶囊四周透出来（与发布 pill 同款），代价是滚动到底的让位要垫在滚动内容里（见下条）。
+- `home__fab-bar` 从 `bottom: 0` + `safe-area-bottom` 换成 `@include above-tabbar($space-3)`：
+  让出「胶囊带 + 安全区」，发布 pill 落在胶囊之上（#62 的透明浮层形态不变）。
+  `$space-3` 而不是 `$space-2`：胶囊为容纳加厚的选中内衬长到 124rpx，带高多了 12rpx，间距得跟着抬。
 - 给组件标签加 `class="home__list"`（宿主节点 `flex: 1` + flex 列）：小程序里自定义组件是一个真实节点，
   `PlanList` 内部 `.plan-list { flex: 1 }` 只相对宿主节点生效；宿主节点不接高度，列表就会塌成 0。
   同一口径见 `CommentItem` 的 `.comment-item__avatar`。若运行时组件是虚节点，这几条落在不存在的节点上，无副作用。
 - FAB 是 `scroll-view` 的**兄弟节点**，`position: fixed`（兼容清单 §2.2 实测可用）；直径走 `$fab-size`，
-  让位用 `.home__fab-space`（padding-bottom = `$fab-size + $space-4` + 安全区）垫在列表下面，
-  最后一张卡片滚到底不会被 FAB 压住 —— 不需要测量、不需要改组件样式（禁 `boundingClientRect`，兼容清单 §2.3）。
-  两处同源一个 token，改尺寸不会只改一半。
+  让位走 `PlanList` 的 `float-clearance`，在滚动内容尾部垫 `.plan-list__float-space`
+  （padding-bottom = `$tabbar-band + $space-3 + $fab-size + $space-2` + 安全区）——
+  胶囊带、pill 与胶囊的间距、pill 自身高三段一起让开，末卡滚到底既不过胶囊也不过 pill。
+  让位必须垫在**滚动内容里**而不是靠兄弟节点压视口（#45：压视口会让末卡被裁、底下留一条死空间），
+  导航改成 fixed 之后这条更吃紧：视口已经铺到屏幕底边，不垫末卡就永久藏在胶囊下面。
+  不需要测量、不需要改组件样式（禁 `boundingClientRect`，兼容清单 §2.3）。两处同源一个 token，改尺寸不会只改一半。
 - FAB 收起用 `scroll` 事件 + 时间戳节流（120ms）+ 方向死区（4px），**不用 worklet**：T0 实测 SharedValue
   无法经 Vue 模板承载（兼容清单 §2.5），CSS transition 可用。
 
@@ -48,7 +58,9 @@
 
 1. 列表是否真的撑满剩余高度（宿主节点那条兜底是否必要/是否够用）。
 2. 下拉刷新头在 Skyline 下的表现（组件 README 也标了未实测）。
-3. FAB 与安全区/原生 tabBar 的间距观感（tabBar 页 `env(safe-area-inset-bottom)` 预期为 0）。
+3. 真机复验悬浮胶囊：模拟器已实测 `windowHeight` 844、`env(safe-area-inset-bottom)` 34px、
+   发布 pill 底边距胶囊顶边 12.5px、胶囊底下无黑带；剩下的是空壳 `custom-tab-bar` 在个别机型上是否仍占位或拦点击
+   （若占位，按组件 README 的口径补 `pointer-events: none`）。
 4. 冷启动首屏：`onRefresh` 是否命中 `planListRef`（命中不了会抛错并留下一次 onShow 重试，日志 tag `usePageRefresh`）。
 5. 切 tab、从详情页返回、发布后返回三条路径的刷新语义。
 6. 滚动收起 FAB 的实际手感：`scroll` 事件在 Skyline 的 `scroll-view type="list"` 下是否逐帧到达、

@@ -7,6 +7,7 @@
  */
 import { nextTick, ref } from 'vue'
 import BaseNavbar from '@/components/base/BaseNavbar/index.vue'
+import BaseTabBar from '@/components/base/BaseTabBar/index.vue'
 import PlanList from '@/components/business/PlanList/index.vue'
 import type { PlanListScrollEvent } from '@/components/business/PlanList/types'
 import { fetchPlanList } from '@/api/plan'
@@ -130,7 +131,7 @@ usePageRefresh({
       :on-page="onPage"
       :on-error="onError"
       :auto-load="false"
-      :fab-clearance="true"
+      :float-clearance="true"
       :inner-top-gap="true"
       empty-text="还没有计划，点下方发布第一条"
       @click="onCardClick"
@@ -149,6 +150,9 @@ usePageRefresh({
         <text class="home__fab-text">发布</text>
       </view>
     </view>
+
+    <!-- 底部导航：fixed 悬浮，不占这一列的空间；滚动到底的让位由 PlanList 在内容尾部垫（float-clearance） -->
+    <BaseTabBar active="home" />
   </view>
 </template>
 
@@ -176,14 +180,16 @@ usePageRefresh({
 }
 
 // 发布浮层与我的页退出登录同口径（#62）：fixed 底部居中透明带 + 白底 pill，列表从四周透出。
-// fixed 是 T0 实测可用项（兼容清单 §2.2），故浮层是 scroll-view 的兄弟节点而不是子节点
+// fixed 是 T0 实测可用项（兼容清单 §2.2），故浮层是 scroll-view 的兄弟节点而不是子节点。
+// 置底改为让位给悬浮胶囊（above-tabbar），胶囊占掉的那条带 + 安全区不能再压一次浮层。
+// $space-3 而不是 $space-2：胶囊为容纳加厚的色块内衬长到 124rpx，带高多了 12rpx，
+// 间距不跟着抬就会贴到胶囊沿上。
 .home__fab-bar {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
   @include flex-center;
-  @include safe-area-bottom($space-3);
+  @include above-tabbar($space-3);
 }
 
 .home__fab {

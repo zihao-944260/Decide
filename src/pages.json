@@ -8,6 +8,13 @@
       }
     },
     {
+      "path": "pages/ideas/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "Great Ideas"
+      }
+    },
+    {
       "path": "pages/mine/index",
       "style": {
         "navigationStyle": "custom",
@@ -39,12 +46,14 @@
     "backgroundColor": "#F5F6F8"
   },
   "tabBar": {
+    "custom": true,
     "color": "#8A8F99",
     "selectedColor": "#2B6DE8",
     "backgroundColor": "#FFFFFF",
     "borderStyle": "white",
     "list": [
       { "pagePath": "pages/home/index", "text": "首页", "iconPath": "static/tabbar/home.png", "selectedIconPath": "static/tabbar/home-active.png" },
+      { "pagePath": "pages/ideas/index", "text": "Great Ideas", "iconPath": "static/tabbar/idea.png", "selectedIconPath": "static/tabbar/idea-active.png" },
       { "pagePath": "pages/mine/index", "text": "我的", "iconPath": "static/tabbar/user.png", "selectedIconPath": "static/tabbar/user-active.png" }
     ]
   }

@@ -19,7 +19,7 @@ const props = withDefaults(defineProps<Props>(), {
   emptyActionOwned: false,
   animated: true,
   lowerThreshold: 60,
-  fabClearance: false,
+  floatClearance: false,
   innerTopGap: false,
 })
 const emit = defineEmits<Emits>()
@@ -190,8 +190,8 @@ defineExpose({
       <BaseLoadMore v-if="footerVisible" :status="footerStatus" @retry="onFooterRetry" />
     </template>
 
-    <!-- FAB 让位垫在滚动内容尾部（#45）：视口不被压矮，末卡滚到底时落在 FAB 之上 -->
-    <view v-if="fabClearance" class="plan-list__fab-space" />
+    <!-- 底部悬浮层让位垫在滚动内容尾部（#45）：视口不被压矮，末卡滚到底时落在胶囊与 pill 之上 -->
+    <view v-if="floatClearance" class="plan-list__float-space" />
   </scroll-view>
 </template>
 
@@ -220,10 +220,13 @@ defineExpose({
   height: $card-gap;
 }
 
-// FAB 让位 = 直径 + 下边距 + 安全区（与首页 FAB 的 bottom 同口径）；只垫滚动内容，不压视口
-.plan-list__fab-space {
+// 底部悬浮层让位 = 胶囊带（含胶囊高 + 与屏底的间距）+ pill 与胶囊的间距 + pill 自身高 + 一格呼吸间距。
+// 前三项与 `above-tabbar($space-3)` 严格同口径：pill 底边就在「$space-3 + 胶囊带 + 安全区」处，
+// 顶边还要再高一个 $fab-size —— 只算这三段，滚到底时末卡底正好接在 pill 顶边（0 间距，贴脸），
+// 所以再补一格 $space-2。只垫滚动内容，不压视口。
+.plan-list__float-space {
   width: 100%;
-  @include safe-area-bottom($fab-size + $space-4);
+  @include safe-area-bottom($tabbar-band + $space-3 + $fab-size + $space-2);
 }
 
 // 卡片贴容器左右边（不再内缩 $space-3）：容器圆角 + overflow:hidden 才能裁切到卡片本身；

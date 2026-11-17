@@ -67,14 +67,39 @@ $color-fill-light: #f7f8fa; // 编辑器工具栏浅底（比 fill 更浅一档�
 $color-fill-deep: #e6e8ec;
 $color-toast-bg: rgba(0, 0, 0, 0.75);
 
+// 底部悬浮胶囊导航（BaseTabBar）。
+// $tabbar-band 是「胶囊占掉的底部带（不含安全区）」的唯一来源：首页发布浮层与我的页退出登录浮层
+// 都按它上移（mixins 的 above-tabbar），改这里三处一起动。
+// 高度 112→124rpx：色块四周的白边要加厚，而色块本身还得把 81rpx 的图标+文字包住，
+// 两头一起算，胶囊只能跟着长。112rpx 下纵向内衬一旦超过 15rpx 文字就顶到色块沿了。
+$tabbar-height: 124rpx;
+$tabbar-bottom-gap: 16rpx;
+$tabbar-band: $tabbar-height + $tabbar-bottom-gap;
+$tabbar-icon-size: 44rpx;
+// 高亮滑块（BaseTabBar 的唯一内衬节点）：槽位宽按项数等分（constants/tabbar.ts 算），
+// 滑块本体在槽位内再收这四个内衬。
+// 这两个值同时是**果冻形变的预算**，不是纯装饰：滑块最宽一刻 scale 1.05、跳两格的落点过冲约 5px，
+// 两头都吃掉内衬，剩下的才是离胶囊沿的余量（实测横向余 6px、纵向余 6px）。想收紧先回算，
+// 别指望 capsule 的 overflow 兜底 —— 顶到边上再被裁掉，看起来就是「色块冲出导航」。
+// 纵向：色块 124-28=96rpx，包住 81rpx 内容还剩 7.5rpx；且胶囊圆角=高/2、色块圆角=色块高/2，
+// 两层圆角之差恰好等于这个内衬，所以弧线是同心且等距的。
+$tabbar-pill-inset-y: 14rpx;
+$tabbar-pill-inset-x: 26rpx;
+
 // 阴影
 $shadow-card: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
 $shadow-popup: 0 -4rpx 24rpx rgba(0, 0, 0, 0.06);
+$shadow-tabbar: 0 8rpx 24rpx rgba(26, 29, 36, 0.08); // 悬浮胶囊：四向柔和，比卡片阴影重一档才浮得住
 
 // 动效时长（Skyline 实测仅 CSS transition/animation 可用，见兼容清单 §2.5）
 $duration-fast: 150ms;
 $duration-base: 250ms;
 $duration-slow: 350ms;
+// 底部导航滑块：位移比常规动效慢一档才看得出「滑过去」。
+// bezier 第二控制点 >1 → 收尾带过冲，但峰值只到 1.02：跳两格（首页↔我的）位移 2 槽，
+// 溢出也就 5px 左右，落在 $tabbar-pill-inset-x 预算内。再往上抬就是「冲出导航」那条线。
+$duration-tabbar-slide: 500ms;
+$ease-tabbar-spring: cubic-bezier(0.3, 1.25, 0.6, 1);
 
 // 层级
 $z-navbar: 100; // 吸顶导航 / 置底栏：内容之上、弹层之下

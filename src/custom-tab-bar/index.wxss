@@ -1,0 +1,19 @@
+/**
+ * 空壳自定义 tabBar —— 唯一作用是让 `pages.json → tabBar.custom: true` 生效。
+ *
+ * 为什么需要它：本工程是 Skyline 渲染，实测 `wx.hideTabBar()` 只收起原生条的内容、
+ * 不归还它占的那条带子（windowHeight 恒为 844−82=762，带子露出窗口底色＝黑），
+ * 而 `custom: true` 把视口整块还给页面（windowHeight 实测 844）。
+ * 底部导航本体由 Vue 侧的 `components/base/BaseTabBar` 画（要跟着设计 token 走，
+ * 原生 WXML/WXSS 读不到 SCSS 变量），这里只留一个 0×0 的节点钉在左下角，
+ * 不画东西、不吃点击。
+ *
+ * 真机复验项：若某台机器上这个空壳仍占位/拦截点击，改回原生 tabBar 或补 `pointer-events: none`。
+ */
+.stub {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 0;
+}
