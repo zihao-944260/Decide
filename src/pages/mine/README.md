@@ -1,42 +1,46 @@
 # 我的页（`pages/mine/index`）
 
-WBS **T5.5**（我的页编排：`UserHeader` + `StatCards` + `FilterTabs` + `PlanList` + `plan.myList` 游标分页 + 三态 + 下拉刷新）
+WBS **T5.5**（我的页编排：`UserHeader` + `StatCards` + `PlanList` + `plan.myList` 游标分页 + 三态 + 下拉刷新）
 + **T5.6**（我发起的计划长按管理：编辑 / 提前截止 / 删除）。
 结构依据 `技术方案.md` §8.7 与 §11，接线依据 §12 J2 的六条硬约束。**本页不新增组件、不改共享层。**
+
+> 2026-11-18 两处变更：① 筛选切换器**只剩上方那排 `StatCards`**（四张卡，含新增的「已截止」），
+> `FilterTabs` 从本页下线 —— 两套控件同时表达同一个 `activeFilter` 是重复 UI，不是双保险；
+> ② 列表滚动位置在**切 tab** 和**切 filter** 时归零（从详情页返回不归零，理由见 §2）。
 
 文件：`index.vue`（编排）+ `types.ts`（页面局部常量/类型）+ 本 README。
 
 ---
 
-## 1. 页面结构与「为什么头部三块不在滚动流里」
+## 1. 页面结构与「为什么头部两块不在滚动流里」
 
 ```
 view.mine                                 ← @include page-root（Skyline 下页面本身不滚动）
 ├─ BaseNavbar(title=我的, backable=false) ← tabBar 页 + navigationStyle: custom
 ├─ view.mine__head                        ← ★ 静态块，flex-shrink: 0，在滚动流之外
 │   ├─ UserHeader                         未登录「点击登录」/ 已登录 + 编辑资料弹层
-│   ├─ StatCards  :active="activeFilter"  三张卡（created/joined/ongoing）
-│   └─ FilterTabs :active="activeFilter"  四条 tab（+ ended）
+│   └─ StatCards  :active="activeFilter"  四张卡（created/joined/ongoing/ended）—— 这排卡就是筛选切换器
 ├─ PlanList（v-if=isLoggedIn）            ← ★ 全页唯一的 scroll-view type="list"，flex:1
 ├─ BaseEmpty（v-else）                    未登录出口（点它 = 同一条登录链路）
 └─ BaseTabBar(active=mine)                底部悬浮胶囊导航；原生条由 custom:true + 空壳关掉（组件 README）
 ```
 
 `mine__logout` 与首页发布 pill 同一条让位口径：`@include above-tabbar($space-3)`（胶囊带 + 安全区 + 12pt 间距，
-胶囊长高到 124rpx 后带高多 12rpx，间距同步抬一档），
+胶囊两版长高：112→124→136rpx，带高同步跟到 152rpx），
 不再写 `bottom: 0` + `safe-area-bottom`，否则会压在胶囊上。
 `BaseTabBar` 是 fixed 悬浮层、不占普通流，所以列表铺到视口底从胶囊四周透出；
 末卡不被胶囊/登出 pill 永久盖住靠 `PlanList` 的 `:float-clearance="true"`（与首页同款，登出 pill 与发布 pill 同位同高）。
+实测：我的页滚动视口 376.3×584.0、`bottom` 874.2 = 窗口底；`BaseTabBar/README.md`「悬浮定位实测」同一条口径。
 
-§8.7 的结构图把四块都画在同一个 `scroll-view` 里，**这张图与已验收的组件源码冲突**：
+§8.7 的结构图把头部与列表画在同一个 `scroll-view` 里，**这张图与已验收的组件源码冲突**：
 `PlanList/index.vue` 的模板根节点自己就是一个 `scroll-view type="list"`（还带 `refresher-enabled` + `scrolltolower`）。
 照图接就会得到「虚拟列表里套一个虚拟列表」，直接违反 §12-5「整页唯一的滚动流是一个 `scroll-view type='list'`」，
 而嵌套滚动在兼容清单里是零条目（§2.8：清单没写 ≠ 可用）。
 
-本页按**源码**接：头部三块是滚动流的兄弟静态节点，列表吃剩余高度 —— 与首页（`BaseNavbar` 静态 + `PlanList` 滚动）
+本页按**源码**接：头部两块是滚动流的兄弟静态节点，列表吃剩余高度 —— 与首页（`BaseNavbar` 静态 + `PlanList` 滚动）
 同一条接法。附带两个好处：
 
-- 头部（约 380~420rpx）常驻不滚走，切 filter 时筛选条一直在视野里，不需要吸顶（`sticky-*` 实测渲染 0×0，本来也做不了）；
+- 头部（约 380~420rpx）常驻不滚走，切 filter 时切换器一直在视野里，不需要吸顶（`sticky-*` 实测渲染 0×0，本来也做不了）；
 - `UserHeader` 的编辑弹层是 `page-container`（`BasePopup`），不再落在 `scroll-view type="list"` 的后代里 ——
   `UserHeader/README.md` 自己列的那条「page-container 嵌在 list 容器里能否全屏覆盖 = 未验证组合」在本页不成立。
 
@@ -47,7 +51,7 @@ view.mine                                 ← @include page-root（Skyline 下�
 ```ts
 const activeFilter = ref<MyFilter>('created')
 
-/** ★ 唯一写入点：StatCards 的 @select 与 FilterTabs 的 @change 都落在这一个函数上 */
+/** ★ 唯一写入点：四张 StatCards 的 @select 全都落在这一个函数上 */
 function setActiveFilter(filter: MyFilter): void {
   if (filter === activeFilter.value) return
   activeFilter.value = filter
@@ -55,32 +59,55 @@ function setActiveFilter(filter: MyFilter): void {
 ```
 ```vue
 <StatCards :stats="stats" :active="activeFilter" :disabled="!isLoggedIn" :loading="!isLoggedIn" @select="setActiveFilter" />
-<FilterTabs :active="activeFilter" :disabled="!isLoggedIn" @change="setActiveFilter" />
 ```
 
-- 两个组件都是**纯受控**（不 import store、不持有选中态），高亮一律从这一个 ref 读回来。
-  分成两份就必然出现「卡片亮 A、tab 亮 B、列表是 C」。
-- 去重放在 setter 而不是依赖组件：`FilterTabs` 点已选中项不发事件，`StatCards` **会**发
-  （`StatCards/index.vue:54-56` 只判 `disabled`，不判重复）。少了这层，多点一次同一张卡 = 一次多余的 `reload()`。
-- 默认 `'created'`。**没有「全部」这个 tab**：`MyFilter` 只有四个值（`constants/plan.ts:27`），
+- `StatCards` 是**纯受控**（不 import store、不持有选中态），高亮一律从这一个 ref 读回来。
+  页面上只剩这一个筛选控件，所以不存在「卡片亮 A、tab 亮 B、列表是 C」这种对质 —— 上一版那个
+  第二控件（`FilterTabs`）删掉之后，这条不变量从「靠两个 prop 必须写同一个 ref」降级成「只有一个地方能写」。
+- 去重放在 setter 而不是依赖组件：`StatCards` 点已选中项**会**照发事件（`StatCards/index.vue` 只判 `disabled`）。
+  少了这层，多点一次同一张卡 = 一次多余的 `reload()` + 一次云函数往返。
+- 默认 `'created'`。**没有「全部」这个档**：`MyFilter` 只有四个值（`constants/plan.ts`），
   「全部」要 `created ∪ joined` 并集，而两个桶的游标锚点不同（`plan/src/handlers/myList.ts` 头注释：
   created 锚 `createdAt`、joined 锚 `lastActionAt`），并集与游标分页和 3s 预算都不友好 —— 已裁决不做。
 
-切 filter 的取数：
+切 filter 的取数与滚动归零：
 
 ```ts
 const fetcher: PageFetcher<PlanSummary> = (cursor, pageSize) =>
   fetchMyPlans({ cursor, pageSize, filter: activeFilter.value })   // 调用时读 ref，不是快照
 
 watch(activeFilter, async () => {
-  await nextTick()
-  await planListRef.value?.reload()   // 不 force：seed 命中该桶就秒出（§8.7「切回不重新请求」）
+  const list = await resolveList()
+  if (!list) return
+  list.scrollToTop()      // ← 先归零，不等数据
+  await list.reload()     // 不 force：seed 命中该桶就秒出（§8.7「切回不重新请求」）
 })
 ```
+
+**顺序是刻意的，反了就是缺陷**：归零是对「用户这一次点击」的即时反馈，挂在请求回来之后，
+慢的时候表现成「点了没反应、列表还停在旧桶的第 8 张」。`resolveList()` 给两跳 `nextTick`
+是因为 `PlanList` 在 `v-if` 里，mp 端「Vue patch 完」与「宿主节点就位」是两个节奏。
 `seed: () => planStore.myPage(activeFilter.value)` + `onPage: planStore.setMyPage(activeFilter.value, page, append)`
 —— 缓存主人是 `planStore.myLists[filter]`（四个桶），页面只在 `onPage` 里写、在 `seed` 里读。
 竞态由 `usePagingList` 的 `seq` 代次挡（切桶时在途旧请求整条作废，`onPage` 不会被旧结果调用，
 所以 `activeFilter.value` 在 `onPage` 里读是安全的）。
+
+## 2.1 滚动位置只在两种时刻归零
+
+| 触发 | 走哪条 | 为什么 |
+| --- | --- | --- |
+| 切 filter（点另一张统计卡） | 页面 `watch(activeFilter)` → `list.scrollToTop()` | 换了一桶数据还停在旧滚动深度，看到的第一张卡是新桶的中间某条 |
+| 切 tab 进本页 / 进首页 | `useTabScrollReset(() => planListRef.value?.scrollToTop())`（两页各挂一次） | 导航切页等于「重新看这个页面」 |
+| **从详情页/编辑页返回** | **不动** | §7.3 的既有不变量：返回时要停在原来读到的位置。「onShow 就归零」会把这条打断 |
+
+分得开靠 `stores/tabbar.ts` 的 `switchSeq`：它只在真的换了一个 tab 时递增（点当前项、组件 setup 期
+「认领自己」都不加），`useTabScrollReset` 记住上一次看到的 seq，seq 没变就什么都不做 ——
+所以它不是「onShow 钩子」，是「onShow 且这次确实是切 tab」。2026-11-18 模拟器实测这一条：
+首页滚到底 → 进发布页 → 返回，仍停在底部（色块标记扫描：下标记可见、上标记不可见）；
+再切 tab 走一个来回，回到顶部（上标记可见、下标记不可见）。
+
+`scrollToTop()` 的实现口径见 `PlanList/README.md`：Skyline 的 `type="list"` 上 `scroll-top` 不生效，
+只有 `scroll-into-view` 生效，而它只在**值变化**时起作用，所以是先清空再 `nextTick` 指回顶部锚点。
 
 ## 3. stats 读一处、刷新一次（主 agent 验收时改写的口径）
 
@@ -140,7 +167,7 @@ async function onLogin(): Promise<void> {
   用户**主动**点登录失败需要反馈，所以页面自己弹那一条 —— silent 已经掐掉了 api 层那条，**不会双弹**。
 - 未登录时 `PlanList` **整块不渲染**（`v-if`），换成 `BaseEmpty` + 「点击登录」。
   否则组件会永久停在骨架屏（`loaded=false` 且没人发请求），那是个假「加载中」。
-  `StatCards`/`FilterTabs` 保留但传 `disabled`（拦点击）+ `loading`（画占位条而不是 0）。
+  `StatCards` 保留但传 `disabled`（拦点击）+ `loading`（画占位条而不是 0）。
 - 未登录态点登录只是**静默建档**（`user.login({})` 拿 openId），昵称头像仍靠 `UserHeader` 的「编辑资料」填。
 
 `UserHeader @updated`（§12 J2-4）：
@@ -315,14 +342,15 @@ showToastMsg('已删除')
 - 页面**不挂任何定时器**：倒计时心跳归 `utils/ticker`（`CountDown` 订阅），
   onShow/onHide 的 `resumeTick`/`pauseTick` 归 `usePageRefresh`。
 - 页面**零测量**：没有 `boundingClientRect` / `createSelectorQuery`（`scroll-view type="list"` 内视口外节点
-  取矩形会永久挂起，兼容清单 §2.3）。本页也不需要 —— 没有滚动定位诉求，没有吸底栏。
+  取矩形会永久挂起，兼容清单 §2.3）。§2.1 那两条滚动归零也不构成测量 —— 归零是往组件暴露的
+  `scrollToTop()` 里推一个锚点 id，页面不知道也不关心当前滚动距离；没有吸底栏。
 - 页面**不接 `@scroll`**：我的页没有 FAB，接了只会白白把逐帧事件变成逐帧 setData（§11.1）。
 - 选择器口径：一个节点一个类名 + 平铺 class，无后代/子代/伪元素/结构伪类；
   尺寸与颜色全走 token（`$space-*`/`$color-*`/`$tap-min-height`），无字面量。
 
 ## 8. 上报的共享层缺口（一条都没动，等主 agent 收口）
 
-1. **`users.stats` 自建档起永远不会变** —— 三张卡的数字与列表条数必然不一致（T5.3 验收标准直接失效）。
+1. **`users.stats` 自建档起永远不会变** —— 四张卡的数字与列表条数必然不一致（T5.3 验收标准直接失效）。
    证据链：`cloudfunctions/user/src/handlers/login.ts:9-10` 明写「登录路径**不重算** stats，权威统计由 `user.stats` 负责」；
    而全云端唯一写 `users.stats` 的地方是 `cloudfunctions/user/src/handlers/stats.ts:32`；
    前端 `src/api/user.ts:25` 的 `fetchStats` **零调用方**（`§8.7` 裁决 v1 不调）；store 侧
@@ -413,7 +441,7 @@ showToastMsg('已删除')
 3. **`uni.showLoading` / `hideLoading`（提前截止的两个往返）**：零条目。
    去掉它不影响正确性，只影响「点了之后 2~16s 没有任何反馈」的观感 —— 真机若表现异常就直接删掉这一段。
 4. **`refresher-enabled` 的下拉刷新头**：`PlanList/README.md` 已列未实测；本页额外要看的是一处新组合 ——
-   下拉手势**只在列表区域**有效，头部三块在 `scroll-view` 之外，从头部往下拽不会触发刷新（是否符合预期需产品点头）。
+   下拉手势**只在列表区域**有效，头部两块在 `scroll-view` 之外，从头部往下拽不会触发刷新（是否符合预期需产品点头）。
 5. **`activeFilter` 连点与刷新并发**：`usePagingList.reload()` 会 `seq += 1` 抢下状态机，
    而页面直调 `loadPage()` 那条路曾归 `usePageRefresh.run()` 的 `refreshing` 锁管不到（缺口 7）——
    **现已收口：页面两处都改走 `runNow()`，本页没有任何一条绕锁的取数路径**，
@@ -421,13 +449,13 @@ showToastMsg('已删除')
    理论结果：显示永不会错（旧请求被代次作废），最坏是少一次即时刷新。
    真机快速连点四个 tab + 下拉一次 + 改一次昵称，确认无重复数据、无两次并发列表请求。
 6. **小屏高度分配**：`mine__head` 约 380~420rpx 常驻，iPhone SE / 打开系统大字体时列表还剩多少，
-   需实测；不够就把 `StatCards` 与 `FilterTabs` 的纵向 margin 各收一档（都在页面侧，不动组件）。
+   需实测；不够就把 `UserHeader` 与 `StatCards` 的纵向 margin 各收一档（都在页面侧，不动组件）。
 7. **`UserHeader` 的 `button open-type="chooseAvatar"` / `input type="nickname"`**：组件侧已列真机复核，
    本页额外贡献一条正向证据 —— 弹层（`page-container`）现在挂在静态头部而不是 `scroll-view` 后代里，
    组件 README 里那条「未验证组合」在本页不成立，真机若能正常全屏覆盖就把那条改掉。
 8. **页面切走再回来的倒计时**：`onHide → pauseTick`、`onShow → resumeTick + 强广播一次`（`usePageRefresh` 内部）。
    看「提前截止」后切到首页再切回来，卡片是否已按归零沿置灰（60s 这个窗口正好是最容易看出问题的地方）。
-9. **集成首跑 `npm run build:mp-weixin`**（本波两路都被禁止跑构建）：`UserHeader`/`StatCards`/`FilterTabs`
+9. **集成首跑 `npm run build:mp-weixin`**（本波两路都被禁止跑构建）：`UserHeader`/`StatCards`
    三个 I1 路组件此前从未进过构建，本页是它们的 WXML 第一次被真正编译。
    重点看：`UserHeader` 里原生 `<button>` 嵌自定义组件（`BaseAvatar`）的产物、`BasePopup` 的 `page-container` 位置。
 
@@ -436,9 +464,8 @@ showToastMsg('已删除')
 | 文档 | 说法 | 源码事实 | 本页做法 |
 | --- | --- | --- | --- |
 | `UserHeader/README.md` §Props + 缺口 3 | `nickNameMaxlength` 默认 **`-1` = 不限长**，前端没有昵称上限 | `UserHeader/index.vue:37` 默认已是 `Limit.NICKNAME_MAX`(30)，`constants/plan.ts:52` 的 `NICKNAME_MAX` 也有了这个值；`types.ts` 注释已改，README 没跟上 | 页面**不注入**这个 prop（用组件默认值即可） |
-| `UserHeader/README.md` §接线示例 | `UserHeader`/`StatCards`/`FilterTabs`/`PlanList` 全放进页面自己的 `<scroll-view type="list">` | `PlanList/index.vue` 的根节点**自己就是** `scroll-view type="list"` → 照抄就是嵌套滚动容器 + 两个滚动流 | 头部三块静态在滚动流之外（§1） |
-| `FilterTabs/README.md` §文案单一来源 | 「`MY_FILTER_LABELS` 在 `types.ts` 里导出」+「已上报缺口：建议上收到 `constants/plan.ts`」 | 已经上收了：`constants/plan.ts:36`；消费方 `FilterTabs/index.vue:17` 与 `StatCards/types.ts:1` 都从 `@/constants/plan` import（`FilterTabs/types.ts` 只留了 `type MyFilter` 那一行） | ——（纯文档过期，建议删那条缺口） |
-| `StatCards/README.md` §接线 | 「`StatCards` 只从 `FilterTabs/types.ts` 取文案常量」 | 同上，取自 `@/constants/plan` | —— |
+| `UserHeader/README.md` §接线示例 | `UserHeader`/`StatCards`/`FilterTabs`/`PlanList` 全放进页面自己的 `<scroll-view type="list">` | `PlanList/index.vue` 的根节点**自己就是** `scroll-view type="list"` → 照抄就是嵌套滚动容器 + 两个滚动流 | 头部两块静态在滚动流之外（§1） |
+| `FilterTabs/README.md`（整篇） | 描述一个仍在页面里的筛选条 | **2026-11-18 该组件已从本页下线**（用户口径：上方四张卡就是切换器，下面再来一条是重复入口）；文案表 `MY_FILTER_LABELS` 早已上收到 `constants/plan.ts`，消费方只剩 `StatCards/types.ts` | 页面不 import、不渲染；`src/components/business/FilterTabs/` 目前零引用，删不删等主 agent 裁决 |
 | `UserHeader/README.md` §接线示例 | `onRefresh` 里 `await userStore.refresh()`；`:loading="refreshing"` | `user.login` 不重算 `stats`（`login.ts:9-10`）→ 这次往返拉不回新数字，要拉数字得用 `user.stats` | 不调 `refresh()`；改在 `loadPage` 里非阻塞调 `refreshStats()`（理由见 §3）；`loading` 只在未登录时给 |
 | `UserHeader/README.md` §未登录口径 | 推荐 `v-if="isLoggedIn"` 整块不渲染 `StatCards` | 组件本身支持 `disabled` + `loading` 两个 prop | 保留渲染但 `disabled` + `loading`：§12 J2-3 明确要求「传 `disabled`」，且不渲染会让登录前后版式跳一大块 |
 

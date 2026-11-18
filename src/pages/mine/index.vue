@@ -5,15 +5,17 @@
  * 生命周期与心跳在 usePageRefresh 内部，资料弹层在 UserHeader 内部 —— 页面一行都不重复写。
  *
  * ── 结构上的一个必要偏离（README §1 有完整理由）────────────────────────
- * §8.7 的结构图把 UserHeader / StatCards / FilterTabs / PlanList 画在同一个 scroll-view 里，
+ * §8.7 的结构图把 UserHeader / StatCards / PlanList 画在同一个 scroll-view 里，
  * 但 **PlanList 的根节点自己就是一个 `scroll-view type="list"`**（组件源码 index.vue 的模板第一行），
  * 而 §12-5 要求「整页唯一的滚动流是一个 scroll-view」。两者不能同时要：
- * 所以头部三块是**滚动流之外的静态兄弟节点**，列表吃掉剩余高度 —— 与首页
+ * 所以头部两块是**滚动流之外的静态兄弟节点**，列表吃掉剩余高度 —— 与首页
  * （BaseNavbar 静态 + PlanList 滚动）同一条接法。
  *
- * ── 本页面遵守的五条硬口径 ─────────────────────────────────────────
- * 1. `activeFilter` 是全页唯一的 filter 真相：StatCards 的 :active 与 FilterTabs 的 :active
- *    读同一个 ref，两者的事件落回同一个 setter（setActiveFilter）。
+ * ── 本页面遵守的六条硬口径 ─────────────────────────────────────────
+ * 1. `activeFilter` 是全页唯一的 filter 真相：**切换器只剩上方那一排 StatCards**（用户 2026-11-18 口径，
+ *    原来下面还有一条 FilterTabs 四个 chip，两处高亮同一个 ref 是重复入口），四张卡的点击全部落回
+ *    setActiveFilter 这一个写入点。第四张「已截止」没有独立计数，由 `created − ongoing` 推出，
+ *    口径推导写在 StatCards/types.ts 的 STAT_CARDS 上。
  * 2. stats 只有一个来源：`useUserStore().stats`，页面不直接 import `api/user`。
  *    数字由 `userStore.refreshStats()`（= `user.stats`）在每次差异化刷新时更新；
  *    「登录路径不重算 stats」的原因和这条链路为什么必须单独发一次请求见 stores/user.ts 的 refreshStats 注释。
@@ -25,12 +27,14 @@
  *    再 invalidatePage('plan-detail') 让留在页面栈里的详情页收敛。
  *    桶和组件渲染列表是**两个数组**，所以每次写穿都改两处（store + planListRef 的 patchItem/removeItem），
  *    理由见 closeEarly / dropPlanEverywhere 的注释与 README §6。
+ * 6. 列表滚动位置只在两种时刻归零：**切 tab 进本页**（useTabScrollReset，从详情页返回那一次不动位置）
+ *    和**切 filter**（setActiveFilter）。换了一桶数据还停在旧滚动深度，看到的第一张卡是新桶的中间某条，
+ *    读起来像列表坏了。
  */
 import { computed, nextTick, ref, watch } from 'vue'
 import BaseEmpty from '@/components/base/BaseEmpty/index.vue'
 import BaseNavbar from '@/components/base/BaseNavbar/index.vue'
 import BaseTabBar from '@/components/base/BaseTabBar/index.vue'
-import FilterTabs from '@/components/business/FilterTabs/index.vue'
 import PlanList from '@/components/business/PlanList/index.vue'
 import StatCards from '@/components/business/StatCards/index.vue'
 import UserHeader from '@/components/business/UserHeader/index.vue'
@@ -42,6 +46,7 @@ import {
   useActionSheet,
   useModal,
   usePageRefresh,
+  useTabScrollReset,
   useToast,
   type PageFetcher,
   type PageRefreshContext,
@@ -82,7 +87,7 @@ const planListRef = ref<InstanceType<typeof PlanList> | null>(null)
 const activeFilter = ref<MyFilter>('created')
 
 const isLoggedIn = computed(() => userStore.isLoggedIn)
-/** 三个数字的唯一来源：页面不发第二次取数，更新由 loadPage 里的 refreshStats 负责 */
+/** 四个数字的唯一来源：页面不发第二次取数，更新由 loadPage 里的 refreshStats 负责 */
 const stats = computed(() => userStore.stats)
 const emptyText = computed(() => EMPTY_TEXTS[activeFilter.value])
 const emptyActionText = computed(() => EMPTY_ACTION_TEXTS[activeFilter.value])
@@ -113,8 +118,8 @@ function onError(error: unknown): void {
 }
 
 /**
- * ★ 唯一写入点：StatCards 的 @select 与 FilterTabs 的 @change 都落在这一个函数上。
- * 去重放在这里（而不是依赖组件）：FilterTabs 点已选中项不发事件，但 StatCards 会 ——
+ * ★ 唯一写入点：四张 StatCards 的 @select 都落在这一个函数上。
+ * 去重放在这里（而不是依赖组件）：StatCards 点已选中项**会**照发事件，
  * 少了这层，多点一次同一张卡就是一次多余的 reload + 一次云函数往返。
  */
 function setActiveFilter(filter: MyFilter): void {
@@ -125,10 +130,14 @@ function setActiveFilter(filter: MyFilter): void {
 /**
  * 切 filter = 重新走一遍首屏（不 force）：seed 命中该桶就秒出、不发请求（§8.7「切回不重新请求」）。
  * nextTick 兜住「watch 早于组件因 v-if 重新挂载」这一帧。
+ *
+ * 滚动先归零再 reload，不等数据：归零是对**用户这一次点击**的反馈，把它挂在请求回来之后，
+ * 慢的时候就是「点了没反应、列表还停在旧桶的第 8 张」。
  */
 watch(activeFilter, async () => {
   const list = await resolveList()
   if (!list) return
+  list.scrollToTop()
   await list.reload()
 })
 
@@ -154,7 +163,7 @@ async function loadPage({ first }: PageRefreshContext): Promise<void> {
   await nextTick()
   // 未登录不发列表请求（plan.myList 要 openId，发了也是吃一次 1002 + 一次 3s 预算）
   if (!isLoggedIn.value) return
-  // 三个数字的权威值只有 user.stats 会算：登录路径明确不重算，users.stats 停在建档值。
+  // 四个数字的权威值只有 user.stats 会算：登录路径明确不重算，users.stats 停在建档值。
   // 挂在这里而不是 onShow 必刷：进入本函数的前提是 usePageRefresh 判定过期/被失效，最多约 60s 一次。
   // 不 await、也不让它把整页标脏 —— 数字旧着只是不好看，列表拉不到才是真问题。
   void userStore
@@ -167,6 +176,12 @@ async function loadPage({ first }: PageRefreshContext): Promise<void> {
 }
 
 const { markStale, runNow } = usePageRefresh({ key: PAGE_KEYS.mine, onRefresh: loadPage })
+
+// 切 tab 回到本页 → 列表回到顶部；从详情页返回那一次不动位置（口径见 useTabScrollReset）。
+// 未登录时列表根本没挂，planListRef 为空，?. 让这一下自然落空。
+useTabScrollReset(() => {
+  planListRef.value?.scrollToTop()
+})
 
 // ── 登录（T5.5：唯一登录链路）───────────────────────────────────────────
 
@@ -422,13 +437,14 @@ function dropPlanEverywhere(planId: string): void {
     <BaseNavbar class="mine__nav" title="我的" :backable="false" />
 
     <!--
-      头部三块是滚动流**之外**的静态节点（理由见文件头 + README §1）。
+      头部两块是滚动流**之外**的静态节点（理由见文件头 + README §1）。
       顺带一个好处：UserHeader 的编辑弹层（BasePopup，#78 起为 fixed 遮罩+面板，弃 page-container）
       不再嵌套在 scroll-view type="list" 里 —— 那个组合在兼容清单 §2.3 只做过首屏隔离测试。
     -->
     <view class="mine__head">
       <UserHeader @login="onLogin" @updated="onProfileUpdated" />
       <!-- 未登录：disabled 拦点击 + loading 画占位条（0 在未登录时是一句假话，见 StatCards README 口径 2） -->
+      <!-- 唯一切换器：四张卡就是四个 filter，下面不再有一条 chip 重复表达同一件事 -->
       <StatCards
         class="mine__stats"
         :stats="stats"
@@ -437,7 +453,6 @@ function dropPlanEverywhere(planId: string): void {
         :loading="!isLoggedIn"
         @select="setActiveFilter"
       />
-      <FilterTabs class="mine__tabs" :active="activeFilter" :disabled="!isLoggedIn" @change="setActiveFilter" />
     </view>
 
     <!-- 已登录才挂列表：PlanList 内部就是本页唯一的 scroll-view type="list" -->
@@ -496,14 +511,11 @@ function dropPlanEverywhere(planId: string): void {
   flex-shrink: 0;
 }
 
-// StatCards / FilterTabs 只带自己的左右 $space-3 内衬，纵向间距归页面
+// StatCards 只带自己的左右 $space-3 内衬，纵向间距归页面。
+// 它下面不再垫间距：与列表之间那一格由 PlanList 容器的 margin-top（$card-gap）提供（首页同口径），
+// 这里再给就双倍。
 .mine__stats {
   margin-top: $card-gap;
-}
-
-.mine__tabs {
-  margin-top: $card-gap;
-  // 下间距由 PlanList 容器的 margin-top（$card-gap）提供（首页同口径），这里再给就双倍
 }
 
 // 组件宿主节点的兜底：小程序里自定义组件是真实节点，.plan-list 的 flex:1 是相对它算的。

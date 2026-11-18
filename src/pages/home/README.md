@@ -33,7 +33,11 @@
   列表因此铺到视口底、从胶囊四周透出来（与发布 pill 同款），代价是滚动到底的让位要垫在滚动内容里（见下条）。
 - `home__fab-bar` 从 `bottom: 0` + `safe-area-bottom` 换成 `@include above-tabbar($space-3)`：
   让出「胶囊带 + 安全区」，发布 pill 落在胶囊之上（#62 的透明浮层形态不变）。
-  `$space-3` 而不是 `$space-2`：胶囊为容纳加厚的选中内衬长到 124rpx，带高多了 12rpx，间距得跟着抬。
+  用 `$space-3` 而不是 `$space-2`、胶囊为选中内衬一路长到 136rpx（112→124→136），带高跟着抬到 152rpx ——
+  实测发布 pill 底边离胶囊顶边 12.9px = `$space-3`，滚到底末卡底边离胶囊顶边 148.8px，浮层不压内容。
+- 切 tab 回本页时列表滚动归零：`useTabScrollReset(() => planListRef.value?.scrollToTop())`。
+  这一条只认「真的换了一个 tab」（`stores/tabbar.ts` 的 `switchSeq`），**从详情页返回不归零** ——
+  §7.3 的「回来接着看」是不变量。口径与实测见 `../mine/README.md` §2.1 与 `PlanList/README.md`。
 - 给组件标签加 `class="home__list"`（宿主节点 `flex: 1` + flex 列）：小程序里自定义组件是一个真实节点，
   `PlanList` 内部 `.plan-list { flex: 1 }` 只相对宿主节点生效；宿主节点不接高度，列表就会塌成 0。
   同一口径见 `CommentItem` 的 `.comment-item__avatar`。若运行时组件是虚节点，这几条落在不存在的节点上，无副作用。

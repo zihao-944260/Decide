@@ -47,6 +47,7 @@ export {
   type PageRefreshController,
   type UsePageRefreshOptions,
 } from '@/composables/usePageRefresh'
+export { useTabScrollReset } from '@/composables/useTabScrollReset'
 export { buildShareMessage, useShare, type AppShareMessage, type ShareConfig } from '@/composables/useShare'
 export { showToastMsg, useToast, type ToastIcon, type ToastOptions } from '@/composables/useToast'
 export { useModal, type ConfirmOptions } from '@/composables/useModal'

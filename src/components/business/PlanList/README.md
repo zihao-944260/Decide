@@ -31,10 +31,21 @@
 ### defineExpose（给 T3.5 / T5.5 编排用，Ref 自动解包）
 
 `list` `loading` `refreshing` `hasMore` `loaded` `error`
-`reload(options?)` `refresh()` `loadMore()` `appendItem(item, position?)` `patchItem(id, patch)` `removeItem(id)` `setList(items)` `reset()`
+`reload(options?)` `refresh()` `loadMore()` `appendItem(item, position?)` `patchItem(id, patch)` `removeItem(id)` `setList(items)` `reset()` `scrollToTop()`
 
 典型用法：`planListRef.value?.patchItem(planId, { commentCount: n + 1 })`、
-新建计划成功回来 `appendItem(summary, 'head')`、切 filter `reload()`。
+新建计划成功回来 `appendItem(summary, 'head')`、切 filter `scrollToTop()` 然后 `reload()`。
+
+### `scrollToTop()` 为什么不是 `scroll-top`
+
+Skyline `scroll-view type="list"` 上 **`scroll-top` 不生效**（模拟器实测：值变了、截图逐像素相同），
+生效的是 `scroll-into-view` —— 所以组件在滚动内容最前面放一个零高度锚点 `.plan-list__anchor`
+（`id = plan-list__top-anchor`），归零就是把这个 id 推给 `scroll-into-view`。
+第二个坑：`scroll-into-view` **只在值变化时起作用**，第二次切 tab 再赋同一个字符串不会有动作，
+所以实现是先清空、`nextTick` 后再指回锚点。页面不要自己去摸 `scroll-top`，也不要做任何测量
+（list 容器内视口外节点取矩形会永久挂起，兼容清单 §2.3）。
+谁调它：`useTabScrollReset`（切 tab，从详情页返回不算）与我的页的 `watch(activeFilter)`（切筛选）——
+归零时机与理由见 `src/pages/mine/README.md` §2.1。
 
 ## 三态（§11.2）
 

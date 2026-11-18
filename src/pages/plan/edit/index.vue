@@ -881,9 +881,13 @@ const toolbarDisabled = computed(() => submitting.value || !ready.value)
 
     <!-- 状态行 + 发布栏：fixed 置底栈（#79），tail 占位高度与之对账 -->
     <view v-if="ready" class="plan-edit__bottom">
+      <!-- 状态行：底栏透明之后，靠灰底挡住内容才可读这条路没了 —— 它改成一颗胶囊，
+           与首页发布 pill、底部导航胶囊同一语言（浮层控件不透明，带子本身不画背景） -->
       <view class="plan-edit__status">
-        <text class="plan-edit__status-hint">{{ draftSavedAt > 0 ? '草稿已自动保存' : '内容改动会自动存到本机' }}</text>
-        <text class="plan-edit__status-count">{{ charCount }} 字</text>
+        <view class="plan-edit__status-pill">
+          <text class="plan-edit__status-hint">{{ draftSavedAt > 0 ? '草稿已自动保存' : '内容改动会自动存到本机' }}</text>
+          <text class="plan-edit__status-count">{{ charCount }} 字</text>
+        </view>
       </view>
 
       <!-- 发布按钮置底（用户裁定 2026-11-13）：导航栏只留居中标题 -->
@@ -1021,38 +1025,54 @@ const toolbarDisabled = computed(() => submitting.value || !ready.value)
   padding-bottom: $space-2;
 }
 
-// 尾部占位 = fixed 底栏真实高度（状态行 $space-1*2 + 文本行高；发布栏 $space-2*3 + 按钮高 + 安全区），
-// 再加 $space-3 余量兜住细线与取整误差，滚到底时最后一张卡不被盖住（#79）
+// 尾部占位 = fixed 底栏真实高度，逐项对上：
+//   状态行 = 行内距 $space-1*2 + 胶囊自身内距 $space-1*2 + 文本行高 $font-xs*$line-normal
+//   发布栏 = $space-2*3 + 按钮高 + 安全区
+// 再加 $space-3 余量兜住取整误差，滚到底时最后一张卡不被盖住（#79）。
+// 底栏透明之后这一条更要留着：以前内容滚进不透明底栏是「看不见」，现在是「压在按钮底下」，
+// 让位只能靠占位，不能靠背景遮。
 .plan-edit__tail {
   width: 100%;
-  height: calc(#{$space-1 * 2 + $font-xs * $line-normal + $space-2 * 3 + $button-height-lg + $space-3} + env(safe-area-inset-bottom));
+  height: calc(#{$space-1 * 4 + $font-xs * $line-normal + $space-2 * 3 + $button-height-lg + $space-3} + env(safe-area-inset-bottom));
 }
 
-// 状态行 + 发布栏的 fixed 置底栈（#79）：不占文档流，尾部占位与它对账
+// 状态行 + 发布栏的 fixed 置底栈（#79）：不占文档流，尾部占位与它对账。
+// 2026-11-18 用户口径：与底部导航同款 —— 底栏自己不画背景，内容从按钮四周透出来。
+// 于是这一层只剩「定位 + 让位」，看得见的只有那颗主色按钮。
 .plan-edit__bottom {
   position: fixed;
   right: 0;
   bottom: 0;
   left: 0;
   z-index: $z-navbar;
-  background-color: $color-bg-page;
 }
 
+// 状态行：整行只负责居中，不画背景；可读性由那颗胶囊自己负责（白底 + 近影，与首页 pill 同款）
 .plan-edit__status {
-  @include flex-between;
   width: 100%;
   padding: $space-1 $space-3;
-  background-color: $color-bg-page;
+  @include flex-center;
+}
+
+.plan-edit__status-pill {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  max-width: 100%;
+  padding: $space-1 $space-3;
+  background-color: $color-bg-card;
+  border-radius: $radius-round;
+  box-shadow: $shadow-popup;
 }
 
 .plan-edit__status-hint {
-  flex: 1;
   min-width: 0;
   font-size: $font-xs;
   color: $color-text-3;
 }
 
 .plan-edit__status-count {
+  margin-left: $space-2;
   font-size: $font-xs;
   color: $color-text-3;
 }
@@ -1113,13 +1133,13 @@ const toolbarDisabled = computed(() => submitting.value || !ready.value)
   font-weight: 600;
 }
 
-// 置底发布栏：安全区 + 顶部细线与内容分隔
+// 置底发布栏：只剩安全区与内距。背景与顶部细线一起去掉（2026-11-18 用户口径，与底部导航同款）——
+// 底栏透明之后，那条细线就成了浮在内容上的一道孤线，不再分隔任何东西。
+// 按钮保持主色实心：它是这一层唯一的前景，透明的是「栏」，不是「按钮」。
 .plan-edit__footer {
   width: 100%;
   padding: $space-2 $space-3;
   @include safe-area-bottom($space-2);
-  background-color: $color-bg-card;
-  @include hairline-top;
 }
 
 .plan-edit__footer-text {

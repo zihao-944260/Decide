@@ -3,7 +3,8 @@
  * 首页（技术方案 §8.8 / WBS T3.5）—— 只做编排，不做实现。
  *
  * 分工边界：骨架/空态/错误重试三态、下拉刷新、触底加载更多全部在 PlanList 内部（§4.7 已验收口径），
- * 页面一行都不重复写；倒计时心跳与 onShow/onHide 归 usePageRefresh（§7.3），页面不挂任何定时器。
+ * 页面一行都不重复写；倒计时心跳与 onShow/onHide 归 usePageRefresh（§7.3），切 tab 回来把列表归零
+ * 归 useTabScrollReset —— 页面自己一行 onShow/onHide 都不写，也不挂任何定时器。
  */
 import { nextTick, ref } from 'vue'
 import BaseNavbar from '@/components/base/BaseNavbar/index.vue'
@@ -11,7 +12,7 @@ import BaseTabBar from '@/components/base/BaseTabBar/index.vue'
 import PlanList from '@/components/business/PlanList/index.vue'
 import type { PlanListScrollEvent } from '@/components/business/PlanList/types'
 import { fetchPlanList } from '@/api/plan'
-import { usePageRefresh, type PageFetcher } from '@/composables'
+import { usePageRefresh, useTabScrollReset, type PageFetcher } from '@/composables'
 import { PlanStatus } from '@/constants/plan'
 import { PAGE_KEYS } from '@/constants/pages'
 import { usePlanStore } from '@/stores/plan'
@@ -116,6 +117,12 @@ usePageRefresh({
     if (!list) throw new Error('planList instance not mounted')
     await list.reload({ force: !first })
   },
+})
+
+// 切 tab 回到本页 → 列表回到顶部（用户 2026-11-18 口径）。从详情页返回那一次不动位置，
+// 区分两种 onShow 的口径在 composable 里，这里只管「归零归谁」。
+useTabScrollReset(() => {
+  planListRef.value?.scrollToTop()
 })
 </script>
 

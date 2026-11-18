@@ -15,6 +15,13 @@ import { tabIndexOf, type TabBarKey } from '@/constants/tabbar'
 export const useTabBarStore = defineStore('tabbar', () => {
   const active = ref<TabBarKey>('home')
   const prev = ref<TabBarKey>('home')
+  /**
+   * 真的换了一项的次数。页面靠它分清两种 onShow：
+   * **切 tab 切过来的**（要把列表滚动归零，用户 2026-11-18 口径）与**从详情页返回的**
+   * （必须保留滚动位置 —— §7.3 不做「onShow 必刷」就是为了这个）。
+   * 点当前项与 setup 期「认领自己」都走不到这里，所以它不会被自己人误加。
+   */
+  const switchSeq = ref(0)
 
   const activeIndex = computed(() => tabIndexOf(active.value))
   const prevIndex = computed(() => tabIndexOf(prev.value))
@@ -30,7 +37,8 @@ export const useTabBarStore = defineStore('tabbar', () => {
     if (key === active.value) return
     prev.value = active.value
     active.value = key
+    switchSeq.value += 1
   }
 
-  return { active, prev, activeIndex, prevIndex, go }
+  return { active, prev, activeIndex, prevIndex, switchSeq, go }
 })

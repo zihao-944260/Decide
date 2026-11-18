@@ -36,123 +36,35 @@ export type Emits = {
 
 没有 props 承载列表/筛选，没有 slot，没有 `defineExpose`。
 
-## 页面接线示例（T5.5 可逐字抄；这一段同时说明 StatCards / FilterTabs 的关系）
+## 页面接线（T5.5 已落地 —— 示例不再维护第二份）
+
+这一节原来是一整页可逐字抄的示例，抄出来的那份同时犯过三个错：把四个组件塞进页面自己的
+`scroll-view type="list"`（`PlanList` 的根节点**自己就是** list 容器 → 嵌套滚动 + 两个滚动流）、
+渲染了后来下线的 `FilterTabs`、以及用 `userStore.refresh()` 取数字（登录路径不重算 stats，拉不回新数字）。
+**唯一权威接线就是页面本身**：[`src/pages/mine/index.vue`](file:///Users/duan/Desktop/Decide/src/pages/mine/index.vue)
+与 `src/pages/mine/README.md`（§1 结构 / §2 筛选 / §3 stats 口径）。本文档只保留组件契约，不再维护第二份页面代码。
+
+组件级三行，其余以页面为准：
 
 ```vue
-<script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
-import FilterTabs from '@/components/business/FilterTabs/index.vue'
-import PlanList from '@/components/business/PlanList/index.vue'
-import StatCards from '@/components/business/StatCards/index.vue'
-import UserHeader from '@/components/business/UserHeader/index.vue'
-import { fetchMyPlans } from '@/api/plan'
-import { invalidatePage, usePageRefresh, type PageFetcher } from '@/composables'
-import type { MyFilter } from '@/constants/plan'
-import { usePlanStore } from '@/stores/plan'
-import { useUserStore } from '@/stores/user'
-import type { PageResult } from '@/types/api'
-import type { PlanSummary, UserInfo } from '@/types/models'
-
-const userStore = useUserStore()
-const planStore = usePlanStore()
-
-/**
- * 我的页唯一的 filter 真相。StatCards 的 :active 与 FilterTabs 的 :active 读同一个 ref，
- * 两个组件都不持有选中态 —— 分成两份就会「卡片高亮 A、列表是 B」。
- */
-const activeFilter = ref<MyFilter>('created')
-const planListRef = ref<InstanceType<typeof PlanList> | null>(null)
-
-/** 数字来自 users 文档的冗余字段，进页面拉一次 userInfo 就够了，别发 user.stats（stores/user.ts 已注释） */
-const stats = computed(() => userStore.stats)
-
-/** fetcher 读 ref，filter 换了就换引用；组件不认识 api */
-const fetcher: PageFetcher<PlanSummary> = (cursor, pageSize) =>
-  fetchMyPlans({ cursor, pageSize, filter: activeFilter.value })
-
-function onStatSelect(filter: MyFilter): void {
-  activeFilter.value = filter // 卡片只把 filter 交回页面，剩下由下面的 watch 统一处理
-}
-
-function onFilterChange(filter: MyFilter): void {
-  activeFilter.value = filter
-}
-
-function onPage(page: PageResult<PlanSummary>, append: boolean): void {
-  planStore.setMyPage(activeFilter.value, page, append)
-}
-
-/** 切 filter：seed 命中该桶就不发请求（§8.7「切回不重新请求」），下拉刷新与 invalidate 走 force */
-watch(activeFilter, async () => {
-  await nextTick()
-  void planListRef.value?.reload()
-})
-
-/** 保存资料成功：stats 已在 store 里跟着 userInfo 同步过，页面只需要知道「资料变过」 */
-function onProfileUpdated(_info: UserInfo): void {
-  invalidatePage('mine')
-}
-
-/** refreshing 传给 StatCards 的 loading：进页面重拉期间画占位条，不显示 0 */
-const { refreshing } = usePageRefresh({
-  key: 'mine',
-  onRefresh: async ({ first }) => {
-    await nextTick()
-    if (userStore.isLoggedIn) await userStore.refresh()
-    const list = planListRef.value
-    if (!list) throw new Error('planList instance not mounted')
-    await list.reload({ force: !first })
-  },
-})
-</script>
-
-<template>
-  <view class="mine">
-    <scroll-view type="list" class="mine__scroll">
-      <!-- 未登录时组件自己出「点击登录」，页面只需接 login -->
-      <UserHeader @login="onLogin" @updated="onProfileUpdated" />
-
-      <!-- 未登录建议整块不渲染：stats 全 0 会被读成「你一条都没发起过」。口径见下面一节 -->
-      <StatCards
-        v-if="userStore.isLoggedIn"
-        :stats="stats"
-        :active="activeFilter"
-        :loading="refreshing"
-        @select="onStatSelect"
-      />
-
-      <FilterTabs :active="activeFilter" @change="onFilterChange" />
-
-      <PlanList
-        ref="planListRef"
-        :fetcher="fetcher"
-        :seed="() => planStore.myPage(activeFilter)"
-        :on-page="onPage"
-        :auto-load="false"
-        @click="onCardClick"
-        @long-press="onLongPress"
-      />
-    </scroll-view>
-  </view>
-</template>
+<UserHeader @login="onLogin" @updated="onProfileUpdated" />
+<StatCards :stats="stats" :active="activeFilter" :loading="!isLoggedIn" :disabled="!isLoggedIn" @select="setActiveFilter" />
+<PlanList ref="planListRef" :fetcher="fetcher" :seed="() => planStore.myPage(activeFilter)" :on-page="onPage" :auto-load="false" />
 ```
 
-（`onLogin` / `onCardClick` / `onLongPress` 是页面自己的活；长按管理归 T5.6。
-这段示例只证明三个组件的契约能对接上，不构成 T5.5 的最终形状。）
+## 为什么 StatCards 是纯受控（本轮裁决，页面别绕过）
 
-## 为什么 StatCards 与 FilterTabs 是纯受控（本轮裁决，页面别绕过）
-
-两个组件都不 import store、不发请求、不持有状态，数字与选中态一律由页面喂：
+不 import store、不发请求、不持有状态，数字与选中态一律由页面喂：
 
 - **状态只有一个来源**。`planStore.myLists[filter]` 才是缓存的主人，`activeFilter` 才是选中态的主人。
-  组件内部各自 `ref(active)` 的话，就会出现「卡片显示 A、tab 高亮 B、列表数据是 C」三份真相；
+  组件内部自己 `ref(active)` 的话，就会出现「卡片显示 A、列表数据是 C」两份真相；
   §4.11 已经因为「一个列表实例服务四个 filter 桶，`loaded` 分不清桶」裁决过一次同类问题。
-- **下一轮页面要接 `planStore`**，组件里藏状态就等于给页面埋一个必须知道的私有约定。
-- 联动因此**必须在页面完成**：`StatCards` 的 `@select` 和 `FilterTabs` 的 `@change` 都写同一个
-  `activeFilter`，两者从它读回来渲染高亮。组件之间零依赖（StatCards 只从 FilterTabs 的 `types.ts`
-  取文案常量，不 import 组件）。
+- **页面要接 `planStore`**，组件里藏状态就等于给页面埋一个必须知道的私有约定。
+- 联动因此**必须在页面完成**：`StatCards` 的 `@select` 写页面那个 `activeFilter`，高亮再从它读回来。
+  2026-11-18 起页面只剩这一个切换控件（`FilterTabs` 下线），所以「两处 prop 必须写同一个 ref」
+  这条外部约束也随之消失 —— 但纯受控这条不变，因为数字仍然不属于组件。
 
-## 未登录时三张卡显示什么（口径）
+## 未登录时四张卡显示什么（口径）
 
 `stats` 在未登录时是 `{ created: 0, joined: 0, ongoing: 0 }`（`stores/user.ts` 的 `EMPTY_STATS`，`logout()` 也会重置回它）。
 **0 在这里是假话** —— 它陈述的是「你一条都没发起过」，而实际情况是「还没登录，没有你的数据」。
@@ -194,15 +106,13 @@ const { refreshing } = usePageRefresh({
    把这个「用公开成员凑出来的私有约定」收掉 —— 否则编辑器线的 `ImageUploader` 将来接微信素材选择时会照抄这套 hack。
    另注：走这条路**绕过了 `useUpload.pick()` 里的格式/体积校验**（`chooseAvatar` 的 detail 没有 size/宽高可校验），
    体积上限只有云存储自己兜。
-3. **前端 `constants/plan.ts` 的 `Limit` 没有昵称长度上限**。唯一权威值在服务端：
-   `cloudfunctions/common/src/constants.ts:59` 的 `ServerLimit.NICKNAME_MAX = 30`，超限 `user.updateProfile` 报 1001。
-   组件没发明这个数字：默认 `nickNameMaxlength = -1`（不限长），超限吃一次云端往返 + `request.ts` 的统一 toast。
-   建议：加 `Limit.NICKNAME_MAX = 30`（与云端同源，改一处要改两处），页面接
-   `:nick-name-maxlength="Limit.NICKNAME_MAX"`，同时组件的 `clampNick()` 会自动生效
-   （微信昵称面板能回填比 input maxlength 更长的串，本地截断必须在提交前做一次）。
-4. **`MY_FILTER_LABELS`（筛选文案表）落在 `FilterTabs/types.ts` 而不是 `constants/plan.ts`**。
-   因为 `StatCards` 的卡片标签必须与 tab 标签逐字一致，只能有一个人写。
-   建议：上收到 `src/constants/plan.ts`（与 `MY_FILTERS` 同域），届时通知我改两处 import。
+3. **前端 `constants/plan.ts` 的 `Limit` 没有昵称长度上限** —— **已收口**：`Limit.NICKNAME_MAX = 30`
+   与云端 `ServerLimit.NICKNAME_MAX`（`cloudfunctions/common/src/constants.ts`）同源，组件默认值就是它，
+   `clampNick()` 因此在提交前生效一次（微信昵称面板能回填比 input maxlength 更长的串）。
+   **代价照旧：改上限要改两处**，这条不是被消除而是被记录。
+4. **`MY_FILTER_LABELS`（筛选文案表）落在 `FilterTabs/types.ts` 而不是 `constants/plan.ts`** ——
+   **已收口**：表在 `src/constants/plan.ts`，`StatCards/types.ts` 从那里 import。
+   2026-11-18 `FilterTabs` 从我的页下线后，这份文案只剩一个消费方，business 组件之间的横向依赖也随之消失。
 
 ## 待真机复核（模拟器通过 ≠ 真机通过，M0）
 

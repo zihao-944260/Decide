@@ -29,7 +29,7 @@ export const MY_FILTERS: MyFilter[] = ['created', 'joined', 'ongoing', 'ended']
 
 /**
  * 四个筛选项的文案 —— **单一来源**。
- * `FilterTabs`（T5.4）的标签和 `StatCards`（T5.3）三张卡的标签必须逐字相同：用户点了「我参与的」卡片、
+ * `StatCards`（T5.3）四张卡的标签和 `FilterTabs`（T5.4）的标签必须逐字相同：用户点了「我参与的」卡片、
  * 下面高亮的却是「我参加过的」，在真机上读起来就是 bug。两处共用这张表，漂移只可能发生在一处改动里。
  * 键集与 `MyFilter` 用 `Record` 绑死 —— 新增 filter 值时这里不补就编译不过。
  */

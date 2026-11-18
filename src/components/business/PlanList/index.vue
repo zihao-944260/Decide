@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import BaseEmpty from '@/components/base/BaseEmpty/index.vue'
 import BaseLoadMore from '@/components/base/BaseLoadMore/index.vue'
 import BaseSkeleton from '@/components/base/BaseSkeleton/index.vue'
@@ -127,6 +127,23 @@ function onScroll(event: PlanListScrollEvent): void {
   emit('scroll', { detail: { scrollTop: event.detail?.scrollTop } })
 }
 
+/** 顶部锚点的 id，模板里那个 view 的 id 必须与它逐字相同 */
+const TOP_ANCHOR = 'plan-list__top-anchor'
+const intoView = ref('')
+
+/**
+ * 把滚动位置归零（切 tab / 切 filter 都要它）。
+ * 走 `scroll-into-view` 而不是 `scroll-top`：前者 Skyline 实测生效、后者不生效（兼容清单 §2.2）。
+ * `scroll-into-view` 只在**值发生变化**时动作，同一个 id 再写一次是不动的 —— 所以先清空再挂回，
+ * 中间隔一帧，连续两次归零才都有效（第一次归零后值仍停在 id 上，不这么做第二次就没了）。
+ */
+function scrollToTop(): void {
+  intoView.value = ''
+  nextTick(() => {
+    intoView.value = TOP_ANCHOR
+  })
+}
+
 onMounted(() => {
   if (props.autoLoad) void reload()
 })
@@ -148,6 +165,7 @@ defineExpose({
   removeItem,
   setList,
   reset,
+  scrollToTop,
 })
 </script>
 
@@ -156,6 +174,7 @@ defineExpose({
     :class="['plan-list', innerTopGap ? 'plan-list--flush-top' : '']"
     type="list"
     :scroll-y="true"
+    :scroll-into-view="intoView"
     :show-scrollbar="false"
     :lower-threshold="lowerThreshold"
     :refresher-enabled="true"
@@ -164,6 +183,9 @@ defineExpose({
     @scroll="onScroll"
     @scrolltolower="onLower"
   >
+    <!-- 滚动归零的靶子：0 高、不吃间距，scroll-into-view 把它对齐到容器顶就是回到顶部 -->
+    <view :id="TOP_ANCHOR" class="plan-list__anchor" />
+
     <!-- 首页（innerTopGap）：顶留白垫在滚动内容里，容器本身不上外边距；我的页走容器 margin-top，不垫 -->
     <view v-if="innerTopGap" class="plan-list__top" />
 
@@ -213,6 +235,11 @@ defineExpose({
 // 首页：容器顶贴导航（不上外边距），顶留白改由滚动内容里的 __top 提供
 .plan-list--flush-top {
   margin-top: 0;
+}
+
+// 滚动归零锚点：必须真的 0 高，否则它自己就成了内容里多出来的一段间距
+.plan-list__anchor {
+  height: 0;
 }
 
 // 内部顶留白（仅 innerTopGap）：与卡间一致的 $card-gap，首卡不被容器顶圆角裁切

@@ -147,8 +147,8 @@ function labelClass(key: TabBarKey): string[] {
 
 // position: relative 是给滑块当定位参照的：滑块的 left/top 与百分比宽度都相对胶囊算。
 // overflow:hidden 在这里只是**兜底**，不是把滑块关进胶囊的手段 —— 真正保证不冲出导航的是几何：
-// $tabbar-pill-inset-* 留出的内衬比「最大横向形变 + 落点过冲」之和还宽（算账见 tokens 注释），
-// 滑块离胶囊沿始终有 6px 以上余量。裁剪只留给以后真把预算调爆的情况，那时它是最后一道视觉底线。
+// $tabbar-pill-inset 留出的内衬比「最大横向形变 + 落点过冲」之和还宽（算账见 tokens 注释），
+// 滑块离胶囊沿始终有 5px 左右余量。裁剪只留给以后真把预算调爆的情况，那时它是最后一道视觉底线。
 // 裁剪随 border-radius 一起做（兼容清单「border-radius + overflow:hidden 裁剪 ✅」）。
 .base-tabbar__capsule {
   position: relative;
@@ -162,7 +162,8 @@ function labelClass(key: TabBarKey): string[] {
   box-shadow: $shadow-tabbar;
 }
 
-// 滑块槽位：绝对定位、等分宽、只靠 translateX 位移；padding 让本体在槽内再收一圈，不贴边
+// 滑块槽位：绝对定位、等分宽、只靠 translateX 位移；padding 让本体在槽内再收一圈，不贴边。
+// 一圈用同一个值（$tabbar-pill-inset），横竖拆成两个值的那天就是「首项左边距和上下不一样」的成因。
 .base-tabbar__slider {
   position: absolute;
   left: 0;
@@ -170,13 +171,14 @@ function labelClass(key: TabBarKey): string[] {
   height: 100%;
   display: flex;
   flex-direction: row;
-  padding: $tabbar-pill-inset-y $tabbar-pill-inset-x;
+  padding: $tabbar-pill-inset;
   transition: transform $duration-tabbar-slide $ease-tabbar-spring;
 }
 
 // 本体只负责「长什么样 + 果冻形变」，位移归槽位，两条 transform 不互相覆盖。
 // 圆角用 $radius-round（= 高的一半，胶囊形）而不是固定档位：外层胶囊也是这个圆角，
-// 内衬 $tabbar-pill-inset-y 恰好是内外两层圆角之差，所以两圈弧线是同心且等距的。
+// 而内衬横竖相等 ⇒ 内外两层圆角之差 = 内衬 = 圆心位移 0 ⇒ 两圈弧线严格同心，
+// 于是「色块离胶囊沿的距离」在四边和两段端点弧上都等于 $tabbar-pill-inset。
 .base-tabbar__jelly {
   flex: 1;
   background-color: $color-fill;

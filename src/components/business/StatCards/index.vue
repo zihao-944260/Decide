@@ -1,13 +1,14 @@
 <script setup lang="ts">
 /**
- * StatCards（T5.3）——「我发起的 / 我参与的 / 进行中」三张数据卡。
+ * StatCards（T5.3）——「我发起的 / 我参与的 / 进行中 / 已截止」四张数据卡。
  *
  * **纯受控**（§11 本轮裁决）：不 import store、不发请求、不持有选中态。
- * 数字全部来自 `props.stats`，高亮全部来自 `props.active`，点击只 `emit('select', filter)`。
+ * 数字全部由 `props.stats` 算出来（每张卡自带 `count`，见 types.ts），
+ * 高亮全部来自 `props.active`，点击只 `emit('select', filter)`。
  * 这样下一轮页面接 `planStore` / `userStore` 时不会出现「组件内部还有一份状态」的打架。
  *
- * 与 FilterTabs 的联动口径（页面必须遵守，否则会出现「卡片高亮 A、列表是 B」）：
- * `active` 传的就是 FilterTabs 的 `active` —— 页面持有的**同一个** `activeFilter`，两个组件都从它读。
+ * 这一排卡同时**就是我的页唯一切换器**（用户 2026-11-18 口径：下面那条 FilterTabs chip 是重复入口，删）。
+ * 所以它必须四张卡对齐四个 MyFilter 取值，一个不多一个不少 —— 少一张就有一桶数据点不到。
  */
 import { computed } from 'vue'
 import { compactCount } from '@/utils/format'
@@ -34,7 +35,7 @@ function readCount(value: number | undefined): string {
 }
 
 const cards = computed<CardView[]>(() =>
-  STAT_CARDS.map((card) => ({ ...card, text: readCount(props.stats[card.key]) })),
+  STAT_CARDS.map((card) => ({ ...card, text: readCount(card.count(props.stats)) })),
 )
 
 function itemClass(card: CardView): string[] {
@@ -88,7 +89,7 @@ function onSelect(card: CardView): void {
   }
 }
 
-// 左右内衬与 FilterTabs 同口径（$space-3），两块的列宽因此天然对齐。
+// 左右内衬 $space-3 与页面其它块同口径，列宽因此与下面的列表对齐
 .stat-cards {
   @include flex-column;
   padding: 0 $space-3;
@@ -101,7 +102,8 @@ function onSelect(card: CardView): void {
   width: 100%;
 }
 
-// 三卡等分；对称外边距代替 gap（同 FilterTabs：结构伪类按不支持处理）。
+// 四卡等分；对称外边距代替 gap（结构伪类按不支持处理）。
+// 按 token 算：390/402pt 屏每列约 83~86px，四字标签（$font-xs）约 47px，放得下且不会留悬空列。
 .stat-cards__item {
   @include flex-column;
   flex: 1;
