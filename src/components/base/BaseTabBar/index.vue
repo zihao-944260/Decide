@@ -58,7 +58,7 @@ const jellySeq = ref(0)
 
 const sliderStyle = computed(() => ({
   width: `${TABBAR_SLOT_WIDTH}%`,
-  transform: `translateX(${sliderIndex.value * 100}%)`,
+  transform: `translateX(${sliderIndex.value * 100}%)`
 }))
 
 /** seq=0 是没动过：不给动画类，避免首帧凭空抖一下 */
@@ -66,7 +66,7 @@ const jellyClass = computed(() => {
   if (jellySeq.value === 0) return ['base-tabbar__jelly']
   return [
     'base-tabbar__jelly',
-    jellySeq.value % 2 === 1 ? 'base-tabbar__jelly--odd' : 'base-tabbar__jelly--even',
+    jellySeq.value % 2 === 1 ? 'base-tabbar__jelly--odd' : 'base-tabbar__jelly--even'
   ]
 })
 

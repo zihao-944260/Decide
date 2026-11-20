@@ -4,29 +4,29 @@
 
 ## Props
 
-| prop | 类型 | 默认 | 说明 |
-| --- | --- | --- | --- |
-| `visible` | `boolean` | 必填 | 受控显隐 |
-| `title` | `string` | `''` | 标题，居中 |
-| `content` | `string` | `''` | 正文；有默认插槽时以插槽为准 |
-| `confirmText` | `string` | `'确定'` | 确认按钮文案 |
-| `cancelText` | `string` | `'取消'` | 取消按钮文案 |
-| `showCancel` | `boolean` | `true` | 是否显示取消按钮 |
-| `danger` | `boolean` | `false` | 确认按钮用危险色 |
-| `maskClosable` | `boolean` | `false` | 点蒙层关闭（确认类弹窗默认关闭，避免误触） |
+| prop           | 类型      | 默认     | 说明                                       |
+| -------------- | --------- | -------- | ------------------------------------------ |
+| `visible`      | `boolean` | 必填     | 受控显隐                                   |
+| `title`        | `string`  | `''`     | 标题，居中                                 |
+| `content`      | `string`  | `''`     | 正文；有默认插槽时以插槽为准               |
+| `confirmText`  | `string`  | `'确定'` | 确认按钮文案                               |
+| `cancelText`   | `string`  | `'取消'` | 取消按钮文案                               |
+| `showCancel`   | `boolean` | `true`   | 是否显示取消按钮                           |
+| `danger`       | `boolean` | `false`  | 确认按钮用危险色                           |
+| `maskClosable` | `boolean` | `false`  | 点蒙层关闭（确认类弹窗默认关闭，避免误触） |
 
 ## Emits
 
-| 事件 | 参数 | 说明 |
-| --- | --- | --- |
-| `update:visible` | `boolean` | v-model（蒙层关闭时也会触发） |
-| `confirm` | — | 点确认；**不自动关闭**，由调用方决定（如异步提交成功后再关） |
-| `cancel` | — | 点取消，组件已同时置 `visible=false` |
+| 事件             | 参数      | 说明                                                         |
+| ---------------- | --------- | ------------------------------------------------------------ |
+| `update:visible` | `boolean` | v-model（蒙层关闭时也会触发）                                |
+| `confirm`        | —         | 点确认；**不自动关闭**，由调用方决定（如异步提交成功后再关） |
+| `cancel`         | —         | 点取消，组件已同时置 `visible=false`                         |
 
 ## Slots
 
-| slot | 说明 |
-| --- | --- |
+| slot    | 说明                                                                 |
+| ------- | -------------------------------------------------------------------- |
 | default | 替换 `content` 的自定义主体（表单、勾选框等），调用方自行包 `<text>` |
 
 ## 示例

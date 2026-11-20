@@ -9,7 +9,7 @@ export const PlanStatus = {
   Draft: 0,
   Ongoing: 1,
   Ended: 2,
-  Removed: 3,
+  Removed: 3
 } as const
 
 /** 列表查询一律带 status in [1,2]（§11.3：软删除 3 不出现在任何列表里） */
@@ -17,7 +17,7 @@ export const LISTABLE_PLAN_STATUS: readonly number[] = [PlanStatus.Ongoing, Plan
 
 export const VoteType = {
   Agree: 1,
-  Disagree: 2,
+  Disagree: 2
 } as const
 
 export type VoteTypeValue = 1 | 2
@@ -25,13 +25,13 @@ export const VOTE_TYPES: readonly number[] = [VoteType.Agree, VoteType.Disagree]
 
 export const CommentStatus = {
   Normal: 0,
-  Removed: 1,
+  Removed: 1
 } as const
 
 export const UserStatus = {
   Normal: 0,
   Muted: 1,
-  Banned: 2,
+  Banned: 2
 } as const
 
 export type MyFilter = 'created' | 'joined' | 'ongoing' | 'ended'
@@ -48,7 +48,7 @@ export const Limit = {
   BLOCK_TEXT_MAX: 2000,
   PAGE_SIZE: 10,
   PAGE_SIZE_MAX: 20,
-  COMMENT_PAGE_SIZE: 20,
+  COMMENT_PAGE_SIZE: 20
 } as const
 
 /** 以下为服务端侧附加上限（前端不感知，故不在 src/constants 里） */
@@ -73,7 +73,7 @@ export const ServerLimit = {
   RATE_LIMIT_COUNT: 5,
   RATE_WINDOW_MS: 10000,
   /** 集合内单页最多取多少条评论（评论专用上限 20） */
-  COMMENT_PAGE_SIZE_MAX: 20,
+  COMMENT_PAGE_SIZE_MAX: 20
 } as const
 
 /** 内容安全场景值（§11.3：1 资料 / 2 评论 / 3 论坛 / 4 社交） */
@@ -81,7 +81,7 @@ export const SecScene = {
   Profile: 1,
   Comment: 2,
   Forum: 3,
-  Social: 4,
+  Social: 4
 } as const
 
 /**
@@ -94,5 +94,5 @@ export const Collection = {
   Votes: 'votes',
   Comments: 'comments',
   Participations: 'participations',
-  Counters: 'counters',
+  Counters: 'counters'
 } as const

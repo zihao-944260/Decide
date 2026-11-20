@@ -33,7 +33,7 @@ import type { ActionSheetItem } from '@/components/base/BaseActionSheet/types'
 import { useActionSheet, useEditor } from '@/composables'
 
 // 状态机只有这一个：块 id 的增删、排序、段落样式改写、草稿，全在 useEditor（§8.1）
-const editor = useEditor({ /* getExtra / openId / onDraftSaved 由页面按 useForm 接 */ })
+const editor = useEditor({/* getExtra / openId / onDraftSaved 由页面按 useForm 接 */})
 const sheet = useActionSheet()
 
 // 这三个是 setup 顶层的 Ref 绑定，模板会自动解包，直接绑即可
@@ -75,7 +75,7 @@ function blockActions(payload: EditorBlockLongPressEvent): ActionSheetItem[] {
     { key: 'up', text: '上移', disabled: payload.index <= 0 },
     { key: 'down', text: '下移', disabled: payload.index >= blocks.value.length - 1 },
     { key: 'duplicate', text: '复制这块' },
-    { key: 'delete', text: '删除这块', danger: true },
+    { key: 'delete', text: '删除这块', danger: true }
   ]
 }
 
@@ -149,24 +149,23 @@ function onSheetCancel(): void {
 不需要 disabled 态时也可以省掉 `<BaseActionSheet>`，改用 `sheet.openNative(['上移','下移','删除'])`
 ——详情页 T3.11 就是走的这条（native 版没有 disabled 语义，块排序要用得上就得换 `open()`）。
 
-
 ## Props（逐字抄自 ./types.ts）
 
-| prop | 类型 | 默认 | 说明 |
-| --- | --- | --- | --- |
-| `blocks` | `Block[]` | 必填 | 页面 `editor.blocks` 原样传入：不排序、不消毒、不改 id |
-| `focusId` | `string?` | `''` | 页面 `editor.focusId`：等值的块进入聚焦视觉态 |
+| prop      | 类型      | 默认 | 说明                                                   |
+| --------- | --------- | ---- | ------------------------------------------------------ |
+| `blocks`  | `Block[]` | 必填 | 页面 `editor.blocks` 原样传入：不排序、不消毒、不改 id |
+| `focusId` | `string?` | `''` | 页面 `editor.focusId`：等值的块进入聚焦视觉态          |
 
 ## Emits（逐字抄自 ./types.ts）
 
-| 事件 | 签名 | 来源与去处 |
-| --- | --- | --- |
-| `focus` | `(id: string)` | text/quote 的 textarea `@focus`、divider 的 `@tap`、image 的卡片点击 → 页面 `editor.setFocus(id)` |
-| `blur` | `(id: string)` | 仅 text/quote（image/divider 契约里没有 blur）。页面**必须带守卫** `if (focusId === id) editor.blur()`。守卫**不在容器里做**：`props.focusId` 要等一次重渲染才更新，永远比 `editor.focusId` 慢一拍；页面直接读 Ref 才是最新值，A→B 切换时才不会把刚设好的 focusId 抹掉 |
-| `input` | `(id: string, text: string)` | text/quote → 页面 `editor.setText(id, text)` |
-| `update` | `(id: string, next: { fileID: string; w: number; h: number })` | image 上传成功 → 页面 `editor.updateImage(id, next)` |
-| `remove` | `(id: string)` | image 自带的删除入口 → 页面 `editor.removeBlock(id)` |
-| `long-press` | `(payload: { id: string; index: number })` | 任意块长按 → 页面弹 ActionSheet。`index` 是**原始 blocks 的下标**，直接喂 `moveBlock` 的边界判断 |
+| 事件         | 签名                                                           | 来源与去处                                                                                                                                                                                                                                                             |
+| ------------ | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `focus`      | `(id: string)`                                                 | text/quote 的 textarea `@focus`、divider 的 `@tap`、image 的卡片点击 → 页面 `editor.setFocus(id)`                                                                                                                                                                      |
+| `blur`       | `(id: string)`                                                 | 仅 text/quote（image/divider 契约里没有 blur）。页面**必须带守卫** `if (focusId === id) editor.blur()`。守卫**不在容器里做**：`props.focusId` 要等一次重渲染才更新，永远比 `editor.focusId` 慢一拍；页面直接读 Ref 才是最新值，A→B 切换时才不会把刚设好的 focusId 抹掉 |
+| `input`      | `(id: string, text: string)`                                   | text/quote → 页面 `editor.setText(id, text)`                                                                                                                                                                                                                           |
+| `update`     | `(id: string, next: { fileID: string; w: number; h: number })` | image 上传成功 → 页面 `editor.updateImage(id, next)`                                                                                                                                                                                                                   |
+| `remove`     | `(id: string)`                                                 | image 自带的删除入口 → 页面 `editor.removeBlock(id)`                                                                                                                                                                                                                   |
+| `long-press` | `(payload: { id: string; index: number })`                     | 任意块长按 → 页面弹 ActionSheet。`index` 是**原始 blocks 的下标**，直接喂 `moveBlock` 的边界判断                                                                                                                                                                       |
 
 Slots：无。`defineExpose`：无（组件无状态，页面要的方法全在 `useEditor` 上）。
 
@@ -294,4 +293,3 @@ Slots：无。`defineExpose`：无（组件无状态，页面要的方法全在 
    `selection-start/end`（实测无高亮）、`placeholder-class`（无条目，占位色交给原生默认）、
    `show-confirm-bar` / `confirm-type`（编辑器没有「完成」语义）。
    采用的 `value / placeholder / maxlength / @input / @focus / @blur` 与已验收的 `CommentInput` 同组口径。
-

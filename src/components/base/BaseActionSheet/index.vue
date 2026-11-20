@@ -4,7 +4,7 @@ import type { ActionSheetItem, Props, Emits } from './types'
 
 withDefaults(defineProps<Props>(), {
   title: '',
-  cancelText: '取消',
+  cancelText: '取消'
 })
 const emit = defineEmits<Emits>()
 
@@ -20,12 +20,7 @@ function onSelect(action: ActionSheetItem, index: number): void {
 </script>
 
 <template>
-  <BasePopup
-    :visible="visible"
-    position="bottom"
-    :round="true"
-    @update:visible="onVisibleChange"
-  >
+  <BasePopup :visible="visible" position="bottom" :round="true" @update:visible="onVisibleChange">
     <view class="base-action-sheet">
       <view v-if="title" class="base-action-sheet__header">
         <text class="base-action-sheet__title">{{ title }}</text>
@@ -44,14 +39,19 @@ function onSelect(action: ActionSheetItem, index: number): void {
             <text
               class="base-action-sheet__item-text"
               :class="{ 'base-action-sheet__item-text--danger': action.danger }"
-            >{{ action.text }}</text>
+              >{{ action.text }}</text
+            >
             <text v-if="action.desc" class="base-action-sheet__item-desc">{{ action.desc }}</text>
           </view>
           <view v-if="index < actions.length - 1" class="base-action-sheet__divider" />
         </view>
       </scroll-view>
       <view class="base-action-sheet__gap" />
-      <view class="base-action-sheet__cancel" hover-class="base-action-sheet__cancel--hover" @tap="onVisibleChange(false)">
+      <view
+        class="base-action-sheet__cancel"
+        hover-class="base-action-sheet__cancel--hover"
+        @tap="onVisibleChange(false)"
+      >
         <text class="base-action-sheet__cancel-text">{{ cancelText }}</text>
       </view>
     </view>

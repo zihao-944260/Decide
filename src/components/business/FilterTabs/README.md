@@ -13,11 +13,11 @@ export interface Props {
 }
 ```
 
-| prop | 类型 | 默认 | 说明 |
-| --- | --- | --- | --- |
-| `active` | `MyFilter` | **必填** | 当前选中的 filter。**唯一真相在页面**，且必须是与 `StatCards` 的 `active` 同一个值 |
-| `filters` | `readonly MyFilter[]` | `MY_FILTERS` | 渲染哪几项、什么顺序。默认四项全给，页面不必覆盖 |
-| `disabled` | `boolean` | `false` | 整条禁点（切 tab 请求在途时防连点）。只拦点击，选中态显示不变 |
+| prop       | 类型                  | 默认         | 说明                                                                               |
+| ---------- | --------------------- | ------------ | ---------------------------------------------------------------------------------- |
+| `active`   | `MyFilter`            | **必填**     | 当前选中的 filter。**唯一真相在页面**，且必须是与 `StatCards` 的 `active` 同一个值 |
+| `filters`  | `readonly MyFilter[]` | `MY_FILTERS` | 渲染哪几项、什么顺序。默认四项全给，页面不必覆盖                                   |
+| `disabled` | `boolean`             | `false`      | 整条禁点（切 tab 请求在途时防连点）。只拦点击，选中态显示不变                      |
 
 ## Emits（逐字抄自 `types.ts`）
 

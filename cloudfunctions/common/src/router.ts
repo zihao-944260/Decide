@@ -25,7 +25,10 @@ export interface ActionContext {
   readonly startedAt: number
 }
 
-export type ActionRun = (payload: Record<string, unknown>, ctx: ActionContext) => Promise<unknown> | unknown
+export type ActionRun = (
+  payload: Record<string, unknown>,
+  ctx: ActionContext
+) => Promise<unknown> | unknown
 
 export interface ActionSpec {
   /** write 会走「5 次/10s」限流（§11.3），read 不限流 */
@@ -35,7 +38,12 @@ export interface ActionSpec {
 
 export type ActionMap = Record<string, ActionSpec>
 
-function result(code: number, message: string, data: unknown, serverTime: number): ApiResult<unknown> {
+function result(
+  code: number,
+  message: string,
+  data: unknown,
+  serverTime: number
+): ApiResult<unknown> {
   return { code, message, data, serverTime }
 }
 
@@ -44,7 +52,8 @@ function result(code: number, message: string, data: unknown, serverTime: number
  * 原始信息只进日志，不外泄 —— message 里可能含集合名、内部 id、微信接口错误串。
  */
 function toFailure(err: unknown): { code: number; message: string; data: unknown } {
-  if (err instanceof BizError) return { code: err.code, message: err.message, data: err.data ?? null }
+  if (err instanceof BizError)
+    return { code: err.code, message: err.message, data: err.data ?? null }
   return { code: ErrorCode.SERVER_ERROR, message: '服务开小差了，请稍后重试', data: null }
 }
 
@@ -53,7 +62,10 @@ function isDatabaseMissing(err: unknown): boolean {
   return /not exist|不存在|collection iis?name/i.test(message) || message.includes('-502005')
 }
 
-export function createRouter(fn: string, actions: ActionMap): (event: unknown) => Promise<ApiResult<unknown>> {
+export function createRouter(
+  fn: string,
+  actions: ActionMap
+): (event: unknown) => Promise<ApiResult<unknown>> {
   // 每个函数入口只做一次：环境动态解析 + 关掉「读不到文档就抛异常」的默认行为
   initCloud()
 
@@ -70,7 +82,9 @@ export function createRouter(fn: string, actions: ActionMap): (event: unknown) =
       action = typeof body.action === 'string' ? body.action : ''
       const raw = body.payload
       const payload: Record<string, unknown> =
-        raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {}
+        raw && typeof raw === 'object' && !Array.isArray(raw)
+          ? (raw as Record<string, unknown>)
+          : {}
 
       if (!action) throw new BizError(ErrorCode.INVALID_PARAM, '缺少接口动作')
       const spec = actions[action]
@@ -92,7 +106,7 @@ export function createRouter(fn: string, actions: ActionMap): (event: unknown) =
           fn,
           action,
           openId: shortOpenId(openId),
-          error: err instanceof Error ? `${err.name}: ${err.message}` : String(err),
+          error: err instanceof Error ? `${err.name}: ${err.message}` : String(err)
         })
       }
     }

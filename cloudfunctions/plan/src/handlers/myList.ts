@@ -11,7 +11,14 @@
  * created/ongoing/ended 的锚点是计划的 createdAt，joined 的锚点是 participations.lastActionAt，
  * 编码格式相同（v1:sort:_id）而语义不同，跨 tab 复用游标只会得到另一页，不会串数据。
  */
-import { MY_FILTERS, inEnum, participationDao, planDao, readPageArgs, type ActionSpec } from 'common'
+import {
+  MY_FILTERS,
+  inEnum,
+  participationDao,
+  planDao,
+  readPageArgs,
+  type ActionSpec
+} from 'common'
 import { assembleJoinedPage, assembleSummaryPage, statusesForFilter } from './helpers'
 
 export const myList: ActionSpec = {
@@ -46,10 +53,10 @@ export const myList: ActionSpec = {
       {
         sort,
         afterId,
-        limit: args.limit,
+        limit: args.limit
       },
-      deadline,
+      deadline
     )
     return assembleSummaryPage(rows, args.cursor, args.size, ctx.openId)
-  },
+  }
 }

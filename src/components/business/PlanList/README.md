@@ -5,22 +5,22 @@
 
 ## 契约
 
-| 类型 | 名称 | 说明 |
-| --- | --- | --- |
-| prop | `fetcher: PageFetcher<PlanSummary>` | 必填。签名 `(cursor, pageSize) => Promise<PageResult<PlanSummary>>` |
-| prop | `pageSize?` | 默认 `Limit.PAGE_SIZE`（10） |
-| prop | `seed?: () => PageResult<PlanSummary> \| null` | 首屏缓存回填，命中不发请求（我的页切 filter） |
-| prop | `onPage?: (page, append) => void` | 每页成功回吐，页面写 store 缓存 |
-| prop | `onError?: (err) => void` | 取数失败透传（toast/埋点），组件自身只渲染重试态 |
-| prop | `getId?: (item) => string` | 主键，默认 `item.planId`；同时用作 `v-for :key` |
-| prop | `autoLoad?: boolean` | 默认 **false**：组件不自己发请求，首屏由页面调 `reload()` |
-| prop | `emptyText?` / `emptyActionText?` | 空态文案 / 空态按钮（留空不显示按钮；默认点按钮 = `reload({force:true})`） |
-| prop | `emptyActionOwned?: boolean` | 默认 **false**。true 时点按钮**只 emit `empty-action`**、组件不再内部 reload —— 动作归页面 |
-| prop | `animated?` | 透传给 PlanCard 的比例条动画开关 |
-| prop | `lowerThreshold?` | 触底预加载距离（px），默认 60 |
-| emit | `click(planId)` / `long-press(planId)` / `expire(planId)` | 原样转发 PlanCard |
-| emit | `empty-action()` | 空态按钮点击，仅在 `emptyActionOwned=true` 时发出（`emptyActionText` 得同时给，否则没有按钮可点） |
-| emit | `scroll(event)` | 转发内部 `scroll-view` 的滚动事件（页面做 FAB 收起等滚动响应） |
+| 类型 | 名称                                                      | 说明                                                                                              |
+| ---- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| prop | `fetcher: PageFetcher<PlanSummary>`                       | 必填。签名 `(cursor, pageSize) => Promise<PageResult<PlanSummary>>`                               |
+| prop | `pageSize?`                                               | 默认 `Limit.PAGE_SIZE`（10）                                                                      |
+| prop | `seed?: () => PageResult<PlanSummary> \| null`            | 首屏缓存回填，命中不发请求（我的页切 filter）                                                     |
+| prop | `onPage?: (page, append) => void`                         | 每页成功回吐，页面写 store 缓存                                                                   |
+| prop | `onError?: (err) => void`                                 | 取数失败透传（toast/埋点），组件自身只渲染重试态                                                  |
+| prop | `getId?: (item) => string`                                | 主键，默认 `item.planId`；同时用作 `v-for :key`                                                   |
+| prop | `autoLoad?: boolean`                                      | 默认 **false**：组件不自己发请求，首屏由页面调 `reload()`                                         |
+| prop | `emptyText?` / `emptyActionText?`                         | 空态文案 / 空态按钮（留空不显示按钮；默认点按钮 = `reload({force:true})`）                        |
+| prop | `emptyActionOwned?: boolean`                              | 默认 **false**。true 时点按钮**只 emit `empty-action`**、组件不再内部 reload —— 动作归页面        |
+| prop | `animated?`                                               | 透传给 PlanCard 的比例条动画开关                                                                  |
+| prop | `lowerThreshold?`                                         | 触底预加载距离（px），默认 60                                                                     |
+| emit | `click(planId)` / `long-press(planId)` / `expire(planId)` | 原样转发 PlanCard                                                                                 |
+| emit | `empty-action()`                                          | 空态按钮点击，仅在 `emptyActionOwned=true` 时发出（`emptyActionText` 得同时给，否则没有按钮可点） |
+| emit | `scroll(event)`                                           | 转发内部 `scroll-view` 的滚动事件（页面做 FAB 收起等滚动响应）                                    |
 
 `emptyActionOwned` 存在的理由：我的页四个空态里 `created` 的按钮是「去发布」（跳编辑页），
 不是一次注定还是空的重试。为什么不靠组件嗅探「页面挂没挂 `@empty-action`」：
@@ -49,14 +49,14 @@ Skyline `scroll-view type="list"` 上 **`scroll-top` 不生效**（模拟器实�
 
 ## 三态（§11.2）
 
-| 条件 | 呈现 |
-| --- | --- |
-| `!loaded && !error` | `BaseSkeleton type="card" :rows="3" :avatar` |
-| `loaded && list 空 && !error` | `BaseEmpty`（可带操作按钮） |
-| `error`（首屏失败） | 骨架屏收起，底部 `BaseLoadMore status="error"` 点击重试 |
-| `loading` 且已有数据 | `BaseLoadMore status="loading"` |
-| `!hasMore` 且有数据 | `BaseLoadMore status="nomore"` |
-| 空闲且还有下一页 | 底部不显示（等 `scrolltolower`） |
+| 条件                          | 呈现                                                    |
+| ----------------------------- | ------------------------------------------------------- |
+| `!loaded && !error`           | `BaseSkeleton type="card" :rows="3" :avatar`            |
+| `loaded && list 空 && !error` | `BaseEmpty`（可带操作按钮）                             |
+| `error`（首屏失败）           | 骨架屏收起，底部 `BaseLoadMore status="error"` 点击重试 |
+| `loading` 且已有数据          | `BaseLoadMore status="loading"`                         |
+| `!hasMore` 且有数据           | `BaseLoadMore status="nomore"`                          |
+| 空闲且还有下一页              | 底部不显示（等 `scrolltolower`）                        |
 
 **骨架独占（用户裁定 2026-11-13）**：reload（含下拉刷新）请求路径先清 `list`/`error`，模板用
 `<template v-else>` 包真列表 + BaseLoadMore ⇒ 骨架屏与真数据永不同屏；刷新期间整屏只有骨架。
@@ -65,12 +65,11 @@ Skyline `scroll-view type="list"` 上 **`scroll-top` 不生效**（模拟器实�
 
 ```ts
 // 首页：fetcher 要包一次，api 的入参是 PageQuery，PageFetcher 要的是 (cursor, pageSize)
-const fetcher: PageFetcher<PlanSummary> = (cursor, pageSize) =>
-  fetchPlanList({ cursor, pageSize })
+const fetcher: PageFetcher<PlanSummary> = (cursor, pageSize) => fetchPlanList({ cursor, pageSize })
 
 const planListRef = ref<InstanceType<typeof PlanList> | null>(null)
 function onPage(page: PageResult<PlanSummary>, append: boolean): void {
-  planStore.setHomePage(page, append)   // 也有的页面用 seed 回填：() => planStore.home
+  planStore.setHomePage(page, append) // 也有的页面用 seed 回填：() => planStore.home
 }
 onLoad(() => planListRef.value?.reload())
 ```

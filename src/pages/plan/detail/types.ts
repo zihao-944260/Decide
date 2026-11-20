@@ -69,7 +69,7 @@ export const EMPTY_DETAIL_VIEW: DetailView = {
   locked: false,
   commentCount: 0,
   closed: true,
-  isAuthor: false,
+  isAuthor: false
 }
 
 /**

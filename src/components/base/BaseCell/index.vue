@@ -9,7 +9,7 @@ withDefaults(defineProps<Props>(), {
   value: '',
   arrow: false,
   icon: '',
-  section: false,
+  section: false
 })
 const emit = defineEmits<Emits>()
 
@@ -23,13 +23,20 @@ function onTap(): void {
 </script>
 
 <template>
-  <view class="base-cell" :class="{ 'base-cell--section': section }" hover-class="base-cell--hover" @tap="onTap">
+  <view
+    class="base-cell"
+    :class="{ 'base-cell--section': section }"
+    hover-class="base-cell--hover"
+    @tap="onTap"
+  >
     <view v-if="hasIconSlot" class="base-cell__icon">
       <slot name="icon" />
     </view>
     <image v-else-if="icon" class="base-cell__icon-img" :src="icon" mode="aspectFit" />
     <view class="base-cell__main">
-      <text :class="section ? 'base-cell__title base-cell__title--section' : 'base-cell__title'">{{ title }}</text>
+      <text :class="section ? 'base-cell__title base-cell__title--section' : 'base-cell__title'">{{
+        title
+      }}</text>
       <text v-if="desc" class="base-cell__desc">{{ desc }}</text>
     </view>
     <text v-if="value" class="base-cell__value">{{ value }}</text>

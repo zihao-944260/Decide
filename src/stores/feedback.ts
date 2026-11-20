@@ -50,7 +50,7 @@ const HIDDEN_DIALOG: DialogState = {
   content: '',
   confirmText: '确定',
   cancelText: '取消',
-  danger: false,
+  danger: false
 }
 
 const HIDDEN_SHEET: SheetState = { visible: false, title: '', actions: [] }
@@ -88,7 +88,7 @@ export const useFeedbackStore = defineStore('feedback', () => {
       content: request.content,
       confirmText: request.confirmText || '确定',
       cancelText: request.cancelText || '取消',
-      danger: Boolean(request.danger),
+      danger: Boolean(request.danger)
     }
     return new Promise<boolean>((resolve) => {
       resolveDialog = resolve
@@ -131,6 +131,6 @@ export const useFeedbackStore = defineStore('feedback', () => {
     closeDialog,
     confirmDialog,
     pickSheet,
-    closeAll,
+    closeAll
   }
 })

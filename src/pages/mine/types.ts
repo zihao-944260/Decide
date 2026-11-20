@@ -18,7 +18,7 @@ export const TITLE_PREVIEW_WIDTH = 12
 export const MANAGE_LABELS = {
   edit: '编辑计划',
   closeEarly: '提前截止',
-  remove: '删除计划',
+  remove: '删除计划'
 } as const
 
 /**
@@ -29,7 +29,7 @@ export const MANAGE_LABELS = {
 export const CONFIRM_LABELS = {
   closeEarly: '确定截止',
   remove: '删除',
-  logout: '退出',
+  logout: '退出'
 } as const
 
 /** 长按菜单的一项：`label` 喂原生 ActionSheet，`run` 是选中后执行的动作 */
@@ -47,7 +47,7 @@ export const EMPTY_TEXTS: Record<MyFilter, string> = {
   created: '还没有发起过计划',
   joined: '还没有参与过表决',
   ongoing: '没有进行中的计划',
-  ended: '还没有已截止的计划',
+  ended: '还没有已截止的计划'
 }
 
 /**
@@ -59,7 +59,7 @@ export const EMPTY_ACTION_TEXTS: Record<MyFilter, string> = {
   created: '去发布第一条',
   joined: '',
   ongoing: '',
-  ended: '',
+  ended: ''
 }
 
 /** 编辑页路由（`src/pages.json` 已注册）。query 参数名固定 `planId`，与详情页同口径 */

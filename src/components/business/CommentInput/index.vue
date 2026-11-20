@@ -2,13 +2,7 @@
 import { showToastMsg } from '@/composables'
 import { ErrorCode } from '@/constants/error-code'
 import { Limit, TextInput } from '@/constants/plan'
-import type {
-  CommentInputExpose,
-  KeyboardPayload,
-  PublishResult,
-  Props,
-  Emits,
-} from './types'
+import type { CommentInputExpose, KeyboardPayload, PublishResult, Props, Emits } from './types'
 import { computed, ref, watch } from 'vue'
 
 /** 组件顶起输入条时，键盘上沿再多留的空隙（px） */
@@ -29,7 +23,7 @@ const props = withDefaults(defineProps<Props>(), {
   adjustPosition: true,
   cursorSpacing: TextInput.CURSOR_SPACING,
   bottomOffset: 0,
-  maxRows: 4,
+  maxRows: 4
 })
 const emit = defineEmits<Emits>()
 
@@ -44,7 +38,7 @@ watch(
   () => props.modelValue,
   (value) => {
     if (value !== draft.value) draft.value = value
-  },
+  }
 )
 
 const busy = computed(() => submitting.value || props.posting)
@@ -53,11 +47,11 @@ const canSend = computed(() => !props.disabled && !busy.value && draft.value.tri
 const nativeAdjust = computed(() => !props.avoidKeyboard && props.adjustPosition)
 const lifted = computed(() => props.avoidKeyboard && keyboardHeight.value > 0)
 const liftOffset = computed(
-  () => props.bottomOffset + (lifted.value ? keyboardHeight.value + KEYBOARD_GAP : 0),
+  () => props.bottomOffset + (lifted.value ? keyboardHeight.value + KEYBOARD_GAP : 0)
 )
 // fixed 吸底 + translateY 抬升（兼容清单 §2.2：fixed 可用、transform 可用；不用 sticky）
 const barStyle = computed<Record<string, string>>(() => ({
-  transform: `translateY(-${liftOffset.value}px)`,
+  transform: `translateY(-${liftOffset.value}px)`
 }))
 // 行数 → 修饰类，max-height 全部由 token 算出来，避免在 JS 里写死尺寸
 const rowsClass = computed(() => {
@@ -106,7 +100,7 @@ function onKeyboardChange(event: unknown): void {
   const detail = readDetail(event)
   const payload: KeyboardPayload = {
     height: Math.max(0, readNumber(detail.height)),
-    duration: readNumber(detail.duration),
+    duration: readNumber(detail.duration)
   }
   keyboardHeight.value = payload.height
   emit('keyboard-height', payload)
@@ -218,7 +212,12 @@ defineExpose(exposed)
         @tap="send"
       >
         <view v-if="busy" class="comment-input__spinner" />
-        <text v-else class="comment-input__send-text" :class="{ 'comment-input__send-text--off': !canSend }">发送</text>
+        <text
+          v-else
+          class="comment-input__send-text"
+          :class="{ 'comment-input__send-text--off': !canSend }"
+          >发送</text
+        >
       </view>
     </view>
   </view>
@@ -338,5 +337,4 @@ defineExpose(exposed)
   border-radius: $radius-round;
   animation: comment-input-spin 800ms linear infinite;
 }
-
 </style>

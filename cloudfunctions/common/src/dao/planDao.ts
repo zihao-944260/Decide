@@ -8,7 +8,15 @@
  */
 import { Collection, LISTABLE_PLAN_STATUS, PlanStatus } from '../constants'
 import { collection, getCommand, idOf, rowOf, rowsOf, totalOf, updatedOf } from '../db'
-import type { Condition, DbLogicCommand, PlanDoc, PlanRow, Transaction, UpdatePayload, VoteCounts } from '../types'
+import type {
+  Condition,
+  DbLogicCommand,
+  PlanDoc,
+  PlanRow,
+  Transaction,
+  UpdatePayload,
+  VoteCounts
+} from '../types'
 
 /**
  * 列表投影字段。`optionCount` 是创建/更新时落库的派生字段（否则列表要读回整个 options 数组）；
@@ -29,7 +37,7 @@ const LIST_FIELDS: Record<string, boolean> = {
   vote: true,
   commentCount: true,
   status: true,
-  createdAt: true,
+  createdAt: true
 }
 
 type WherePart = Condition | DbLogicCommand
@@ -44,7 +52,12 @@ function merge(...parts: readonly WherePart[]): WherePart {
  * 为什么必须带 _id 次键 —— 同一毫秒可以有两条计划（并发创建），
  * 只按 createdAt < c 翻页会在边界处重复或漏数据。
  */
-function cursorClause(field: 'createdAt' | 'seq', sort: number, id: string, dir: 'desc' | 'asc'): DbLogicCommand {
+function cursorClause(
+  field: 'createdAt' | 'seq',
+  sort: number,
+  id: string,
+  dir: 'desc' | 'asc'
+): DbLogicCommand {
   const cmd = getCommand()
   const strict = dir === 'desc' ? cmd.lt(sort) : cmd.gt(sort)
   const tie = dir === 'desc' ? cmd.lt(id) : cmd.gt(id)
@@ -88,7 +101,9 @@ export const planDao = {
     const cmd = getCommand()
     const base: Condition = { status: cmd.in([...LISTABLE_PLAN_STATUS]) }
     const where: WherePart =
-      args.sort === null ? base : merge(base, cursorClause('createdAt', args.sort, args.afterId, 'desc'))
+      args.sort === null
+        ? base
+        : merge(base, cursorClause('createdAt', args.sort, args.afterId, 'desc'))
     const raw = await collection(Collection.Plans)
       .where(where)
       .field(LIST_FIELDS)
@@ -108,7 +123,7 @@ export const planDao = {
     openId: string,
     statuses: readonly number[],
     args: PageQueryArgs,
-    deadline?: { mode: 'active' | 'expired'; now: number },
+    deadline?: { mode: 'active' | 'expired'; now: number }
   ): Promise<PlanRow[]> {
     const cmd = getCommand()
     // expired = status=2 ∪ (status=1 且 deadline>0 且已过)，跨字段 OR 必须顶到 where 顶层
@@ -116,7 +131,10 @@ export const planDao = {
       deadline && deadline.mode === 'expired'
         ? cmd.or(
             { status: PlanStatus.Ended } as Condition,
-            { status: PlanStatus.Ongoing, deadline: cmd.and(cmd.gt(0), cmd.lte(deadline.now)) } as Condition,
+            {
+              status: PlanStatus.Ongoing,
+              deadline: cmd.and(cmd.gt(0), cmd.lte(deadline.now))
+            } as Condition
           )
         : ({ status: cmd.in([...statuses]) } as Condition)
     const parts: WherePart[] = [{ openId } as Condition, statusPart]
@@ -125,7 +143,9 @@ export const planDao = {
     }
     const base = merge(...parts)
     const where: WherePart =
-      args.sort === null ? base : merge(base, cursorClause('createdAt', args.sort, args.afterId, 'desc'))
+      args.sort === null
+        ? base
+        : merge(base, cursorClause('createdAt', args.sort, args.afterId, 'desc'))
     const raw = await collection(Collection.Plans)
       .where(where)
       .field(LIST_FIELDS)
@@ -212,7 +232,9 @@ export const planDao = {
    */
   async incVote(planId: string, key: 'agree' | 'disagree', delta: number): Promise<number> {
     const cmd = getCommand()
-    const raw = await collection(Collection.Plans).doc(planId).update({ data: { [`vote.${key}`]: cmd.inc(delta) } })
+    const raw = await collection(Collection.Plans)
+      .doc(planId)
+      .update({ data: { [`vote.${key}`]: cmd.inc(delta) } })
     return updatedOf(raw)
   },
 
@@ -239,9 +261,17 @@ export const planDao = {
     return rowOf<PlanDoc>(raw)
   },
 
-  async txIncVote(tx: Transaction, planId: string, key: 'agree' | 'disagree', delta: number): Promise<void> {
+  async txIncVote(
+    tx: Transaction,
+    planId: string,
+    key: 'agree' | 'disagree',
+    delta: number
+  ): Promise<void> {
     const cmd = getCommand()
-    await tx.collection(Collection.Plans).doc(planId).update({ data: { [`vote.${key}`]: cmd.inc(delta) } })
+    await tx
+      .collection(Collection.Plans)
+      .doc(planId)
+      .update({ data: { [`vote.${key}`]: cmd.inc(delta) } })
   },
 
   /**
@@ -249,14 +279,24 @@ export const planDao = {
    * 与 txIncVote 同理，刻意不用「读-改-写」，并发投同一选项时后者会丢计数。
    * optionId 必须先由 handler 校验存在于 plan.options（挡住伪造选项与点号路径注入）。
    */
-  async txIncOptionVote(tx: Transaction, planId: string, optionId: string, delta: number): Promise<void> {
+  async txIncOptionVote(
+    tx: Transaction,
+    planId: string,
+    optionId: string,
+    delta: number
+  ): Promise<void> {
     const cmd = getCommand()
-    await tx.collection(Collection.Plans).doc(planId).update({ data: { [`optionVotes.${optionId}`]: cmd.inc(delta) } })
+    await tx
+      .collection(Collection.Plans)
+      .doc(planId)
+      .update({ data: { [`optionVotes.${optionId}`]: cmd.inc(delta) } })
   },
 
   /** 对账修正：只在计数确实漂移时由 scheduler 调用 */
   async setCounts(planId: string, vote: VoteCounts, commentCount: number): Promise<number> {
-    const raw = await collection(Collection.Plans).doc(planId).update({ data: { vote, commentCount } })
+    const raw = await collection(Collection.Plans)
+      .doc(planId)
+      .update({ data: { vote, commentCount } })
     return updatedOf(raw)
-  },
+  }
 }

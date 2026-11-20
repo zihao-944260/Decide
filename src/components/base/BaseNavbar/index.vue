@@ -8,7 +8,7 @@ const props = withDefaults(defineProps<Props>(), {
   backable: true,
   transparent: false,
   fixed: false,
-  guardBack: false,
+  guardBack: false
 })
 const emit = defineEmits<Emits>()
 
@@ -37,7 +37,10 @@ function onBack(): void {
 </script>
 
 <template>
-  <view class="base-navbar" :class="{ 'base-navbar--transparent': transparent, 'base-navbar--fixed': fixed }">
+  <view
+    class="base-navbar"
+    :class="{ 'base-navbar--transparent': transparent, 'base-navbar--fixed': fixed }"
+  >
     <view class="base-navbar__status" :style="statusStyle" />
     <view class="base-navbar__body" :style="bodyStyle">
       <view

@@ -34,7 +34,7 @@ const EMPTY_NAME = '点子商量局用户'
 
 const props = withDefaults(defineProps<Props>(), {
   loginDesc: '登录后即可发起计划、参与表决',
-  nickNameMaxlength: Limit.NICKNAME_MAX,
+  nickNameMaxlength: Limit.NICKNAME_MAX
 })
 const emit = defineEmits<Emits>()
 

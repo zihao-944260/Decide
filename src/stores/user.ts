@@ -1,4 +1,8 @@
-import { fetchStats as fetchStatsApi, login as loginApi, updateProfile as updateProfileApi } from '@/api/user'
+import {
+  fetchStats as fetchStatsApi,
+  login as loginApi,
+  updateProfile as updateProfileApi
+} from '@/api/user'
 import { setUnauthorizedHandler, type RequestOptions } from '@/api/request'
 import { usePlanStore } from '@/stores/plan'
 import type { UserInfo, UserStats } from '@/types/models'
@@ -52,7 +56,7 @@ export const useUserStore = defineStore('user', () => {
   /** 登录（或补全昵称头像），成功后落 storage。options 透传给 api，冷启动静默登录用 `{ silent: true }` */
   async function login(
     profile?: { nickName?: string; avatarUrl?: string },
-    options?: RequestOptions,
+    options?: RequestOptions
   ): Promise<UserInfo> {
     const { userInfo: info } = await loginApi(profile ?? {}, options)
     applyUserInfo(info)
@@ -88,7 +92,10 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  async function updateProfile(profile: { nickName: string; avatarUrl: string }): Promise<UserInfo> {
+  async function updateProfile(profile: {
+    nickName: string
+    avatarUrl: string
+  }): Promise<UserInfo> {
     const { userInfo: info } = await updateProfileApi(profile)
     applyUserInfo(info)
     persist()
@@ -147,6 +154,6 @@ export const useUserStore = defineStore('user', () => {
     refreshStats,
     updateProfile,
     logout,
-    hydrate,
+    hydrate
   }
 })

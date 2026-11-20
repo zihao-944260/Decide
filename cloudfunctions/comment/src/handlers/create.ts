@@ -39,7 +39,7 @@ import {
   userDao,
   type ActionSpec,
   type CommentDoc,
-  type UserInfo,
+  type UserInfo
 } from 'common'
 
 /** 同一评论最多尝试取 seq 的次数：再多会把 3s 预算吃光 */
@@ -72,7 +72,8 @@ export const create: ActionSpec = {
 
     // 两个读互不依赖，并行掉一次往返（3s 超时下每次往返都要抠）
     const [plan, user] = await Promise.all([planDao.getById(planId), userDao.getByOpenId(openId)])
-    if (!plan || plan.status === PlanStatus.Removed) throw new BizError(ErrorCode.NOT_FOUND, '计划不存在或已删除')
+    if (!plan || plan.status === PlanStatus.Removed)
+      throw new BizError(ErrorCode.NOT_FOUND, '计划不存在或已删除')
     if (!isOpenForAction(plan.status, plan.deadline ?? 0, now)) {
       throw new BizError(ErrorCode.PLAN_CLOSED, '该计划已截止，无法评论')
     }
@@ -83,12 +84,19 @@ export const create: ActionSpec = {
     await checkText(openId, content, SecScene.Comment, startedAt)
 
     const seq = await acquireSeq(planId)
-    const doc: CommentDoc = { planId, openId, content, seq, status: CommentStatus.Normal, createdAt: now }
+    const doc: CommentDoc = {
+      planId,
+      openId,
+      content,
+      seq,
+      status: CommentStatus.Normal,
+      createdAt: now
+    }
     const commentId = await commentDao.insert(doc)
     await planDao.incCommentCount(planId, 1)
     await participationDao.upsert(openId, planId, 'comment', now)
 
     const author: UserInfo = user ? toUserInfo(user) : fallbackAuthor(openId)
     return { comment: toCommentItem({ ...doc, _id: commentId }, author) }
-  },
+  }
 }

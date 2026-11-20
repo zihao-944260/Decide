@@ -4,15 +4,15 @@
 
 ## 契约
 
-| 类型 | 名称 | 说明 |
-| --- | --- | --- |
-| prop | `summary: PlanSummary` | 列表契约单条数据（必填） |
-| prop | `status?: number` | 外层已知的 PlanStatus，覆盖 `summary.status`；只用于置灰，组件不判真实状态 |
-| prop | `animated?: boolean` | 默认 true，比例条宽度过渡开关（整屏降级用） |
-| emit | `click(planId)` | 点击进详情 |
-| emit | `long-press(planId)` | 长按，菜单由页面挂 |
-| emit | `expire(planId)` | 倒计时归零沿（挂载时已截止不触发） |
-| slot | `footer` | 覆盖底部统计行（默认「赞同 N / 反对 N / 评论 N」）；`optionsEnabled`、`optionCount` 想上卡片就走这里 |
+| 类型 | 名称                   | 说明                                                                                                 |
+| ---- | ---------------------- | ---------------------------------------------------------------------------------------------------- |
+| prop | `summary: PlanSummary` | 列表契约单条数据（必填）                                                                             |
+| prop | `status?: number`      | 外层已知的 PlanStatus，覆盖 `summary.status`；只用于置灰，组件不判真实状态                           |
+| prop | `animated?: boolean`   | 默认 true，比例条宽度过渡开关（整屏降级用）                                                          |
+| emit | `click(planId)`        | 点击进详情                                                                                           |
+| emit | `long-press(planId)`   | 长按，菜单由页面挂                                                                                   |
+| emit | `expire(planId)`       | 倒计时归零沿（挂载时已截止不触发）                                                                   |
+| slot | `footer`               | 覆盖底部统计行（默认「赞同 N / 反对 N / 评论 N」）；`optionsEnabled`、`optionCount` 想上卡片就走这里 |
 
 ## 与 §8.5 mock 的差异（均为已裁决项）
 
@@ -22,7 +22,7 @@
 ## 状态同步（§10 的实现点）
 
 ```ts
-const votes  = computed(() => planStore.voteCounts[planId] ?? props.summary.votes)
+const votes = computed(() => planStore.voteCounts[planId] ?? props.summary.votes)
 const myVote = computed(() => planStore.myVotes[planId])
 ```
 

@@ -19,7 +19,7 @@ import {
   toUserInfo,
   userDao,
   voteDao,
-  type ActionSpec,
+  type ActionSpec
 } from 'common'
 import { getLivePlan, readPlanId } from './writeShared'
 
@@ -35,12 +35,19 @@ export const detail: ActionSpec = {
     const now = Date.now()
     const [author, mine] = await Promise.all([
       userDao.getByOpenId(doc.openId),
-      voteDao.myVote(planId, ctx.openId),
+      voteDao.myVote(planId, ctx.openId)
     ])
     // myVote：简单票 1|2 原样，选项票（type=0）/ 未投 → 0；myOption：选项票的 optionId，否则 ''（#60/#61）
-    const myVote = mine && (mine.type === VoteType.Agree || mine.type === VoteType.Disagree) ? mine.type : 0
+    const myVote =
+      mine && (mine.type === VoteType.Agree || mine.type === VoteType.Disagree) ? mine.type : 0
     const myOption = mine?.optionId ?? ''
     // 作者档案缺失（历史脏数据 / 未登录过的老作者）给占位身份，详情不能因此整页打不开
-    return toPlanDetail(doc, author ? toUserInfo(author) : fallbackAuthor(doc.openId), myVote, now, myOption)
-  },
+    return toPlanDetail(
+      doc,
+      author ? toUserInfo(author) : fallbackAuthor(doc.openId),
+      myVote,
+      now,
+      myOption
+    )
+  }
 }

@@ -7,7 +7,7 @@ const props = withDefaults(defineProps<Props>(), {
   tone: 'text',
   size: 'sm',
   showDot: true,
-  endedText: '',
+  endedText: ''
 })
 const emit = defineEmits<Emits>()
 
@@ -22,7 +22,7 @@ const countdown = useCountdown(() => props.deadline, {
   total: props.total,
   onExpire: () => {
     if (mounted) emit('expire', props.deadline)
-  },
+  }
 })
 onMounted(() => {
   mounted = true

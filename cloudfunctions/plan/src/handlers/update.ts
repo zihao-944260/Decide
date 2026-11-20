@@ -16,7 +16,7 @@ import {
   requireWritableUser,
   reviewImages,
   reviewText,
-  validatePlanWrite,
+  validatePlanWrite
 } from './writeShared'
 
 export const update: ActionSpec = {
@@ -44,5 +44,5 @@ export const update: ActionSpec = {
     // status 也不在这里翻：已截止的计划上面已经拦掉，1 → 2 的翻转只交给 scheduler（§6.7），
     // 读路径的「惰性截止」由 mapper.effectiveStatus 折算，不需要写路径配合。
     return { ok: true }
-  },
+  }
 }

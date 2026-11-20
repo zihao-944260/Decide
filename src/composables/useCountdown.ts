@@ -5,7 +5,7 @@ import {
   countdownPrecision,
   formatCountdown,
   remainingPercent,
-  type CountdownLevel,
+  type CountdownLevel
 } from '@/utils/format'
 import { logger } from '@/utils/logger'
 import { subscribeTick, type TickPrecision } from '@/utils/ticker'
@@ -39,7 +39,7 @@ export interface Countdown {
 
 export function useCountdown(
   deadline: MaybeRefOrGetter<number>,
-  options: UseCountdownOptions = {},
+  options: UseCountdownOptions = {}
 ): Countdown {
   const text = ref('')
   const level = ref<CountdownLevel>('ended')
@@ -105,7 +105,7 @@ export function useCountdown(
   // deadline 传 ref 时（编辑页改截止时间）跟着重算；传普通函数则无依赖可追踪，靠 refresh()
   watch(
     () => toValue(deadline),
-    () => sync(),
+    () => sync()
   )
 
   sync()

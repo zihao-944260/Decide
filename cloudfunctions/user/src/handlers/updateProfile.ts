@@ -16,7 +16,7 @@ import {
   isImageFileID,
   toUserInfo,
   userDao,
-  type ActionSpec,
+  type ActionSpec
 } from 'common'
 
 export const updateProfile: ActionSpec = {
@@ -41,5 +41,5 @@ export const updateProfile: ActionSpec = {
     await userDao.update(openId, { nickName, avatarUrl, updatedAt: now })
     const userInfo = toUserInfo({ ...existing, nickName, avatarUrl, updatedAt: now })
     return { userInfo }
-  },
+  }
 }

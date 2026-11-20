@@ -19,7 +19,7 @@ function emptyMyLists(): Record<MyFilter, PageBucket> {
     created: emptyBucket(),
     joined: emptyBucket(),
     ongoing: emptyBucket(),
-    ended: emptyBucket(),
+    ended: emptyBucket()
   }
 }
 
@@ -111,7 +111,7 @@ export const usePlanStore = defineStore('plan', () => {
     votes: VoteCounts,
     myVote: VoteTypeValue | null,
     options?: PlanOption[],
-    myOption?: string,
+    myOption?: string
   ): void {
     voteCounts.value[planId] = votes
     if (myVote === null) delete myVotes.value[planId]
@@ -182,6 +182,6 @@ export const usePlanStore = defineStore('plan', () => {
     applyVoteResult,
     patchPlan,
     removePlan,
-    clear,
+    clear
   }
 })

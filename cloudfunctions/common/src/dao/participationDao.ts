@@ -48,12 +48,17 @@ function warnMissingCollection(scene: string, openId: string, err: unknown): voi
   log.warn('participations 集合尚未在控制台建表，读路径暂返回空结果', {
     scene,
     openId,
-    error: err instanceof Error ? err.message : String(err),
+    error: err instanceof Error ? err.message : String(err)
   })
 }
 
 export const participationDao = {
-  async upsert(openId: string, planId: string, kind: ParticipationKind, now: number): Promise<void> {
+  async upsert(
+    openId: string,
+    planId: string,
+    kind: ParticipationKind,
+    now: number
+  ): Promise<void> {
     try {
       const ref = collection(Collection.Participations).doc(participationId(openId, planId))
       const existing = rowOf<ParticipationDoc>(await ref.get())
@@ -62,14 +67,14 @@ export const participationDao = {
         openId,
         planId,
         lastActionAt: now,
-        types: previous.includes(kind) ? previous : [...previous, kind],
+        types: previous.includes(kind) ? previous : [...previous, kind]
       }
       await ref.set({ data })
     } catch (err) {
       log.warn('participations 冗余写入失败（不影响主链路）', {
         planId,
         kind,
-        error: err instanceof Error ? err.message : String(err),
+        error: err instanceof Error ? err.message : String(err)
       })
     }
   },
@@ -82,7 +87,7 @@ export const participationDao = {
     openId: string,
     lastActionAt: number | null,
     afterId: string,
-    limit: number,
+    limit: number
   ): Promise<ParticipationCursorRow[]> {
     const cmd = getCommand()
     const base: Condition = { openId }
@@ -93,8 +98,8 @@ export const participationDao = {
             base,
             cmd.or(
               { lastActionAt: cmd.lt(lastActionAt) } as Condition,
-              { lastActionAt, _id: cmd.lt(afterId) } as Condition,
-            ),
+              { lastActionAt, _id: cmd.lt(afterId) } as Condition
+            )
           )
     try {
       const raw = await collection(Collection.Participations)
@@ -115,12 +120,14 @@ export const participationDao = {
   /** user.stats 的 joined：一条记录 = 一个参与过的计划（_id 天然去重），所以记录数就是参与数 */
   async countByUser(openId: string): Promise<number> {
     try {
-      const raw = await collection(Collection.Participations).where({ openId } as Condition).count()
+      const raw = await collection(Collection.Participations)
+        .where({ openId } as Condition)
+        .count()
       return totalOf(raw)
     } catch (err) {
       if (!isCollectionMissing(err)) throw err
       warnMissingCollection('「我参与的」统计', openId, err)
       return 0
     }
-  },
+  }
 }

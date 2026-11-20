@@ -49,7 +49,7 @@ import {
   useTabScrollReset,
   useToast,
   type PageFetcher,
-  type PageRefreshContext,
+  type PageRefreshContext
 } from '@/composables'
 import { PlanStatus, type MyFilter } from '@/constants/plan'
 import { PAGE_KEYS } from '@/constants/pages'
@@ -68,7 +68,7 @@ import {
   EMPTY_TEXTS,
   MANAGE_LABELS,
   TITLE_PREVIEW_WIDTH,
-  type ManageAction,
+  type ManageAction
 } from './types'
 
 const userStore = useUserStore()
@@ -220,7 +220,7 @@ async function onLogout(): Promise<void> {
   const confirmed = await modal.confirm({
     title: '退出登录',
     content: '退出会清空本机的登录状态与列表缓存，确定退出？',
-    confirmText: CONFIRM_LABELS.logout,
+    confirmText: CONFIRM_LABELS.logout
   })
   if (!confirmed) return
   userStore.logout()
@@ -346,7 +346,7 @@ async function closeEarly(planId: string): Promise<void> {
   const confirmed = await modal.confirm({
     title: MANAGE_LABELS.closeEarly,
     content: '确定后该计划将在约 1 分钟后截止，不再接收投票与评论，且无法恢复。',
-    confirmText: CONFIRM_LABELS.closeEarly,
+    confirmText: CONFIRM_LABELS.closeEarly
   })
   if (!confirmed || !beginMutation()) return
 
@@ -366,7 +366,7 @@ async function closeEarly(planId: string): Promise<void> {
         images: current.images,
         deadline,
         optionsEnabled: current.optionsEnabled,
-        options: current.options,
+        options: current.options
       })
       // 只写 deadline，**不写 status**：云端 update 刻意不翻状态（1→2 只归 scheduler，§6.7），
       // 卡片上的「已截止」由 60s 后 CountDown 的归零沿 → @expire → onExpire 落地，不抢跑云端裁决。
@@ -401,7 +401,7 @@ async function removeFlow(summary: PlanSummary): Promise<void> {
   const confirmed = await modal.confirm({
     title: MANAGE_LABELS.remove,
     content: `「${truncate(summary.title, TITLE_PREVIEW_WIDTH)}」删除后不可恢复，已投的票与评论都会一并失效。确定删除？`,
-    confirmText: CONFIRM_LABELS.remove,
+    confirmText: CONFIRM_LABELS.remove
   })
   if (!confirmed || !beginMutation()) return
 

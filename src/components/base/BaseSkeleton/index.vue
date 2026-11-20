@@ -7,7 +7,7 @@ const props = withDefaults(defineProps<Props>(), {
   avatar: false,
   type: 'card',
   count: 3,
-  animated: true,
+  animated: true
 })
 
 // 骨架只画形状不画内容，占位元素用长度数组驱动 v-for
@@ -24,14 +24,16 @@ const groupCount = computed(() => {
 const groups = computed(() => build(groupCount.value))
 const rowList = computed(() => build(Math.max(1, props.rows)))
 // 头像尺寸随形态变化：卡片行/评论用小头像、详情页用大头像
-const avatarClass = computed(() => `base-skeleton__avatar--${props.type === 'detail' ? 'detail' : 'list'}`)
+const avatarClass = computed(
+  () => `base-skeleton__avatar--${props.type === 'detail' ? 'detail' : 'list'}`
+)
 const barClass = computed(() => ({ 'base-skeleton__bar--animated': props.animated }))
 
 // 首行在没有大标题时不吃上间距，否则卡片 padding 之上会多出一截空白
 function rowMod(index: number): Record<string, boolean> {
   return {
     'base-skeleton__row--short': index === rowList.value.length - 1,
-    'base-skeleton__row--tight': index === 0 && props.type !== 'detail',
+    'base-skeleton__row--tight': index === 0 && props.type !== 'detail'
   }
 }
 </script>
@@ -96,7 +98,10 @@ function rowMod(index: number): Record<string, boolean> {
           />
         </view>
       </view>
-      <view v-if="(type === 'list' || type === 'comment') && group < groups.length" class="base-skeleton__divider" />
+      <view
+        v-if="(type === 'list' || type === 'comment') && group < groups.length"
+        class="base-skeleton__divider"
+      />
     </view>
   </view>
 </template>

@@ -26,13 +26,13 @@ function validateBlock(raw: unknown, index: number): Block {
         level: inEnum(rec.level, `${field}层级`, HEADING_LEVEL),
         align: inEnum(rec.align, `${field}对齐`, TEXT_ALIGN),
         bold: rec.bold === undefined ? undefined : asBoolean(rec.bold, `${field}加粗`),
-        color: rec.color === undefined ? undefined : asString(rec.color, `${field}颜色`, 16),
+        color: rec.color === undefined ? undefined : asString(rec.color, `${field}颜色`, 16)
       }
     case 'quote':
       return {
         id: asString(rec.id, `${field} id`, 64),
         type: 'quote',
-        text: asString(rec.text, `${field}正文`, Limit.BLOCK_TEXT_MAX),
+        text: asString(rec.text, `${field}正文`, Limit.BLOCK_TEXT_MAX)
       }
     case 'image': {
       const fileID = asString(rec.fileID, `${field}图片`, 512)
@@ -45,7 +45,7 @@ function validateBlock(raw: unknown, index: number): Block {
         fileID,
         w: asNumber(rec.w, `${field}宽度`),
         h: asNumber(rec.h, `${field}高度`),
-        caption: rec.caption === undefined ? undefined : asString(rec.caption, `${field}图注`, 60),
+        caption: rec.caption === undefined ? undefined : asString(rec.caption, `${field}图注`, 60)
       }
     }
     case 'divider':
@@ -77,7 +77,7 @@ function validateOptions(raw: unknown, enabled: boolean): PlanOption[] {
       order: rec.order === undefined ? i : asNumber(rec.order, `第 ${i + 1} 个选项顺序`),
       // count 是出参字段，权威计数存在 plan.optionVotes（vote.submit 原子自增）。
       // 写入载荷里前端传来的 count 一律忽略，落库恒 0 占位，避免客户端伪造票数。
-      count: 0,
+      count: 0
     })
   }
   return out
@@ -97,7 +97,12 @@ function asStringAllowEmptyOptionImage(value: unknown): string {
  * - 编辑允许**保持原值不变**（哪怕它已经过期），因为改文案不该把过期计划复活，
  *   也允许改成未来的新时间；只允许「未过期 → 未来」或「已过期 → 未来」的顺延。
  */
-export function resolveDeadline(value: unknown, field: string, now: number, keepValue?: number): number {
+export function resolveDeadline(
+  value: unknown,
+  field: string,
+  now: number,
+  keepValue?: number
+): number {
   const deadline = asNumber(value, field)
   if (deadline === 0) return 0
   if (keepValue !== undefined && deadline === keepValue) return deadline
@@ -113,7 +118,11 @@ export interface NormalizedPlanWrite {
   readonly optionCount: number
 }
 
-export function normalizePlanWrite(raw: unknown, now: number, keepDeadline?: number): NormalizedPlanWrite {
+export function normalizePlanWrite(
+  raw: unknown,
+  now: number,
+  keepDeadline?: number
+): NormalizedPlanWrite {
   const body = asRecord(raw, '计划内容')
   const title = asString(body.title, '标题', Limit.TITLE_MAX)
   if (!title) throw new BizError(ErrorCode.INVALID_PARAM, '标题不能为空')
@@ -124,28 +133,35 @@ export function normalizePlanWrite(raw: unknown, now: number, keepDeadline?: num
 
   // 配图可选（契约 §5.2 / §8.6）：asArray 的 required() 默认拒空数组，空列表直接放行
   const imagesIn = body.images === undefined ? [] : body.images
-  const images = Array.isArray(imagesIn) && imagesIn.length === 0 ? [] : asFileIDList(imagesIn, '计划配图', Limit.IMAGE_MAX, false)
+  const images =
+    Array.isArray(imagesIn) && imagesIn.length === 0
+      ? []
+      : asFileIDList(imagesIn, '计划配图', Limit.IMAGE_MAX, false)
   const optionsEnabled = asBoolean(body.optionsEnabled, '选项开关')
   const options = validateOptions(body.options, optionsEnabled)
   const deadline = resolveDeadline(body.deadline, '截止时间', now, keepDeadline)
 
   return {
     payload: { title, blocks, images, deadline, optionsEnabled, options },
-    optionCount: options.length,
+    optionCount: options.length
   }
 }
 
 /** 计划是否可以被编辑：软删不可复活，已截止只读（§6.1） */
 export function assertPlanEditable(status: number): void {
-  if (status === PlanStatus.Removed) throw new BizError(ErrorCode.NOT_FOUND, '该计划不存在或已被删除')
-  if (status === PlanStatus.Ended) throw new BizError(ErrorCode.PLAN_CLOSED, '计划已截止，不能再编辑')
+  if (status === PlanStatus.Removed)
+    throw new BizError(ErrorCode.NOT_FOUND, '该计划不存在或已被删除')
+  if (status === PlanStatus.Ended)
+    throw new BizError(ErrorCode.PLAN_CLOSED, '计划已截止，不能再编辑')
   if (status === PlanStatus.Draft) return
-  if (status !== PlanStatus.Ongoing) throw new BizError(ErrorCode.INVALID_PARAM, '计划状态异常，无法编辑')
+  if (status !== PlanStatus.Ongoing)
+    throw new BizError(ErrorCode.INVALID_PARAM, '计划状态异常，无法编辑')
 }
 
 /** 计划是否可以被投票 / 评论（§8.3 第 1 步） */
 export function assertPlanActionable(status: number, deadline: number, now: number): void {
-  if (status === PlanStatus.Removed) throw new BizError(ErrorCode.NOT_FOUND, '该计划不存在或已被删除')
+  if (status === PlanStatus.Removed)
+    throw new BizError(ErrorCode.NOT_FOUND, '该计划不存在或已被删除')
   if (status === PlanStatus.Draft) throw new BizError(ErrorCode.PLAN_CLOSED, '计划尚未发布')
   if (status === PlanStatus.Ended || (deadline > 0 && deadline <= now)) {
     throw new BizError(ErrorCode.PLAN_CLOSED, '该计划已截止')

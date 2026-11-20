@@ -18,28 +18,28 @@
 
 ## Props
 
-| prop | 类型 | 默认 | 说明 |
-| --- | --- | --- | --- |
-| `visible` | `boolean` | 必填 | 受控显隐 |
-| `position` | `'top' \| 'bottom' \| 'center' \| 'right'` | `'bottom'` | 弹出方向 |
-| `round` | `boolean` | `true` | 圆角（面板 border-radius） |
-| `closable` | `boolean` | `false` | 右上角关闭按钮（88rpx 点击区） |
-| `duration` | `number` | `300` | 进/退场过渡 ms |
-| `zIndex` | `number` | `1000` | 同 `$z-popup` |
-| `maskClosable` | `boolean` | `true` | 点蒙层关闭 |
+| prop           | 类型                                       | 默认       | 说明                           |
+| -------------- | ------------------------------------------ | ---------- | ------------------------------ |
+| `visible`      | `boolean`                                  | 必填       | 受控显隐                       |
+| `position`     | `'top' \| 'bottom' \| 'center' \| 'right'` | `'bottom'` | 弹出方向                       |
+| `round`        | `boolean`                                  | `true`     | 圆角（面板 border-radius）     |
+| `closable`     | `boolean`                                  | `false`    | 右上角关闭按钮（88rpx 点击区） |
+| `duration`     | `number`                                   | `300`      | 进/退场过渡 ms                 |
+| `zIndex`       | `number`                                   | `1000`     | 同 `$z-popup`                  |
+| `maskClosable` | `boolean`                                  | `true`     | 点蒙层关闭                     |
 
 ## Emits
 
-| 事件 | 参数 | 说明 |
-| --- | --- | --- |
-| `update:visible` | `boolean` | v-model |
-| `opened` / `closed` | — | 进/退场动画结束 |
-| `click-overlay` | — | 蒙层点击（关闭动作之前触发） |
+| 事件                | 参数      | 说明                         |
+| ------------------- | --------- | ---------------------------- |
+| `update:visible`    | `boolean` | v-model                      |
+| `opened` / `closed` | —         | 进/退场动画结束              |
+| `click-overlay`     | —         | 蒙层点击（关闭动作之前触发） |
 
 ## Slots
 
-| slot | 说明 |
-| --- | --- |
+| slot    | 说明                                                               |
+| ------- | ------------------------------------------------------------------ |
 | default | 弹层内容。bottom/top 自带白底与底部安全区；center 为 600rpx 宽白卡 |
 
 ## 示例

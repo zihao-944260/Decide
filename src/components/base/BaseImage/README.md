@@ -4,14 +4,14 @@
 
 ## Props
 
-| prop | 类型 | 默认 | 说明 |
-| --- | --- | --- | --- |
-| `src` | `string` | `''` | fileID / https / 本地路径；空串只显示占位 |
-| `mode` | `'scaleToFill' \| 'aspectFit' \| 'aspectFill' \| 'widthFix' \| 'heightFix'` | `'aspectFill'` | 同原生 image |
-| `ratio` | `number` | `0` | 宽/高比，经 CSS `aspect-ratio` 生效（**未在 T0 实测，真机需复核**；0 表示不设） |
-| `lazy` | `boolean` | `true` | 原生 lazy-load |
-| `radius` | `'none' \| 'sm' \| 'md' \| 'lg' \| 'round'` | `'none'` | 圆角，overflow hidden 裁剪 |
-| `preview` | `boolean` | `false` | 点击调 `uni.previewImage`（fileID 预览请先换临时 URL） |
+| prop      | 类型                                                                        | 默认           | 说明                                                                            |
+| --------- | --------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------- |
+| `src`     | `string`                                                                    | `''`           | fileID / https / 本地路径；空串只显示占位                                       |
+| `mode`    | `'scaleToFill' \| 'aspectFit' \| 'aspectFill' \| 'widthFix' \| 'heightFix'` | `'aspectFill'` | 同原生 image                                                                    |
+| `ratio`   | `number`                                                                    | `0`            | 宽/高比，经 CSS `aspect-ratio` 生效（**未在 T0 实测，真机需复核**；0 表示不设） |
+| `lazy`    | `boolean`                                                                   | `true`         | 原生 lazy-load                                                                  |
+| `radius`  | `'none' \| 'sm' \| 'md' \| 'lg' \| 'round'`                                 | `'none'`       | 圆角，overflow hidden 裁剪                                                      |
+| `preview` | `boolean`                                                                   | `false`        | 点击调 `uni.previewImage`（fileID 预览请先换临时 URL）                          |
 
 ## Emits
 

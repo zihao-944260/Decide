@@ -27,7 +27,7 @@ function nativeConfirm(options: ConfirmOptions): Promise<boolean> {
         logger.warn('useModal', 'showModal fail', err)
         // 弹不出来就当用户取消：确认类操作宁可不执行，不能默认放行
         resolve(false)
-      },
+      }
     })
   })
 }
@@ -36,8 +36,9 @@ export function useModal() {
   const feedback = useFeedbackStore()
   return {
     confirm: nativeConfirm,
-    alert: (content: string, title = '提示') => nativeConfirm({ title, content, cancelText: '知道了' }),
+    alert: (content: string, title = '提示') =>
+      nativeConfirm({ title, content, cancelText: '知道了' }),
     confirmCustom: (request: DialogRequest): Promise<boolean> => feedback.openDialog(request),
-    closeCustom: () => feedback.closeDialog(),
+    closeCustom: () => feedback.closeDialog()
   }
 }

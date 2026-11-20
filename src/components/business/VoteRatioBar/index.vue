@@ -11,7 +11,7 @@ const props = withDefaults(defineProps<Props>(), {
   size: 'md',
   emptyText: '暂无人表态',
   options: () => [],
-  myOption: '',
+  myOption: ''
 })
 
 /** 云端计数字段可能是 undefined / NaN，这里一次性钳成非负整数，杜绝 NaN% 与负宽度 */
@@ -114,7 +114,7 @@ const optionRows = computed<OptionRow[]>(() => {
       fillStyle: `width: ${percent}%`,
       percentClass: mine
         ? 'vote-ratio-bar__option-percent vote-ratio-bar__option-percent--mine'
-        : 'vote-ratio-bar__option-percent',
+        : 'vote-ratio-bar__option-percent'
     }
   })
 })
@@ -134,21 +134,35 @@ const optionRows = computed<OptionRow[]>(() => {
     </view>
 
     <view v-if="!optionMode" :class="trackClass">
-      <view v-if="!isEmpty" class="vote-ratio-bar__seg--agree" :class="segClass" :style="agreeStyle" />
-      <view v-if="!isEmpty" class="vote-ratio-bar__seg--disagree" :class="segClass" :style="disagreeStyle" />
+      <view
+        v-if="!isEmpty"
+        class="vote-ratio-bar__seg--agree"
+        :class="segClass"
+        :style="agreeStyle"
+      />
+      <view
+        v-if="!isEmpty"
+        class="vote-ratio-bar__seg--disagree"
+        :class="segClass"
+        :style="disagreeStyle"
+      />
     </view>
 
     <view v-if="!optionMode && !isEmpty" class="vote-ratio-bar__labels">
       <view class="vote-ratio-bar__group">
         <view v-if="isMyAgree" class="vote-ratio-bar__mark vote-ratio-bar__mark--agree" />
         <text :class="agreeNameClass">赞同</text>
-        <text class="vote-ratio-bar__percent vote-ratio-bar__percent--agree">{{ agreePercent }}%</text>
+        <text class="vote-ratio-bar__percent vote-ratio-bar__percent--agree"
+          >{{ agreePercent }}%</text
+        >
         <text v-if="showCount" class="vote-ratio-bar__count">{{ agreeCountText }}</text>
       </view>
       <view class="vote-ratio-bar__group">
         <view v-if="isMyDisagree" class="vote-ratio-bar__mark vote-ratio-bar__mark--disagree" />
         <text :class="disagreeNameClass">反对</text>
-        <text class="vote-ratio-bar__percent vote-ratio-bar__percent--disagree">{{ disagreePercent }}%</text>
+        <text class="vote-ratio-bar__percent vote-ratio-bar__percent--disagree"
+          >{{ disagreePercent }}%</text
+        >
         <text v-if="showCount" class="vote-ratio-bar__count">{{ disagreeCountText }}</text>
       </view>
     </view>

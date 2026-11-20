@@ -15,10 +15,10 @@ export interface Props {
 }
 ```
 
-| prop | 类型 | 默认 | 说明 |
-| --- | --- | --- | --- |
-| `loginDesc` | `string` | `'登录后即可发起计划、参与表决'` | 未登录态副文案 |
-| `nickNameMaxlength` | `number` | `-1` | **`-1` = 前端不限长**（微信 input 的 -1 语义）。为什么要留这个口子见「缺口 3」 |
+| prop                | 类型     | 默认                             | 说明                                                                           |
+| ------------------- | -------- | -------------------------------- | ------------------------------------------------------------------------------ |
+| `loginDesc`         | `string` | `'登录后即可发起计划、参与表决'` | 未登录态副文案                                                                 |
+| `nickNameMaxlength` | `number` | `-1`                             | **`-1` = 前端不限长**（微信 input 的 -1 语义）。为什么要留这个口子见「缺口 3」 |
 
 ## Emits（逐字抄自 `types.ts`）
 
@@ -29,10 +29,10 @@ export type Emits = {
 }
 ```
 
-| 事件 | 载荷 | 说明 |
-| --- | --- | --- |
-| `login` | 无 | 未登录态点了整行。组件**不自己登录** —— 静默登录链路在 `App.vue`/页面（`userStore.login(profile, { silent: true })`），这里只报意图，避免出现第二条登录入口 |
-| `updated` | `UserInfo`（云端回吐的最新值，store 已同步并落盘） | 保存成功。**失败不会走到这里**，失败文案已由 `api/request.ts` 统一 toast（§7.1），组件不再弹第二条 |
+| 事件      | 载荷                                               | 说明                                                                                                                                                        |
+| --------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `login`   | 无                                                 | 未登录态点了整行。组件**不自己登录** —— 静默登录链路在 `App.vue`/页面（`userStore.login(profile, { silent: true })`），这里只报意图，避免出现第二条登录入口 |
+| `updated` | `UserInfo`（云端回吐的最新值，store 已同步并落盘） | 保存成功。**失败不会走到这里**，失败文案已由 `api/request.ts` 统一 toast（§7.1），组件不再弹第二条                                                          |
 
 没有 props 承载列表/筛选，没有 slot，没有 `defineExpose`。
 
@@ -48,8 +48,20 @@ export type Emits = {
 
 ```vue
 <UserHeader @login="onLogin" @updated="onProfileUpdated" />
-<StatCards :stats="stats" :active="activeFilter" :loading="!isLoggedIn" :disabled="!isLoggedIn" @select="setActiveFilter" />
-<PlanList ref="planListRef" :fetcher="fetcher" :seed="() => planStore.myPage(activeFilter)" :on-page="onPage" :auto-load="false" />
+<StatCards
+  :stats="stats"
+  :active="activeFilter"
+  :loading="!isLoggedIn"
+  :disabled="!isLoggedIn"
+  @select="setActiveFilter"
+/>
+<PlanList
+  ref="planListRef"
+  :fetcher="fetcher"
+  :seed="() => planStore.myPage(activeFilter)"
+  :on-page="onPage"
+  :auto-load="false"
+/>
 ```
 
 ## 为什么 StatCards 是纯受控（本轮裁决，页面别绕过）
@@ -116,13 +128,13 @@ export type Emits = {
 
 ## 待真机复核（模拟器通过 ≠ 真机通过，M0）
 
-| 项 | 状态 | 兜底 |
-| --- | --- | --- |
-| `button open-type="chooseAvatar"` 在 Skyline 下的表现 | **兼容清单里没有条目**（§2 全表未测）。按钮能否正常拉起微信头像面板、`chooseavatar` 事件名在 glass-easel 下是否原名透传，都未验证 | 事件没触发 = 不选头像，「只改昵称」路径可提交；上传没回来 = 保存时退回原 avatarUrl |
-| 原生 `<button>` 里嵌自定义组件（`BaseAvatar`） | 未验证：小程序 button 的内容区历史上对子节点有额外限制 | 真机若空白/不渲染，改法是把预览图放 button **外面**，button 退化成「更换头像」文字按钮（结构已按这个改法预留：`avatarPicked` 独立 computed） |
-| `input type="nickname"` 在 Skyline 下 | 兼容清单里没有条目；`type="nickname"` 的微信昵称面板是否弹出未验证 | 退化成普通文本输入（`type="nickname"` 只是附加能力，不弹面板也能打字提交）；blur 载荷无 `value` 时**不覆盖草稿**（`nickValueOf` 返回 null 的分支） |
-| `BasePopup` 弹层作为 `scroll-view type="list"` 的后代节点 | **组合已消解（#78，2026-11-13）**：BasePopup 改 fixed 遮罩+面板（兼容清单 §2.3.2），不再含 page-container；fixed 全屏覆盖与列表嵌套无关 | 无需兜底；弹层内触摸行为仍随 #78 真机复验 |
-| 头像上传（`useUpload` → `wx.cloud.uploadFile`）用 chooseAvatar 的临时路径 | T0.7 只实测过 `chooseMedia` 的临时路径 | 失败即回退原头像（见上面的兜底） |
+| 项                                                                        | 状态                                                                                                                                    | 兜底                                                                                                                                               |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `button open-type="chooseAvatar"` 在 Skyline 下的表现                     | **兼容清单里没有条目**（§2 全表未测）。按钮能否正常拉起微信头像面板、`chooseavatar` 事件名在 glass-easel 下是否原名透传，都未验证       | 事件没触发 = 不选头像，「只改昵称」路径可提交；上传没回来 = 保存时退回原 avatarUrl                                                                 |
+| 原生 `<button>` 里嵌自定义组件（`BaseAvatar`）                            | 未验证：小程序 button 的内容区历史上对子节点有额外限制                                                                                  | 真机若空白/不渲染，改法是把预览图放 button **外面**，button 退化成「更换头像」文字按钮（结构已按这个改法预留：`avatarPicked` 独立 computed）       |
+| `input type="nickname"` 在 Skyline 下                                     | 兼容清单里没有条目；`type="nickname"` 的微信昵称面板是否弹出未验证                                                                      | 退化成普通文本输入（`type="nickname"` 只是附加能力，不弹面板也能打字提交）；blur 载荷无 `value` 时**不覆盖草稿**（`nickValueOf` 返回 null 的分支） |
+| `BasePopup` 弹层作为 `scroll-view type="list"` 的后代节点                 | **组合已消解（#78，2026-11-13）**：BasePopup 改 fixed 遮罩+面板（兼容清单 §2.3.2），不再含 page-container；fixed 全屏覆盖与列表嵌套无关 | 无需兜底；弹层内触摸行为仍随 #78 真机复验                                                                                                          |
+| 头像上传（`useUpload` → `wx.cloud.uploadFile`）用 chooseAvatar 的临时路径 | T0.7 只实测过 `chooseMedia` 的临时路径                                                                                                  | 失败即回退原头像（见上面的兜底）                                                                                                                   |
 
 ## Skyline 约束落地
 

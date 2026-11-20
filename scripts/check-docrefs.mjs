@@ -84,7 +84,11 @@ function findDecl(file, sym) {
   const hits = []
   lines.forEach((text, i) => {
     if (!new RegExp(`\\b${sym.replace(/\$/g, '\\$')}\\b`).test(text)) return
-    if (/\b(function|const|let|export|interface|type)\b/.test(text) || /^[A-Za-z_$][\w$]*\s*[:(=]/.test(text.trim())) hits.push(i + 1)
+    if (
+      /\b(function|const|let|export|interface|type)\b/.test(text) ||
+      /^[A-Za-z_$][\w$]*\s*[:(=]/.test(text.trim())
+    )
+      hits.push(i + 1)
   })
   return hits.length === 1 ? hits[0] : hits.length === 0 ? -1 : -hits.length
 }
@@ -95,43 +99,56 @@ let checked = 0
 
 for (const md of docs) {
   const mdDir = md.split('/').slice(0, -1).join('/')
-  readFileSync(md, 'utf8').split('\n').forEach((line, idx) => {
-    let m
-    CITE.lastIndex = 0
-    while ((m = CITE.exec(line)) !== null) {
-      const r = resolve(m[1], mdDir)
-      checked += 1
-      if (r.error) {
-        console.log(`✗ ${md}:${idx + 1} 引用 ${m[0]} —— ${r.error}`)
-        hard += 1
-        continue
+  readFileSync(md, 'utf8')
+    .split('\n')
+    .forEach((line, idx) => {
+      let m
+      CITE.lastIndex = 0
+      while ((m = CITE.exec(line)) !== null) {
+        const r = resolve(m[1], mdDir)
+        checked += 1
+        if (r.error) {
+          console.log(`✗ ${md}:${idx + 1} 引用 ${m[0]} —— ${r.error}`)
+          hard += 1
+          continue
+        }
+        const file = r.file
+        // 带参数时只审计这些文件（用于「今天改了共享层，只看指向它们的引用」），其余照常计数不打印
+        if (ONLY.length > 0 && !ONLY.some((s) => file === s || file.endsWith(`/${s}`))) continue
+        const src = linesOf(file)
+        const from = Number(m[2])
+        const to = Number(m[3] ?? m[2])
+        if (from < 1 || to > src.length - 1 || from > to) {
+          console.log(`✗ ${md}:${idx + 1} 引用 ${m[0]} —— ${file} 只有 ${src.length - 1} 行`)
+          hard += 1
+          continue
+        }
+        // 严格取引用区间：多取一行就会把「整体偏移一行」这种真漂移全遮掉（踩过）
+        const body = src.slice(from - 1, to).join('\n')
+        const syms = [...line.matchAll(SYMBOL)]
+          .map((s) => s[1])
+          .filter((s) => !/^(vue|ts|json|md)$/.test(s))
+        if (syms.length === 0) continue
+        if (syms.some((s) => body.includes(s))) continue
+        suspect += 1
+        const named = syms.find((s) => src.some((t) => t.includes(s)))
+        const at = named ? findDecl(file, named) : -1
+        const hint =
+          at > 0
+            ? `，建议 ${file.split('/').pop()}:${at}`
+            : at < -1
+              ? `（${named} 出现 ${-at} 次，无法自动定位）`
+              : ''
+        console.log(
+          `⚠ ${md}:${idx + 1} 引用 ${m[0]} 里没有 ${named ? `\`${named}\`` : '该行点名的符号'}${hint}`
+        )
+        console.log(`   src: ${src[from - 1].trim().slice(0, 96) || '(空行)'}`)
+        console.log(`   md : ${line.trim().slice(0, 120)}`)
       }
-      const file = r.file
-      // 带参数时只审计这些文件（用于「今天改了共享层，只看指向它们的引用」），其余照常计数不打印
-      if (ONLY.length > 0 && !ONLY.some((s) => file === s || file.endsWith(`/${s}`))) continue
-      const src = linesOf(file)
-      const from = Number(m[2])
-      const to = Number(m[3] ?? m[2])
-      if (from < 1 || to > src.length - 1 || from > to) {
-        console.log(`✗ ${md}:${idx + 1} 引用 ${m[0]} —— ${file} 只有 ${src.length - 1} 行`)
-        hard += 1
-        continue
-      }
-      // 严格取引用区间：多取一行就会把「整体偏移一行」这种真漂移全遮掉（踩过）
-      const body = src.slice(from - 1, to).join('\n')
-      const syms = [...line.matchAll(SYMBOL)].map((s) => s[1]).filter((s) => !/^(vue|ts|json|md)$/.test(s))
-      if (syms.length === 0) continue
-      if (syms.some((s) => body.includes(s))) continue
-      suspect += 1
-      const named = syms.find((s) => src.some((t) => t.includes(s)))
-      const at = named ? findDecl(file, named) : -1
-      const hint = at > 0 ? `，建议 ${file.split('/').pop()}:${at}` : at < -1 ? `（${named} 出现 ${-at} 次，无法自动定位）` : ''
-      console.log(`⚠ ${md}:${idx + 1} 引用 ${m[0]} 里没有 ${named ? `\`${named}\`` : '该行点名的符号'}${hint}`)
-      console.log(`   src: ${src[from - 1].trim().slice(0, 96) || '(空行)'}`)
-      console.log(`   md : ${line.trim().slice(0, 120)}`)
-    }
-  })
+    })
 }
 
-console.log(`\n对账 ${checked} 条引用：${hard} 条硬错误，${suspect} 条疑似漂移（符号不在引用范围内，需人工确认）。`)
+console.log(
+  `\n对账 ${checked} 条引用：${hard} 条硬错误，${suspect} 条疑似漂移（符号不在引用范围内，需人工确认）。`
+)
 process.exit(hard > 0 ? 1 : 0)

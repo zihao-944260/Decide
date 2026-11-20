@@ -26,7 +26,7 @@ import type { Emits, Props } from './types'
 
 const props = withDefaults(defineProps<Props>(), {
   maxlength: Limit.BLOCK_TEXT_MAX,
-  placeholder: '写点什么…',
+  placeholder: '写点什么…'
 })
 const emit = defineEmits<Emits>()
 
@@ -37,7 +37,9 @@ const length = computed(() => props.block.text.length)
  * 页面顶部总字数用的 blocksCharCount 去空白，两者语义不同，不要互换 */
 const showCounter = computed(() => props.focused || length.value > 0)
 const isFull = computed(() => length.value >= props.maxlength)
-const isWarn = computed(() => !isFull.value && props.maxlength - length.value <= TextInput.WARN_REMAINING)
+const isWarn = computed(
+  () => !isFull.value && props.maxlength - length.value <= TextInput.WARN_REMAINING
+)
 
 function onInput(event: unknown): void {
   emit('input', props.block.id, readInputValue(event))
@@ -79,7 +81,7 @@ function onLongPress(): void {
         class="editor-text-block__counter-text"
         :class="{
           'editor-text-block__counter-text--warn': isWarn,
-          'editor-text-block__counter-text--full': isFull,
+          'editor-text-block__counter-text--full': isFull
         }"
       >
         {{ length }}/{{ maxlength }}

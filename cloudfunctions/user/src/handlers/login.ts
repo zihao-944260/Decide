@@ -23,7 +23,7 @@ import {
   userDao,
   type ActionSpec,
   type UserDoc,
-  type UserInfo,
+  type UserInfo
 } from 'common'
 
 export const login: ActionSpec = {
@@ -52,7 +52,9 @@ export const login: ActionSpec = {
         Object.assign(existing, patch)
       }
       if (existing.status === UserStatus.Banned) {
-        throw new BizError(ErrorCode.FORBIDDEN, '账号已被封禁，无法使用', { userInfo: toUserInfo(existing) })
+        throw new BizError(ErrorCode.FORBIDDEN, '账号已被封禁，无法使用', {
+          userInfo: toUserInfo(existing)
+        })
       }
       return { userInfo: toUserInfo(existing), isNew: false }
     }
@@ -65,7 +67,7 @@ export const login: ActionSpec = {
       status: UserStatus.Normal,
       stats: { created: 0, joined: 0, ongoing: 0 },
       createdAt: now,
-      updatedAt: now,
+      updatedAt: now
     }
     try {
       await userDao.create(doc)
@@ -77,5 +79,5 @@ export const login: ActionSpec = {
     }
     const userInfo: UserInfo = toUserInfo(doc)
     return { userInfo, isNew: true }
-  },
+  }
 }

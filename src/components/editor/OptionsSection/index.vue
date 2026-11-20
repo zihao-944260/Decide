@@ -23,7 +23,7 @@ import { computed, ref, watch } from 'vue'
 import { createEmptyOption, optionCardId, type Emits, type Props } from './types'
 
 const props = withDefaults(defineProps<Props>(), {
-  disabled: false,
+  disabled: false
 })
 const emit = defineEmits<Emits>()
 
@@ -41,7 +41,10 @@ const busyIds = ref<string[]>([])
 
 /** 唯一出口：任何改动都过这里，保证交出去的数组 order 连续 */
 function commit(list: PlanOption[]): void {
-  emit('change', list.map((option, index) => ({ ...option, order: index })))
+  emit(
+    'change',
+    list.map((option, index) => ({ ...option, order: index }))
+  )
 }
 
 function onToggle(): void {
@@ -107,7 +110,7 @@ watch(
     if (kept.length === busyIds.value.length) return
     busyIds.value = kept
     emit('uploading', kept.length > 0)
-  },
+  }
 )
 </script>
 
@@ -125,7 +128,11 @@ watch(
       </view>
     </view>
 
-    <view :class="enabled ? 'options-section__body' : 'options-section__body options-section__body--off'">
+    <view
+      :class="
+        enabled ? 'options-section__body' : 'options-section__body options-section__body--off'
+      "
+    >
       <view
         v-for="(option, index) in options"
         :id="optionCardId(option.id)"
@@ -146,11 +153,16 @@ watch(
       </view>
 
       <BaseButton type="secondary" block :disabled="isFull || disabled" @click="onAdd">
-        <text class="options-section__add-text" :class="{ 'options-section__add-text--off': isFull || disabled }">
+        <text
+          class="options-section__add-text"
+          :class="{ 'options-section__add-text--off': isFull || disabled }"
+        >
           添加选项
         </text>
       </BaseButton>
-      <text class="options-section__hint" :class="{ 'options-section__hint--warn': isFull }">{{ hintText }}</text>
+      <text class="options-section__hint" :class="{ 'options-section__hint--warn': isFull }">{{
+        hintText
+      }}</text>
     </view>
   </view>
 </template>

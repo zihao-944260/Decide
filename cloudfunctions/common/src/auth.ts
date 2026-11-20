@@ -25,7 +25,11 @@ export function assertAuthor(plan: { openId?: string }, openId: string): void {
 }
 
 /** 评论删除权限：评论作者本人或计划作者（§6.4） */
-export function assertCommentDeleter(commentOpenId: string, planOpenId: string, openId: string): void {
+export function assertCommentDeleter(
+  commentOpenId: string,
+  planOpenId: string,
+  openId: string
+): void {
   if (commentOpenId !== openId && planOpenId !== openId) {
     throw new BizError(ErrorCode.FORBIDDEN, '没有权限删除这条评论')
   }
@@ -34,5 +38,6 @@ export function assertCommentDeleter(commentOpenId: string, planOpenId: string, 
 /** 封禁 / 禁言用户不能写（status 见 src/constants/plan.ts 的 UserStatus 镜像） */
 export function assertWritable(status: number, mutedIsEnough: boolean): void {
   if (status === 2) throw new BizError(ErrorCode.FORBIDDEN, '账号已被封禁，无法操作')
-  if (mutedIsEnough && status === 1) throw new BizError(ErrorCode.FORBIDDEN, '账号已被禁言，暂时无法发布')
+  if (mutedIsEnough && status === 1)
+    throw new BizError(ErrorCode.FORBIDDEN, '账号已被禁言，暂时无法发布')
 }

@@ -24,7 +24,7 @@ import type { UploaderChange } from '@/components/editor/ImageUploader/types'
 import {
   firstInvalidOptionIndex,
   optionCardId,
-  optionsProblem,
+  optionsProblem
 } from '@/components/editor/OptionsSection/types'
 import { createPlan, fetchPlanDetail, updatePlan } from '@/api/plan'
 import { ApiError } from '@/api/request'
@@ -41,7 +41,7 @@ import {
   useEditor,
   useForm,
   useModal,
-  type FormRules,
+  type FormRules
 } from '@/composables'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
@@ -59,7 +59,7 @@ import {
   EXIT_ALERT,
   EXIT_DISCARD,
   EXIT_ITEMS,
-  EXIT_SAVE_AND_LEAVE,
+  EXIT_SAVE_AND_LEAVE
 } from './types'
 
 /** EditorContext 的最小结构化类型（避免依赖 DOM lib） */
@@ -91,7 +91,9 @@ const navSpaceStyle = computed(() => `height: ${appStore.navBarHeight}px;`)
 
 const form = useForm<EditModel>(createEditModel, {
   images: [{ max: Limit.IMAGE_MAX, message: `配图最多 ${Limit.IMAGE_MAX} 张` }],
-  deadline: [{ validator: (value: number) => value > 0 && value > peekNow(), message: '请选择截止时间' }],
+  deadline: [
+    { validator: (value: number) => value > 0 && value > peekNow(), message: '请选择截止时间' }
+  ]
 } satisfies FormRules<EditModel>)
 
 const model = form.model
@@ -105,11 +107,11 @@ const editor = useEditor({
     images: [...model.value.images],
     deadline: model.value.deadline,
     optionsEnabled: model.value.optionsEnabled,
-    options: model.value.options.map((item) => ({ ...item })),
+    options: model.value.options.map((item) => ({ ...item }))
   }),
   onDraftSaved: (savedAt) => {
     draftSavedAt.value = savedAt
-  },
+  }
 })
 
 const blocks = editor.blocks
@@ -200,7 +202,7 @@ const deadlineValue = computed(() => model.value.deadline)
 
 /** 弹层打开期间锁住文档滚动（#78 防穿透）：弹层内两列 scroll-view 不受影响 */
 const pageLockStyle = computed(() =>
-  pickerOpen.value || sheetState.value.visible ? 'overflow:hidden;' : '',
+  pickerOpen.value || sheetState.value.visible ? 'overflow:hidden;' : ''
 )
 
 function onPickerSheet(open: boolean): void {
@@ -236,7 +238,7 @@ async function enterAsNew(): Promise<void> {
     content: '上次写到一半的内容已经恢复了。要从空白重新开始吗？',
     confirmText: '继续编辑',
     // 微信 showModal 的 cancelText 上限 4 个汉字：超字会 fail，而 fail 被当「取消」→ 静默丢草稿
-    cancelText: '空白开始',
+    cancelText: '空白开始'
   })
   if (!keep) discardDraft()
   if (pendingFlip) {
@@ -260,7 +262,8 @@ async function loadForEdit(): Promise<void> {
     void pushInitialContent()
   } catch (err) {
     logger.warn('plan-edit', 'detail failed', err)
-    loadError.value = err instanceof ApiError && err.message ? err.message : '加载失败，请检查网络后重试'
+    loadError.value =
+      err instanceof ApiError && err.message ? err.message : '加载失败，请检查网络后重试'
     loadState.value = 'error'
   }
 }
@@ -273,7 +276,9 @@ function applyExtra(src: EditModel | PlanDraftLike): void {
   model.value.images = Array.isArray(src.images) ? [...src.images] : []
   model.value.deadline = typeof src.deadline === 'number' ? src.deadline : 0
   model.value.optionsEnabled = Boolean(src.optionsEnabled)
-  model.value.options = Array.isArray(src.options) ? src.options.map((item, index) => ({ ...item, order: index })) : []
+  model.value.options = Array.isArray(src.options)
+    ? src.options.map((item, index) => ({ ...item, order: index }))
+    : []
 }
 
 interface PlanDraftLike {
@@ -327,7 +332,7 @@ watch(
       return
     }
     replayForNewDraftKey()
-  },
+  }
 )
 
 function replayForNewDraftKey(): void {
@@ -356,7 +361,7 @@ watch(
       if (!editor.isDirty.value) editor.saveDraft(true)
     }, DRAFT_DEBOUNCE_MS)
   },
-  { deep: true },
+  { deep: true }
 )
 
 function clearExtraTimer(): void {
@@ -465,7 +470,12 @@ async function pushInitialContent(): Promise<void> {
   const ctx = editorCtx.value
   if (!ctx) return
   let html = blocksToEditorHtml(blocks.value)
-  const fileIDs = blocks.value.filter((b): b is Extract<Block, { type: 'image' }> => b.type === 'image' && b.fileID.startsWith('cloud://')).map((b) => b.fileID)
+  const fileIDs = blocks.value
+    .filter(
+      (b): b is Extract<Block, { type: 'image' }> =>
+        b.type === 'image' && b.fileID.startsWith('cloud://')
+    )
+    .map((b) => b.fileID)
   if (fileIDs.length) {
     const temp = await resolveTempUrls(fileIDs)
     for (const [cloud, url] of temp) {
@@ -517,7 +527,7 @@ async function clearEditor(): Promise<void> {
   const ok = await modal.confirm({
     title: '清空正文',
     content: '将删除编辑面里的全部正文，确定吗？',
-    confirmText: '清空',
+    confirmText: '清空'
   })
   if (ok) ctx.clear()
 }
@@ -582,7 +592,7 @@ async function insertInlineImage(): Promise<void> {
           inlineUploading.value = false
         }
       })()
-    },
+    }
   })
 }
 
@@ -598,7 +608,7 @@ function syncEditor(): Promise<void> {
       success: (res) => {
         editor.replaceBlocks(editorHtmlToBlocks(withCloudSrc(res.html)))
         resolve()
-      },
+      }
     })
   })
 }
@@ -691,12 +701,12 @@ async function writeAction(payloadModel: EditModel): Promise<void> {
     title: titleText.value.trim(),
     // 末尾空文本段是 ensureTrailingTextBlock 给光标垫的占位，云端拒收空正文，提交前滤掉
     blocks: cloneBlocks(blocks.value).filter(
-      (b) => b.type === 'image' || b.type === 'divider' || hasVisibleText(b.text),
+      (b) => b.type === 'image' || b.type === 'divider' || hasVisibleText(b.text)
     ),
     images: [...payloadModel.images],
     deadline: payloadModel.deadline,
     optionsEnabled: payloadModel.optionsEnabled,
-    options: payloadModel.options.map((item) => ({ ...item })),
+    options: payloadModel.options.map((item) => ({ ...item }))
   }
   const id = planId.value
   try {
@@ -750,12 +760,7 @@ const toolbarDisabled = computed(() => submitting.value || !ready.value)
   <!-- page-meta 必须是模板首节点：弹层打开时锁文档滚动（#78 防穿透） -->
   <page-meta :page-style="pageLockStyle" />
   <view class="plan-edit">
-    <BaseNavbar
-      :title="navTitle"
-      :guard-back="true"
-      fixed
-      @back="onNavBack"
-    />
+    <BaseNavbar :title="navTitle" :guard-back="true" fixed @back="onNavBack" />
     <view class="plan-edit__nav-space" :style="navSpaceStyle" />
 
     <view class="plan-edit__flow">
@@ -776,7 +781,11 @@ const toolbarDisabled = computed(() => submitting.value || !ready.value)
         <view class="plan-edit__section-head">
           <text class="plan-edit__section-title">标题</text>
           <text
-            :class="titleLength >= Limit.TITLE_MAX ? 'plan-edit__counter plan-edit__counter--full' : 'plan-edit__counter'"
+            :class="
+              titleLength >= Limit.TITLE_MAX
+                ? 'plan-edit__counter plan-edit__counter--full'
+                : 'plan-edit__counter'
+            "
           >
             {{ titleLength }}/{{ Limit.TITLE_MAX }}
           </text>
@@ -805,21 +814,51 @@ const toolbarDisabled = computed(() => submitting.value || !ready.value)
         </view>
 
         <!-- 参考图工具栏：详情标签下、编辑面上方的圆角灰卡，两行图标。touchend.stop 保住选区 -->
-        <view :class="toolbarDisabled ? 'plan-edit__toolbar plan-edit__toolbar--off' : 'plan-edit__toolbar'">
+        <view
+          :class="
+            toolbarDisabled ? 'plan-edit__toolbar plan-edit__toolbar--off' : 'plan-edit__toolbar'
+          "
+        >
           <view class="plan-edit__tb-row">
-            <view :class="tbClass('bold')" data-name="bold" @touchend.stop="onFormatTap"><text class="plan-edit__tb-b">B</text></view>
-            <view :class="tbClass('italic')" data-name="italic" @touchend.stop="onFormatTap"><text class="plan-edit__tb-i">I</text></view>
-            <view :class="tbClass('underline')" data-name="underline" @touchend.stop="onFormatTap"><text class="plan-edit__tb-u">U</text></view>
-            <view :class="tbClass('align', 'left')" data-name="align" data-value="left" @touchend.stop="onFormatTap">
+            <view :class="tbClass('bold')" data-name="bold" @touchend.stop="onFormatTap"
+              ><text class="plan-edit__tb-b">B</text></view
+            >
+            <view :class="tbClass('italic')" data-name="italic" @touchend.stop="onFormatTap"
+              ><text class="plan-edit__tb-i">I</text></view
+            >
+            <view :class="tbClass('underline')" data-name="underline" @touchend.stop="onFormatTap"
+              ><text class="plan-edit__tb-u">U</text></view
+            >
+            <view
+              :class="tbClass('align', 'left')"
+              data-name="align"
+              data-value="left"
+              @touchend.stop="onFormatTap"
+            >
               <image class="plan-edit__tb-icon" :src="alignIcon('left')" mode="aspectFit" />
             </view>
-            <view :class="tbClass('align', 'center')" data-name="align" data-value="center" @touchend.stop="onFormatTap">
+            <view
+              :class="tbClass('align', 'center')"
+              data-name="align"
+              data-value="center"
+              @touchend.stop="onFormatTap"
+            >
               <image class="plan-edit__tb-icon" :src="alignIcon('center')" mode="aspectFit" />
             </view>
-            <view :class="tbClass('align', 'right')" data-name="align" data-value="right" @touchend.stop="onFormatTap">
+            <view
+              :class="tbClass('align', 'right')"
+              data-name="align"
+              data-value="right"
+              @touchend.stop="onFormatTap"
+            >
               <image class="plan-edit__tb-icon" :src="alignIcon('right')" mode="aspectFit" />
             </view>
-            <view :class="tbClass('align', 'justify')" data-name="align" data-value="justify" @touchend.stop="onFormatTap">
+            <view
+              :class="tbClass('align', 'justify')"
+              data-name="align"
+              data-value="justify"
+              @touchend.stop="onFormatTap"
+            >
               <image class="plan-edit__tb-icon" :src="alignIcon('justify')" mode="aspectFit" />
             </view>
           </view>
@@ -830,13 +869,37 @@ const toolbarDisabled = computed(() => submitting.value || !ready.value)
             <view class="plan-edit__tb-item" data-action="redo" @touchend.stop="onFormatTap">
               <image class="plan-edit__tb-icon" src="/static/editor/redo.png" mode="aspectFit" />
             </view>
-            <view class="plan-edit__tb-item" data-action="indent" data-value="-1" @touchend.stop="onFormatTap">
-              <image class="plan-edit__tb-icon" src="/static/editor/indent-out.png" mode="aspectFit" />
+            <view
+              class="plan-edit__tb-item"
+              data-action="indent"
+              data-value="-1"
+              @touchend.stop="onFormatTap"
+            >
+              <image
+                class="plan-edit__tb-icon"
+                src="/static/editor/indent-out.png"
+                mode="aspectFit"
+              />
             </view>
-            <view class="plan-edit__tb-item" data-action="indent" data-value="+1" @touchend.stop="onFormatTap">
-              <image class="plan-edit__tb-icon" src="/static/editor/indent-in.png" mode="aspectFit" />
+            <view
+              class="plan-edit__tb-item"
+              data-action="indent"
+              data-value="+1"
+              @touchend.stop="onFormatTap"
+            >
+              <image
+                class="plan-edit__tb-icon"
+                src="/static/editor/indent-in.png"
+                mode="aspectFit"
+              />
             </view>
-            <view :class="tbClass('header', '1')" data-name="header" data-value="1" @touchend.stop="onFormatTap"><text class="plan-edit__tb-h1">H1</text></view>
+            <view
+              :class="tbClass('header', '1')"
+              data-name="header"
+              data-value="1"
+              @touchend.stop="onFormatTap"
+              ><text class="plan-edit__tb-h1">H1</text></view
+            >
             <view class="plan-edit__tb-item" data-action="image" @touchend.stop="onFormatTap">
               <image class="plan-edit__tb-icon" src="/static/editor/image.png" mode="aspectFit" />
             </view>
@@ -862,8 +925,14 @@ const toolbarDisabled = computed(() => submitting.value || !ready.value)
       </view>
 
       <view v-if="ready" class="plan-edit__section">
-        <DeadlinePicker :deadline="deadlineValue" @change="onDeadlineChange" @sheet="onPickerSheet" />
-        <text v-if="errors.deadline" class="plan-edit__error plan-edit__error--inset">{{ errors.deadline }}</text>
+        <DeadlinePicker
+          :deadline="deadlineValue"
+          @change="onDeadlineChange"
+          @sheet="onPickerSheet"
+        />
+        <text v-if="errors.deadline" class="plan-edit__error plan-edit__error--inset">{{
+          errors.deadline
+        }}</text>
       </view>
 
       <view v-if="ready" class="plan-edit__section">
@@ -885,7 +954,9 @@ const toolbarDisabled = computed(() => submitting.value || !ready.value)
            与首页发布 pill、底部导航胶囊同一语言（浮层控件不透明，带子本身不画背景） -->
       <view class="plan-edit__status">
         <view class="plan-edit__status-pill">
-          <text class="plan-edit__status-hint">{{ draftSavedAt > 0 ? '草稿已自动保存' : '内容改动会自动存到本机' }}</text>
+          <text class="plan-edit__status-hint">{{
+            draftSavedAt > 0 ? '草稿已自动保存' : '内容改动会自动存到本机'
+          }}</text>
           <text class="plan-edit__status-count">{{ charCount }} 字</text>
         </view>
       </view>
@@ -1033,7 +1104,10 @@ const toolbarDisabled = computed(() => submitting.value || !ready.value)
 // 让位只能靠占位，不能靠背景遮。
 .plan-edit__tail {
   width: 100%;
-  height: calc(#{$space-1 * 4 + $font-xs * $line-normal + $space-2 * 3 + $button-height-lg + $space-3} + env(safe-area-inset-bottom));
+  height: calc(
+    #{$space-1 * 4 + $font-xs * $line-normal + $space-2 * 3 + $button-height-lg + $space-3} +
+      env(safe-area-inset-bottom)
+  );
 }
 
 // 状态行 + 发布栏的 fixed 置底栈（#79）：不占文档流，尾部占位与它对账。

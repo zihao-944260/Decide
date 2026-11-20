@@ -28,19 +28,19 @@ view.plan-detail                        ← @include page-root（页面本身不
 
 ## 2. 接线一览（都来自已验收源码的 types.ts，不是猜的）
 
-| 位置 | 接法 | 依据 |
-| --- | --- | --- |
-| 取数 | `onLoad` 只取 `query.planId`；首屏加载挂在 `usePageRefresh` 的首次 `onShow` | §7.3；页面不手写 onShow/onHide/pauseTick |
-| 写回 store | `applyVoteResult(planId, detail.votes, toStoreVote(detail.myVote))` + `patchPlan(...)` | §10「状态复用」 |
-| `myVote` | 契约是 `number`，只有 `1\|2` 认作已投，其它值 → `null` → store 删键 | 收窄只有 `useVote.toStoreVote` 一处（本轮从本页提上去的，`NO_VOTE` 哨兵从不进 store，§4.3 裁决 2） |
-| 截止判定 | `status !== Ongoing` 或 `deadline > 0 && deadline <= now`（`useServerNow` 的校准时间）或倒计时归零沿 | §8.5「前端只置灰，真实状态以云函数为准」 |
-| 主态 | `isAuthor = userInfo?.openId === detail.author.openId`（computed，允许 openId 晚到）→ `VoteActions` 整块不渲染 | §8.3 v1 禁止自投；本轮裁决不显示提示文案 |
-| 投票后 | `voted` → `invalidatePage('home')` + `invalidatePage('mine')`；`closed` → 同样两页 + 重拉详情整页置灰 | `useVote` 内部已 `applyVoteResult` + 回滚 + 3003 纠偏；失效「我的」是因为卡片的**参与人数/评论数是列表快照字段**，写穿 store 到不了它们（key 取自 `constants/pages.ts` 的 `PAGE_KEYS`） |
-| 删除权限 | `canRemove = 本人 \|\| 计划作者` 由页面注入 `CommentList` | §4.9 缺口 1 的裁决：不改 `useComments` |
-| 评论入口 | `publish` 返回 `{ ok, toast: false }` | `useComments.post` 的 ApiError 已由 `api/request` 统一 toast（§7.1），双弹会串成两条 |
-| 评论成功 | `useComments({ onPosted })` 里 `bumpCommentCount(+1)` + `scrollToBottom()` | 乐观 append 在 composable 内部已完成；计数**同时写穿 `planStore.patchPlan`**，首页卡片那个「评论 N」才是同步的 |
-| 键盘避让 | 组件自己 `avoidKeyboard`（fixed + translateY），页面**只**接 `keyboard-height` 给滚动区尾部加高 | §4.9 三条硬规则；页面不再叠 `adjust-position` |
-| 分享 | `useShare(() => ({ title, path: '/pages/plan/detail/index?planId=…', imageUrl: cover, query }))` | `useShare` 内部注册 `onShareAppMessage` / `onShareTimeline` |
+| 位置       | 接法                                                                                                           | 依据                                                                                                                                                                                    |
+| ---------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 取数       | `onLoad` 只取 `query.planId`；首屏加载挂在 `usePageRefresh` 的首次 `onShow`                                    | §7.3；页面不手写 onShow/onHide/pauseTick                                                                                                                                                |
+| 写回 store | `applyVoteResult(planId, detail.votes, toStoreVote(detail.myVote))` + `patchPlan(...)`                         | §10「状态复用」                                                                                                                                                                         |
+| `myVote`   | 契约是 `number`，只有 `1\|2` 认作已投，其它值 → `null` → store 删键                                            | 收窄只有 `useVote.toStoreVote` 一处（本轮从本页提上去的，`NO_VOTE` 哨兵从不进 store，§4.3 裁决 2）                                                                                      |
+| 截止判定   | `status !== Ongoing` 或 `deadline > 0 && deadline <= now`（`useServerNow` 的校准时间）或倒计时归零沿           | §8.5「前端只置灰，真实状态以云函数为准」                                                                                                                                                |
+| 主态       | `isAuthor = userInfo?.openId === detail.author.openId`（computed，允许 openId 晚到）→ `VoteActions` 整块不渲染 | §8.3 v1 禁止自投；本轮裁决不显示提示文案                                                                                                                                                |
+| 投票后     | `voted` → `invalidatePage('home')` + `invalidatePage('mine')`；`closed` → 同样两页 + 重拉详情整页置灰          | `useVote` 内部已 `applyVoteResult` + 回滚 + 3003 纠偏；失效「我的」是因为卡片的**参与人数/评论数是列表快照字段**，写穿 store 到不了它们（key 取自 `constants/pages.ts` 的 `PAGE_KEYS`） |
+| 删除权限   | `canRemove = 本人 \|\| 计划作者` 由页面注入 `CommentList`                                                      | §4.9 缺口 1 的裁决：不改 `useComments`                                                                                                                                                  |
+| 评论入口   | `publish` 返回 `{ ok, toast: false }`                                                                          | `useComments.post` 的 ApiError 已由 `api/request` 统一 toast（§7.1），双弹会串成两条                                                                                                    |
+| 评论成功   | `useComments({ onPosted })` 里 `bumpCommentCount(+1)` + `scrollToBottom()`                                     | 乐观 append 在 composable 内部已完成；计数**同时写穿 `planStore.patchPlan`**，首页卡片那个「评论 N」才是同步的                                                                          |
+| 键盘避让   | 组件自己 `avoidKeyboard`（fixed + translateY），页面**只**接 `keyboard-height` 给滚动区尾部加高                | §4.9 三条硬规则；页面不再叠 `adjust-position`                                                                                                                                           |
+| 分享       | `useShare(() => ({ title, path: '/pages/plan/detail/index?planId=…', imageUrl: cover, query }))`               | `useShare` 内部注册 `onShareAppMessage` / `onShareTimeline`                                                                                                                             |
 
 ## 3. T3.12：为什么返回首页能立刻看到新比例
 
@@ -55,15 +55,15 @@ view.plan-detail                        ← @include page-root（页面本身不
 
 ## 4. 刻意没做
 
-| 项 | 原因 |
-| --- | --- |
-| `share-element` 跨页转场 | M0 真机复核项；本轮 F1/G1 都不做，免得两路各自发明一套（§10 指令） |
+| 项                              | 原因                                                                                        |
+| ------------------------------- | ------------------------------------------------------------------------------------------- |
+| `share-element` 跨页转场        | M0 真机复核项；本轮 F1/G1 都不做，免得两路各自发明一套（§10 指令）                          |
 | 详情页下拉刷新（`refresher-*`） | 需求未列；`usePageRefresh` 的 `refreshing` 只服务它自己的 `run()`，页面自拉会把状态拆成两处 |
-| 取消投票入口 | v1 已裁决不做（`VoteTypeValue` 只有 `1\|2`） |
-| 「这是你发起的计划」提示 | §8.3 原文有这句，本轮裁决明确不显示；`VoteActions` 在 `isAuthor` 时整块不渲染 |
-| 选项卡点投 / 选项票数 | §8.6：v1 选项只展示，冻结契约的 `vote.submit` 没有 `optionId` |
-| 页面自己清洗 blocks | `ContentRenderer` 内部已过 `sanitizeBlocks`，重复清洗是第二处真相 |
-| 摘要 `summary` 展示 | 它是云端从 blocks 折出来的**列表用**字段，详情页有全文，摆出来必然重复 |
+| 取消投票入口                    | v1 已裁决不做（`VoteTypeValue` 只有 `1\|2`）                                                |
+| 「这是你发起的计划」提示        | §8.3 原文有这句，本轮裁决明确不显示；`VoteActions` 在 `isAuthor` 时整块不渲染               |
+| 选项卡点投 / 选项票数           | §8.6：v1 选项只展示，冻结契约的 `vote.submit` 没有 `optionId`                               |
+| 页面自己清洗 blocks             | `ContentRenderer` 内部已过 `sanitizeBlocks`，重复清洗是第二处真相                           |
+| 摘要 `summary` 展示             | 它是云端从 blocks 折出来的**列表用**字段，详情页有全文，摆出来必然重复                      |
 
 ## 5. 待人工在模拟器 / 真机验证（我跑不了的部分）
 
@@ -77,14 +77,14 @@ view.plan-detail                        ← @include page-root（页面本身不
 
 ## 6. 共享层缺口与主 agent 裁决（本页交付后由主 agent 收口）
 
-| 上报项 | 裁决 | 落点 |
-| --- | --- | --- |
-| `useActionSheet().open()` 的 `SheetAction{label}` 与 `BaseActionSheet` 的 `ActionSheetItem{text,desc,disabled,key}` 字段名不一致，页面用受控菜单必须自己 map 一层 | **已修**：单一真相放渲染侧。`stores/feedback.ts` 改为 `import type { ActionSheetItem }`，`SheetAction` 整个删掉；`open(request)` 直接透传，`SheetRequest \| { actions }` 那个多余联合参数也删了。页面现在可以把同一份数组同时喂给 `open()` 和 `<BaseActionSheet :actions>` | `src/stores/feedback.ts`、`src/composables/useActionSheet.ts` |
-| `PlanDetail.myVote` 是 `number` 而非 `VoteTypeValue \| 0`，窄化逻辑在 `useVote` 与本页各写一份 | **契约不动**（冻结契约 + 云端镜像 `cloudfunctions/common/src/types.ts` 都返回 `number`），**第三处真相删掉**：窄化收成 `useVote.toStoreVote()` 并从 `@/composables` 出口，本页的 `myVoteOf` 已删 | `src/composables/useVote.ts` |
-| `CommentStatus` 没有配套值 union（E3 已在 `CommentItem/types.ts` 就地窄化一份） | **已修**：`constants/plan.ts` 补 `CommentStatusValue`，与 `PlanStatusValue` / `VoteTypeValue` 同构；组件里那份窄化删掉 | `src/constants/plan.ts` |
-| 模板里用了未 import 的组件时 vue-tsc 不报（`strictTemplates` 未开 + `@dcloudio/uni-app-types` 插件 `Load plugin failed`） | **不开 `strictTemplates`**：那个插件加载失败时，内置标签全会被判成未知元素，打开就是几千条噪音，等于把检查废掉。改为**静态对账脚本** `scripts/check-templates.mjs`（`npm run check:templates`）：模板标签必须能对上 `<script setup>` 的 import 或内置清单。已用负样例验证它真的会拦（PascalCase 与 kebab-case 两种写法都测过） | `package.json`、`scripts/check-templates.mjs` |
-| `useComments.canRemove` 只判「本人」，§8.4 的「计划作者可删」要页面注入 | **保留不改**：`useComments` 不认识计划详情，注入即为正解（§4.9 同一裁决）。组件 README 的缺口条目已同步 | `CommentList/README.md` |
-| `OptionCardList` 判 `options.length >= 2` 而不是 `optionsEnabled` | **不改组件也不改页面**：两者在 v1 恒等，闸门在写入侧（`planPayload.validateOptions(raw, false) → []`、开关为假时不写 options）。依据已写进组件 README —— 将来出现允许不一致的写路径，改组件，不要让每个页面各判一层 | `OptionCardList/README.md` |
+| 上报项                                                                                                                                                            | 裁决                                                                                                                                                                                                                                                                                                                           | 落点                                                          |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| `useActionSheet().open()` 的 `SheetAction{label}` 与 `BaseActionSheet` 的 `ActionSheetItem{text,desc,disabled,key}` 字段名不一致，页面用受控菜单必须自己 map 一层 | **已修**：单一真相放渲染侧。`stores/feedback.ts` 改为 `import type { ActionSheetItem }`，`SheetAction` 整个删掉；`open(request)` 直接透传，`SheetRequest \| { actions }` 那个多余联合参数也删了。页面现在可以把同一份数组同时喂给 `open()` 和 `<BaseActionSheet :actions>`                                                     | `src/stores/feedback.ts`、`src/composables/useActionSheet.ts` |
+| `PlanDetail.myVote` 是 `number` 而非 `VoteTypeValue \| 0`，窄化逻辑在 `useVote` 与本页各写一份                                                                    | **契约不动**（冻结契约 + 云端镜像 `cloudfunctions/common/src/types.ts` 都返回 `number`），**第三处真相删掉**：窄化收成 `useVote.toStoreVote()` 并从 `@/composables` 出口，本页的 `myVoteOf` 已删                                                                                                                               | `src/composables/useVote.ts`                                  |
+| `CommentStatus` 没有配套值 union（E3 已在 `CommentItem/types.ts` 就地窄化一份）                                                                                   | **已修**：`constants/plan.ts` 补 `CommentStatusValue`，与 `PlanStatusValue` / `VoteTypeValue` 同构；组件里那份窄化删掉                                                                                                                                                                                                         | `src/constants/plan.ts`                                       |
+| 模板里用了未 import 的组件时 vue-tsc 不报（`strictTemplates` 未开 + `@dcloudio/uni-app-types` 插件 `Load plugin failed`）                                         | **不开 `strictTemplates`**：那个插件加载失败时，内置标签全会被判成未知元素，打开就是几千条噪音，等于把检查废掉。改为**静态对账脚本** `scripts/check-templates.mjs`（`npm run check:templates`）：模板标签必须能对上 `<script setup>` 的 import 或内置清单。已用负样例验证它真的会拦（PascalCase 与 kebab-case 两种写法都测过） | `package.json`、`scripts/check-templates.mjs`                 |
+| `useComments.canRemove` 只判「本人」，§8.4 的「计划作者可删」要页面注入                                                                                           | **保留不改**：`useComments` 不认识计划详情，注入即为正解（§4.9 同一裁决）。组件 README 的缺口条目已同步                                                                                                                                                                                                                        | `CommentList/README.md`                                       |
+| `OptionCardList` 判 `options.length >= 2` 而不是 `optionsEnabled`                                                                                                 | **不改组件也不改页面**：两者在 v1 恒等，闸门在写入侧（`planPayload.validateOptions(raw, false) → []`、开关为假时不写 options）。依据已写进组件 README —— 将来出现允许不一致的写路径，改组件，不要让每个页面各判一层                                                                                                            | `OptionCardList/README.md`                                    |
 
 ## 7. 2026-11-13 #37：标题行规格并入 + 滚动修复
 

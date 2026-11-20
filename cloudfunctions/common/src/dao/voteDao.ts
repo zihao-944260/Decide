@@ -60,7 +60,10 @@ export const voteDao = {
    * 用确定性 _id = planId#openId 做 in 查询，命中主键索引，无需控制台补建 openId+planId 二级索引；
    * 一次往返覆盖整页，避免 N+1。未投的计划不在返回 map 里，调用方按 '' 兜底。
    */
-  async mapByPlanIds(openId: string, planIds: readonly string[]): Promise<Record<string, ViewerVote>> {
+  async mapByPlanIds(
+    openId: string,
+    planIds: readonly string[]
+  ): Promise<Record<string, ViewerVote>> {
     if (planIds.length === 0 || !openId) return {}
     const cmd = getCommand()
     const ids = planIds.map((planId) => voteDocId(planId, openId))
@@ -72,7 +75,10 @@ export const voteDao = {
     const rows = rowsOf<{ planId: string; type: number; optionId?: string }>(raw)
     const map: Record<string, ViewerVote> = {}
     for (const row of rows) {
-      map[row.planId] = { type: typeof row.type === 'number' ? row.type : 0, optionId: row.optionId ?? '' }
+      map[row.planId] = {
+        type: typeof row.type === 'number' ? row.type : 0,
+        optionId: row.optionId ?? ''
+      }
     }
     return map
   },
@@ -83,7 +89,12 @@ export const voteDao = {
   },
 
   /** 列表排序用：按投票时间倒序翻页，返回 planId 顺序即「我参与的」顺序 */
-  async listPlanIdsByUser(openId: string, sort: number | null, afterId: string, limit: number): Promise<VoteCursorRow[]> {
+  async listPlanIdsByUser(
+    openId: string,
+    sort: number | null,
+    afterId: string,
+    limit: number
+  ): Promise<VoteCursorRow[]> {
     const cmd = getCommand()
     const base: Condition = { openId }
     const cond: WherePart =
@@ -91,7 +102,10 @@ export const voteDao = {
         ? base
         : cmd.and(
             base,
-            cmd.or({ createdAt: cmd.lt(sort) } as Condition, { createdAt: sort, _id: cmd.lt(afterId) } as Condition),
+            cmd.or(
+              { createdAt: cmd.lt(sort) } as Condition,
+              { createdAt: sort, _id: cmd.lt(afterId) } as Condition
+            )
           )
     const raw = await collection(Collection.Votes)
       .where(cond)
@@ -105,13 +119,17 @@ export const voteDao = {
 
   /** user.stats 的 joined：一条投票记录 = 一个参与过的计划，所以记录数就是参与数 */
   async countByUser(openId: string): Promise<number> {
-    const raw = await collection(Collection.Votes).where({ openId } as Condition).count()
+    const raw = await collection(Collection.Votes)
+      .where({ openId } as Condition)
+      .count()
     return totalOf(raw)
   },
 
   /** 对账用：只数有效票（type 必须在枚举内），历史脏数据不会被算进来 */
   async countByType(planId: string, type: number): Promise<number> {
-    const raw = await collection(Collection.Votes).where({ planId, type } as Condition).count()
+    const raw = await collection(Collection.Votes)
+      .where({ planId, type } as Condition)
+      .count()
     return totalOf(raw)
   },
 
@@ -143,5 +161,5 @@ export const voteDao = {
   async txInsert(tx: Transaction, doc: VoteDoc): Promise<string> {
     const raw = await tx.collection(Collection.Votes).add({ data: { ...doc } })
     return idOf(raw)
-  },
+  }
 }

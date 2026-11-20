@@ -10,14 +10,14 @@ import type { UserInfo, UserStats } from '@/types/models'
 
 export function login(
   params: CloudContract['user.login']['req'] = {},
-  options?: RequestOptions,
+  options?: RequestOptions
 ): Promise<{ userInfo: UserInfo; isNew: boolean }> {
   return request('user.login', params, options)
 }
 
 export function updateProfile(
   params: CloudContract['user.updateProfile']['req'],
-  options?: RequestOptions,
+  options?: RequestOptions
 ): Promise<{ userInfo: UserInfo }> {
   return request('user.updateProfile', params, options)
 }

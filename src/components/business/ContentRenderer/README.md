@@ -9,13 +9,13 @@
 
 ## Props
 
-| prop | 类型 | 默认 | 说明 |
-| --- | --- | --- | --- |
-| `blocks` | `Block[]` | 必填 | 云端返回的正文块；组件内再过 `sanitizeBlocks()`，脏块/未知 type 直接丢弃，页面可原样透传 |
-| `radius` | `BaseImageRadius` | `'md'` | 图片块圆角，经 tag-style 的 `img.border-radius` 落进 mp-html |
-| `lazy` | `boolean` | `true` | 图片懒加载，透传 mp-html 的 `lazy-load`（详情页在 `scroll-view` 内，建议保持 true） |
-| `preview` | `boolean` | `true` | 点击图片放大预览（mp-html 的自动预览关闭，由本组件接管编排） |
-| `emptyText` | `string` | `'暂无内容'` | `blocks` 为空数组时的兜底文案 |
+| prop        | 类型              | 默认         | 说明                                                                                     |
+| ----------- | ----------------- | ------------ | ---------------------------------------------------------------------------------------- |
+| `blocks`    | `Block[]`         | 必填         | 云端返回的正文块；组件内再过 `sanitizeBlocks()`，脏块/未知 type 直接丢弃，页面可原样透传 |
+| `radius`    | `BaseImageRadius` | `'md'`       | 图片块圆角，经 tag-style 的 `img.border-radius` 落进 mp-html                             |
+| `lazy`      | `boolean`         | `true`       | 图片懒加载，透传 mp-html 的 `lazy-load`（详情页在 `scroll-view` 内，建议保持 true）      |
+| `preview`   | `boolean`         | `true`       | 点击图片放大预览（mp-html 的自动预览关闭，由本组件接管编排）                             |
+| `emptyText` | `string`          | `'暂无内容'` | `blocks` 为空数组时的兜底文案                                                            |
 
 ## Emits / Slots
 
@@ -23,12 +23,12 @@
 
 ## 块 → HTML 的映射（`blocksToHtml`，见 utils/blocks.ts）
 
-| 块 | HTML | 为什么 |
-| --- | --- | --- |
-| `text` | level 1/2/3 → `<h2>/<h3>/<p>`，段落内换行拆成「每行一个标签」，非末行内联 `margin-bottom:0` | Skyline 行内流断裂（兼容清单 §2.6，mp-html 叶子走 rich-text 同样继承），`<br>` 会变成独立叶子行，拆行是唯一稳的写法 |
-| `image` | `<img src="fileID" width="W" height="H">`，图注是居中 `<p>` | `cloud://` 是 mp-html 显式特判支持的协议；宽高经属性传入，解析期即可算出占位比例（§11.1 防顶跳），无 w/h 时 widthFix 自撑 |
-| `quote` | `<blockquote>` 内嵌 `margin:0` 的 `<p>` 行 | 外框（浅底/左边框/圆角）属于容器样式，由 tag-style 提供；内部行距靠 `margin:0` 收紧 |
-| `divider` | `<hr />` | tag-style 里重画边线（`border-top`，Skyline 无伪元素） |
+| 块        | HTML                                                                                        | 为什么                                                                                                                    |
+| --------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `text`    | level 1/2/3 → `<h2>/<h3>/<p>`，段落内换行拆成「每行一个标签」，非末行内联 `margin-bottom:0` | Skyline 行内流断裂（兼容清单 §2.6，mp-html 叶子走 rich-text 同样继承），`<br>` 会变成独立叶子行，拆行是唯一稳的写法       |
+| `image`   | `<img src="fileID" width="W" height="H">`，图注是居中 `<p>`                                 | `cloud://` 是 mp-html 显式特判支持的协议；宽高经属性传入，解析期即可算出占位比例（§11.1 防顶跳），无 w/h 时 widthFix 自撑 |
+| `quote`   | `<blockquote>` 内嵌 `margin:0` 的 `<p>` 行                                                  | 外框（浅底/左边框/圆角）属于容器样式，由 tag-style 提供；内部行距靠 `margin:0` 收紧                                       |
+| `divider` | `<hr />`                                                                                    | tag-style 里重画边线（`border-top`，Skyline 无伪元素）                                                                    |
 
 ## tokens 桥接
 

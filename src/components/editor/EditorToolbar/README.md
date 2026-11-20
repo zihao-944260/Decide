@@ -12,12 +12,12 @@ import EditorToolbar from '@/components/editor/EditorToolbar/index.vue'
 
 ## Props / Emits（`types.ts` 原样）
 
-| prop | 类型 | 默认 | 说明 |
-| --- | --- | --- | --- |
-| `activeStyle` | `ParagraphStyle \| null` | 必填 | 直接喂 `editor.activeStyle`（`useEditor.ts:142`）。null = 没聚焦块或聚焦在非 text 块上 |
-| `stylable` | `boolean` | 必填 | 直接喂 `editor.stylable`（= `isStylable(聚焦块)`，只对 text 块为真） |
-| `disabled` | `boolean` | `false` | 整条禁用（发布在途等），插入项也一起置灰 |
-| `canRemove` | `boolean` | `false` | 有聚焦块时才为真（页面喂 `!!focusId`）；删除项只看它，不看 stylable |
+| prop          | 类型                     | 默认    | 说明                                                                                   |
+| ------------- | ------------------------ | ------- | -------------------------------------------------------------------------------------- |
+| `activeStyle` | `ParagraphStyle \| null` | 必填    | 直接喂 `editor.activeStyle`（`useEditor.ts:142`）。null = 没聚焦块或聚焦在非 text 块上 |
+| `stylable`    | `boolean`                | 必填    | 直接喂 `editor.stylable`（= `isStylable(聚焦块)`，只对 text 块为真）                   |
+| `disabled`    | `boolean`                | `false` | 整条禁用（发布在途等），插入项也一起置灰                                               |
+| `canRemove`   | `boolean`                | `false` | 有聚焦块时才为真（页面喂 `!!focusId`）；删除项只看它，不看 stylable                    |
 
 ```ts
 export type Emits = {
@@ -40,7 +40,7 @@ import { TEXT_COLORS } from '@/constants/plan'
 import { useEditor } from '@/composables'
 import type { TextBlock } from '@/types/models'
 
-const editor = useEditor({ /* … */ })
+const editor = useEditor({/* … */})
 // 模板不解包嵌套 Ref：先取一层（同 CommentList/README.md 的口径）
 const activeStyle = editor.activeStyle
 const stylable = editor.stylable
@@ -166,4 +166,3 @@ function onToolbarRemove(): void {
 3. **键盘避让缺数据源**（见上一节）：需要 `EditorTextBlock` 补一个 `keyboard-height` 事件，
    或页面实测 `adjust-position` 是否连带抬起 fixed 底部条。§11.2 那条「编辑器工具栏正确避让」现在还没有接口，
    属于阶段 4 验收前必须裁决的事，**别默认它已经通了**。
-

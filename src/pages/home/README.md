@@ -6,22 +6,23 @@
 
 ## 接线
 
-| 位置 | 接到哪 | 口径 |
-| --- | --- | --- |
-| `fetcher` | `(cursor, pageSize) => fetchPlanList({ cursor, pageSize })` | api 收 `PageQuery` 对象，`PageFetcher` 要位置参数，形状不同必须包一层 |
-| `seed` | `planStore.homePage()` | 空桶算「没加载过」的口径收在 store 里，我的页四个 filter 桶共用同一条 |
-| `onPage` | `planStore.setHomePage(page, append)` | 每页成功回吐，组件持列表态、store 持跨页一致态 |
-| `onError` | `logger.warn('home', ...)` | 提示由 `api/request.ts` 统一 toast（§7.1），这里不弹第二条 |
-| `autoLoad` | `false` | 首屏挂在 `usePageRefresh` 的 `onRefresh` → 组件 `reload()` |
-| `@click` | `uni.navigateTo('/pages/plan/detail/index?planId=')` | query 参数名固定 `planId`（详情页 T3.6 并行） |
-| `@expire` | `planStore.patchPlan(planId, { status: PlanStatus.Ended })` | 不整表刷新；卡片置灰由 `PlanCard` 自理，这里只保证其他消费方看到一致状态 |
-| `@long-press` | **不接** | 首页没有管理入口，ActionSheet 归我的页 T5.6 |
+| 位置          | 接到哪                                                      | 口径                                                                     |
+| ------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `fetcher`     | `(cursor, pageSize) => fetchPlanList({ cursor, pageSize })` | api 收 `PageQuery` 对象，`PageFetcher` 要位置参数，形状不同必须包一层    |
+| `seed`        | `planStore.homePage()`                                      | 空桶算「没加载过」的口径收在 store 里，我的页四个 filter 桶共用同一条    |
+| `onPage`      | `planStore.setHomePage(page, append)`                       | 每页成功回吐，组件持列表态、store 持跨页一致态                           |
+| `onError`     | `logger.warn('home', ...)`                                  | 提示由 `api/request.ts` 统一 toast（§7.1），这里不弹第二条               |
+| `autoLoad`    | `false`                                                     | 首屏挂在 `usePageRefresh` 的 `onRefresh` → 组件 `reload()`               |
+| `@click`      | `uni.navigateTo('/pages/plan/detail/index?planId=')`        | query 参数名固定 `planId`（详情页 T3.6 并行）                            |
+| `@expire`     | `planStore.patchPlan(planId, { status: PlanStatus.Ended })` | 不整表刷新；卡片置灰由 `PlanCard` 自理，这里只保证其他消费方看到一致状态 |
+| `@long-press` | **不接**                                                    | 首页没有管理入口，ActionSheet 归我的页 T5.6                              |
 
 `onRefresh` 里的 `reload({ force: !first })` 是 `seed` 与 `invalidatePage('home')` 的交界处，`first` 由
 `usePageRefresh` 给（它才知道本次是首次加载还是过期/跨页失效回来）：
+
 - 首次 → 非 force，让 seed 命中缓存，冷启动与页面重建秒出（§8.7）；
 - 非首次 → 强制真请求，否则新发的计划要等用户手拽下拉刷新才出现。
-不用组件的 `loaded` 当判据：那是实例级状态，一个列表实例服务多个数据桶时（我的页四个 filter）分不清「这个桶加载过没有」。
+  不用组件的 `loaded` 当判据：那是实例级状态，一个列表实例服务多个数据桶时（我的页四个 filter）分不清「这个桶加载过没有」。
 
 ## 布局（Skyline）
 

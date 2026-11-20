@@ -45,7 +45,7 @@ const DEFAULT_PAGE_SIZE = 10
 
 export function usePagingList<T extends object>(
   fetcher: PageFetcher<T>,
-  options: UsePagingOptions<T> = {},
+  options: UsePagingOptions<T> = {}
 ): PagingList<T> {
   const list = ref<T[]>([]) as Ref<T[]>
   const loading = ref(false)
@@ -209,7 +209,7 @@ export function usePagingList<T extends object>(
     patchItem,
     removeItem,
     setList,
-    reset,
+    reset
   }
 }
 

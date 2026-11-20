@@ -14,7 +14,7 @@ const props = withDefaults(defineProps<Props>(), {
   autoload: true,
   emptyText: '还没有评论，来说两句吧',
   skeletonRows: 2,
-  separated: true,
+  separated: true
 })
 const emit = defineEmits<Emits>()
 
@@ -87,7 +87,7 @@ watch(
   () => props.comments.error.value,
   (message, previous) => {
     if (message && message !== previous) emit('error', message)
-  },
+  }
 )
 
 onMounted(() => {

@@ -8,7 +8,7 @@ import type { CommentItem } from '@/types/models'
 export function createComment(
   planId: string,
   content: string,
-  options?: RequestOptions,
+  options?: RequestOptions
 ): Promise<{ comment: CommentItem }> {
   return request('comment.create', { planId, content }, options)
 }
@@ -16,7 +16,7 @@ export function createComment(
 export function fetchComments(
   planId: string,
   query: PageQuery = {},
-  options?: RequestOptions,
+  options?: RequestOptions
 ): Promise<PageResult<CommentItem>> {
   return request('comment.list', { planId, ...query }, options)
 }

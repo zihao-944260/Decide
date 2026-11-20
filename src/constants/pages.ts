@@ -11,7 +11,7 @@
 export const PAGE_KEYS = {
   home: 'home',
   mine: 'mine',
-  planDetail: 'plan-detail',
+  planDetail: 'plan-detail'
 } as const
 
 export type PageKeyValue = (typeof PAGE_KEYS)[keyof typeof PAGE_KEYS]

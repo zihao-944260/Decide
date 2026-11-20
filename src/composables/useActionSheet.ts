@@ -18,7 +18,7 @@ function nativeSheet(itemList: string[], alertText?: string): Promise<number> {
       fail: (err) => {
         logger.debug('useActionSheet', 'dismissed', err)
         resolve(-1)
-      },
+      }
     })
   })
 }
@@ -36,6 +36,6 @@ export function useActionSheet() {
     close: () => feedback.pickSheet(-1),
     /** BaseActionSheet 的 select/cancel 事件回调 */
     resolve: (index: number) => feedback.pickSheet(index),
-    openNative: (itemList: string[], alertText?: string) => nativeSheet(itemList, alertText),
+    openNative: (itemList: string[], alertText?: string) => nativeSheet(itemList, alertText)
   }
 }

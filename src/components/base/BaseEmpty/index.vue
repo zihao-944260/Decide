@@ -6,7 +6,7 @@ import type { Props, Emits } from './types'
 withDefaults(defineProps<Props>(), {
   icon: '',
   text: '暂无内容',
-  actionText: '',
+  actionText: ''
 })
 const emit = defineEmits<Emits>()
 

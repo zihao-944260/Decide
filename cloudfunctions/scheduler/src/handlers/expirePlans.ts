@@ -34,7 +34,10 @@ export async function expirePlans(startedAt: number): Promise<Record<string, unk
     if (rows.length === 0) break
     scanned += rows.length
     // orderBy(deadline asc)：最早过期的先结算，被截断时积压的一定是最新的那批
-    ended += await planDao.markEnded(rows.map((row) => row._id), now)
+    ended += await planDao.markEnded(
+      rows.map((row) => row._id),
+      now
+    )
     rounds += 1
     if (rows.length < ServerLimit.SCHED_BATCH) break
   }

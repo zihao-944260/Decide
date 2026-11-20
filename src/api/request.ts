@@ -6,7 +6,7 @@ import {
   IDEMPOTENT_ACTIONS,
   type CloudAction,
   type CloudContract,
-  type CloudEvent,
+  type CloudEvent
 } from '@/types/cloud'
 import { logger } from '@/utils/logger'
 
@@ -66,10 +66,13 @@ type CallFunctionParam = Parameters<typeof wx.cloud.callFunction>[0]
 
 function rawCall<A extends CloudAction>(
   action: A,
-  data: CloudContract[A]['req'],
+  data: CloudContract[A]['req']
 ): Promise<ApiResult<CloudContract[A]['res']>> {
   return new Promise((resolve, reject) => {
-    const event: CloudEvent<CloudContract[A]['req']> = { action: localAction(action), payload: data }
+    const event: CloudEvent<CloudContract[A]['req']> = {
+      action: localAction(action),
+      payload: data
+    }
     // miniprogram-api-typings 没有声明 callFunction 的 timeout（运行时支持），按真实字段收敛一次
     const param = {
       name: functionNameOf(action),
@@ -88,7 +91,7 @@ function rawCall<A extends CloudAction>(
         // 原文进日志，页面上只给这一句：否则用户会在重试态里读到 callId 和 trace
         logger.error(TAG, `${action} 传输失败`, detail)
         reject(new ApiError(ErrorCode.SERVER_ERROR, '网络异常，请稍后重试', action, detail))
-      },
+      }
     }
     wx.cloud.callFunction(param as unknown as CallFunctionParam)
   })
@@ -105,7 +108,7 @@ async function callOnce<A extends CloudAction>(
   data: CloudContract[A]['req'],
   options: RequestOptions,
   allowUnauthorizedRetry: boolean,
-  allowTimeoutRetry: boolean,
+  allowTimeoutRetry: boolean
 ): Promise<CloudContract[A]['res']> {
   const startedAt = Date.now()
   try {
@@ -140,7 +143,9 @@ async function callOnce<A extends CloudAction>(
         ? err
         : new ApiError(ErrorCode.SERVER_ERROR, '网络异常，请稍后重试', action, String(err))
     const retriable =
-      apiError.code === ErrorCode.SERVER_ERROR && allowTimeoutRetry && IDEMPOTENT_ACTIONS.includes(action)
+      apiError.code === ErrorCode.SERVER_ERROR &&
+      allowTimeoutRetry &&
+      IDEMPOTENT_ACTIONS.includes(action)
     if (retriable) {
       logger.warn(TAG, `${action} 重试一次`)
       return callOnce(action, data, options, allowUnauthorizedRetry, false)
@@ -156,7 +161,7 @@ async function callOnce<A extends CloudAction>(
 export function request<A extends CloudAction>(
   action: A,
   data: CloudContract[A]['req'],
-  options: RequestOptions = {},
+  options: RequestOptions = {}
 ): Promise<CloudContract[A]['res']> {
   const task = () => callOnce(action, data, options, true, true)
 

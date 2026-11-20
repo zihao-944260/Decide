@@ -17,7 +17,7 @@ import {
   requireWritableUser,
   reviewImages,
   reviewText,
-  validatePlanWrite,
+  validatePlanWrite
 } from './writeShared'
 
 export const create: ActionSpec = {
@@ -34,5 +34,5 @@ export const create: ActionSpec = {
     assertPlanCreated(planId)
     await reviewImages(openId, normalized.payload, ctx)
     return { planId }
-  },
+  }
 }

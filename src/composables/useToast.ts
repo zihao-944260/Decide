@@ -22,15 +22,17 @@ function show(title: string, options: ToastOptions = {}): void {
     title,
     icon: options.icon ?? 'none',
     duration: options.duration ?? DEFAULT_DURATION,
-    mask: options.mask ?? false,
+    mask: options.mask ?? false
   })
 }
 
 export function useToast() {
   return {
     show,
-    success: (title: string, options?: ToastOptions) => show(title, { icon: 'success', ...options }),
-    error: (title: string, options?: ToastOptions) => show(title, { icon: 'none', duration: 2500, ...options }),
+    success: (title: string, options?: ToastOptions) =>
+      show(title, { icon: 'success', ...options }),
+    error: (title: string, options?: ToastOptions) =>
+      show(title, { icon: 'none', duration: 2500, ...options }),
     loading: (title = '加载中…') => uni.showLoading({ title, mask: true }),
     hide: () => {
       try {
@@ -39,7 +41,7 @@ export function useToast() {
         // 没弹过 loading 时 hideLoading 会抛，忽略即可，不该冒泡打断业务流程
         logger.debug('toast', 'hideLoading without showing', err)
       }
-    },
+    }
   }
 }
 

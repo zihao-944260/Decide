@@ -13,7 +13,7 @@ import { updateProfile } from './handlers/updateProfile'
 const actions: ActionMap = {
   login,
   updateProfile,
-  stats,
+  stats
 }
 
 const route = createRouter('user', actions)

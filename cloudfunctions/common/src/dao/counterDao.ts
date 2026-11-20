@@ -20,7 +20,10 @@ export function commentSeqKey(planId: string): string {
 
 export const RECONCILE_CURSOR_KEY = 'reconcile:cursor'
 
-async function rollbackQuiet(tx: { rollback(reason?: unknown): Promise<unknown> }, err: unknown): Promise<void> {
+async function rollbackQuiet(
+  tx: { rollback(reason?: unknown): Promise<unknown> },
+  err: unknown
+): Promise<void> {
   try {
     await tx.rollback(err)
   } catch (rollbackErr) {
@@ -40,7 +43,10 @@ export const counterDao = {
       const raw = await tx.collection(Collection.Counters).doc(key).get()
       const current = rowOf<CounterDoc>(raw)
       const next = (current?.value ?? 0) + 1
-      await tx.collection(Collection.Counters).doc(key).set({ data: { value: next, updatedAt: Date.now() } })
+      await tx
+        .collection(Collection.Counters)
+        .doc(key)
+        .set({ data: { value: next, updatedAt: Date.now() } })
       await tx.commit()
       return next
     } catch (err) {
@@ -81,5 +87,5 @@ export const counterDao = {
       .doc(key)
       .update({ data: { value: cmd.set(value), updatedAt: Date.now() } as UpdatePayload })
     updatedOf(raw)
-  },
+  }
 }

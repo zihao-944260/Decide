@@ -74,23 +74,23 @@ function onScrollToLower(): void {
 
 ## Props
 
-| prop | 类型 | 默认 | 说明 |
-| --- | --- | --- | --- |
-| `comments` | `CommentsController` | 必填 | `useComments(planId)` 返回值整体注入（`list/loading/refreshing/hasMore/loaded/error` + 分页方法） |
-| `now` | `number` | `0` | 相对时间基准（ms）。传 0 时组件不订阅 ticker，只兜底读一次校准时间 |
-| `canRemove` | `(comment) => boolean` | 未传 | 删除权限覆盖。不传用 `comments.canRemove`（只判「本人可删」）；§8.4 的「计划作者也能删别人的评论」由页面注入 |
-| `autoload` | `boolean` | `true` | 挂载即 `reload()`；页面自己在 `onLoad` 编排时关掉 |
-| `emptyText` | `string` | `'还没有评论，来说两句吧'` | 空态文案 |
-| `skeletonRows` | `number` | `2` | 首屏骨架每条几行 |
-| `separated` | `boolean` | `true` | 条目间分隔线（最后一条自动不画） |
+| prop           | 类型                   | 默认                       | 说明                                                                                                         |
+| -------------- | ---------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `comments`     | `CommentsController`   | 必填                       | `useComments(planId)` 返回值整体注入（`list/loading/refreshing/hasMore/loaded/error` + 分页方法）            |
+| `now`          | `number`               | `0`                        | 相对时间基准（ms）。传 0 时组件不订阅 ticker，只兜底读一次校准时间                                           |
+| `canRemove`    | `(comment) => boolean` | 未传                       | 删除权限覆盖。不传用 `comments.canRemove`（只判「本人可删」）；§8.4 的「计划作者也能删别人的评论」由页面注入 |
+| `autoload`     | `boolean`              | `true`                     | 挂载即 `reload()`；页面自己在 `onLoad` 编排时关掉                                                            |
+| `emptyText`    | `string`               | `'还没有评论，来说两句吧'` | 空态文案                                                                                                     |
+| `skeletonRows` | `number`               | `2`                        | 首屏骨架每条几行                                                                                             |
+| `separated`    | `boolean`              | `true`                     | 条目间分隔线（最后一条自动不画）                                                                             |
 
 ## Emits
 
-| 事件 | 载荷 | 说明 |
-| --- | --- | --- |
-| `delete` | `(commentId: string, comment: CommentItem)` | 删除按钮点击。组件不碰 api，调不调 `comments.remove` 由页面决定 |
-| `long-press` | `(comment: CommentItem)` | §8.4 的 ActionSheet 入口：`useActionSheet().open({ actions: [{ text: '删除', danger: true }] })`（`ActionSheetItem` 就是 BaseActionSheet 的项类型） |
-| `error` | `(message: string)` | 分页失败从无到有抛一次，页面埋点/提示只写一处 |
+| 事件         | 载荷                                        | 说明                                                                                                                                                |
+| ------------ | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `delete`     | `(commentId: string, comment: CommentItem)` | 删除按钮点击。组件不碰 api，调不调 `comments.remove` 由页面决定                                                                                     |
+| `long-press` | `(comment: CommentItem)`                    | §8.4 的 ActionSheet 入口：`useActionSheet().open({ actions: [{ text: '删除', danger: true }] })`（`ActionSheetItem` 就是 BaseActionSheet 的项类型） |
+| `error`      | `(message: string)`                         | 分页失败从无到有抛一次，页面埋点/提示只写一处                                                                                                       |
 
 ## defineExpose（`CommentListExpose`）
 

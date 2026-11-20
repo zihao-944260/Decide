@@ -31,7 +31,7 @@ import {
   toUserInfo,
   userDao,
   type ActionSpec,
-  type CommentItem,
+  type CommentItem
 } from 'common'
 
 const PLAN_ID_MAX = 128
@@ -41,11 +41,17 @@ export const list: ActionSpec = {
   run: async (payload) => {
     const planId = asString(payload.planId, '计划 ID', PLAN_ID_MAX)
     const plan = await planDao.getById(planId)
-    if (!plan || plan.status === PlanStatus.Removed) throw new BizError(ErrorCode.NOT_FOUND, '计划不存在或已删除')
+    if (!plan || plan.status === PlanStatus.Removed)
+      throw new BizError(ErrorCode.NOT_FOUND, '计划不存在或已删除')
 
     const args = readPageArgs(payload, ServerLimit.COMMENT_PAGE_SIZE_MAX, Limit.COMMENT_PAGE_SIZE)
     // cursor 缺省时传 null 走首页；_id 次键用于 seq 重复（counters 竞态兜底）时不重不漏
-    const rows = await commentDao.listByPlan(planId, args.cursor?.sort ?? null, args.cursor?.id ?? '', args.limit)
+    const rows = await commentDao.listByPlan(
+      planId,
+      args.cursor?.sort ?? null,
+      args.cursor?.id ?? '',
+      args.limit
+    )
 
     const openIds: string[] = []
     for (const row of rows) {
@@ -59,5 +65,5 @@ export const list: ActionSpec = {
       return toCommentItem(row, doc ? toUserInfo(doc) : fallbackAuthor(row.openId))
     })
     return { list: items, nextCursor: page.nextCursor, hasMore: page.hasMore }
-  },
+  }
 }

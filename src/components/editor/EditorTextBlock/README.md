@@ -53,21 +53,21 @@ function onTextBlockLongPress(id: string): void {
 
 ## Props（逐字抄自 ./types.ts）
 
-| prop | 类型 | 默认 | 说明 |
-| --- | --- | --- | --- |
-| `block` | `TextBlock` | 必填 | 当前块。level/bold/align/color 经 `utils/blocks.ts` 的 `blockStyle()` 变成内联样式 |
-| `focused` | `boolean` | 必填（无默认） | 页面 `editor.focusId === block.id` 的结果。**只驱动视觉态**（聚焦底色、计数可见），不驱动原生 `focus` 属性 |
-| `maxlength` | `number?` | `Limit.BLOCK_TEXT_MAX`（2000） | 与云函数 `planPayload.ts` 的截断值同源（§11.3） |
-| `placeholder` | `string?` | `'写点什么…'` | 空块占位文案 |
+| prop          | 类型        | 默认                           | 说明                                                                                                       |
+| ------------- | ----------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| `block`       | `TextBlock` | 必填                           | 当前块。level/bold/align/color 经 `utils/blocks.ts` 的 `blockStyle()` 变成内联样式                         |
+| `focused`     | `boolean`   | 必填（无默认）                 | 页面 `editor.focusId === block.id` 的结果。**只驱动视觉态**（聚焦底色、计数可见），不驱动原生 `focus` 属性 |
+| `maxlength`   | `number?`   | `Limit.BLOCK_TEXT_MAX`（2000） | 与云函数 `planPayload.ts` 的截断值同源（§11.3）                                                            |
+| `placeholder` | `string?`   | `'写点什么…'`                  | 空块占位文案                                                                                               |
 
 ## Emits（逐字抄自 ./types.ts）
 
-| 事件 | 签名 | 去处 |
-| --- | --- | --- |
-| `focus` | `(id: string)` | `editor.setFocus(id)` |
-| `blur` | `(id: string)` | `if (focusId === id) editor.blur()`（守卫必带，且**只能在页面做**：`props.focusId` 比 `editor.focusId` 慢一帧重渲染，容器里判不准。理由详见 `EditorBlockList/README.md` 的 Emits 表） |
-| `input` | `(id: string, text: string)` | `editor.setText(id, text)` |
-| `long-press` | `(id: string)` | 页面弹 ActionSheet（上移/下移/删除/复制/设为标题） |
+| 事件         | 签名                         | 去处                                                                                                                                                                                  |
+| ------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `focus`      | `(id: string)`               | `editor.setFocus(id)`                                                                                                                                                                 |
+| `blur`       | `(id: string)`               | `if (focusId === id) editor.blur()`（守卫必带，且**只能在页面做**：`props.focusId` 比 `editor.focusId` 慢一帧重渲染，容器里判不准。理由详见 `EditorBlockList/README.md` 的 Emits 表） |
+| `input`      | `(id: string, text: string)` | `editor.setText(id, text)`                                                                                                                                                            |
+| `long-press` | `(id: string)`               | 页面弹 ActionSheet（上移/下移/删除/复制/设为标题）                                                                                                                                    |
 
 Slots：无。`defineExpose`：无。
 
@@ -97,14 +97,14 @@ Slots：无。`defineExpose`：无。
 
 §2.4 逐条 ✅ 的那几个才挂上去了：
 
-| 属性 | 值 | 为什么 |
-| --- | --- | --- |
-| `auto-height` | `true` | 长文撑开（实测 2000 字 → 6 行正常），Skyline 下无 line-clamp 也不需要 |
-| `adjust-position` | `true` | 键盘避让（§11.2） |
-| `cursor-spacing` | `16`（px） | 光标与键盘的呼吸间距，与已验收 `CommentInput` 同口径；属交互量，不是设计 token |
-| `hold-keyboard` | `true` | 点底部工具栏不收起键盘（工具栏与块是兄弟组件，默认行为会把键盘打掉） |
-| `disable-default-padding` | `true` | 去掉原生内边距，让编辑态的文字位置贴住 `ContentRenderer` 的 `<text>` |
-| `maxlength` | `Limit.BLOCK_TEXT_MAX` | 与服务端同源 |
+| 属性                      | 值                     | 为什么                                                                         |
+| ------------------------- | ---------------------- | ------------------------------------------------------------------------------ |
+| `auto-height`             | `true`                 | 长文撑开（实测 2000 字 → 6 行正常），Skyline 下无 line-clamp 也不需要          |
+| `adjust-position`         | `true`                 | 键盘避让（§11.2）                                                              |
+| `cursor-spacing`          | `16`（px）             | 光标与键盘的呼吸间距，与已验收 `CommentInput` 同口径；属交互量，不是设计 token |
+| `hold-keyboard`           | `true`                 | 点底部工具栏不收起键盘（工具栏与块是兄弟组件，默认行为会把键盘打掉）           |
+| `disable-default-padding` | `true`                 | 去掉原生内边距，让编辑态的文字位置贴住 `ContentRenderer` 的 `<text>`           |
+| `maxlength`               | `Limit.BLOCK_TEXT_MAX` | 与服务端同源                                                                   |
 
 刻意**没有**用：`focus`/`blur` **属性**（绑 `:focus="focused"` 会变成「页面改 focusId 就弹键盘」，
 滚动定位改用 `scroll-into-view` 就够了）、`selection-start/end`（无高亮）、`placeholder-class`、
@@ -138,13 +138,13 @@ Slots：无。`defineExpose`：无。
 
 ## EditorQuoteBlock / EditorDividerBlock 与本页的差异
 
-| | EditorQuoteBlock | EditorDividerBlock |
-| --- | --- | --- |
-| 数据 | 只有 `text`，`isStylable()` 为 false → 工具栏样式项置灰 | 没有可写字段，`block` 只带 id |
-| 样式来源 | 同样走 `blockStyle()`（quote 分支 = level 3 字号 + 左对齐） | 无文字样式 |
-| 外观 | 与 `ContentRenderer` 的只读引用块逐条对齐：`padding $space-2 $space-3` / `background $color-fill` / `border-left $border-width-thick solid $color-primary` / `radius $radius-sm` / 正文色 `$color-text-2` | 与只读态同一个 `@include hairline-top`，外层套 `$tap-min-height` 容器承担点击 |
-| 色条实现 | `border-left` 真实节点，不再摆 `__bar` 节点（多一个节点多一套宽度口径），也**不是伪元素** | 线本身 1px，选中时换成 `$border-width-thick solid $color-primary` 加粗高亮 |
-| 事件 | `focus / blur / input / long-press`（同本件） | 只有 `focus`（`@tap` 即选中）与 `long-press`，没有 blur |
+|          | EditorQuoteBlock                                                                                                                                                                                          | EditorDividerBlock                                                            |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| 数据     | 只有 `text`，`isStylable()` 为 false → 工具栏样式项置灰                                                                                                                                                   | 没有可写字段，`block` 只带 id                                                 |
+| 样式来源 | 同样走 `blockStyle()`（quote 分支 = level 3 字号 + 左对齐）                                                                                                                                               | 无文字样式                                                                    |
+| 外观     | 与 `ContentRenderer` 的只读引用块逐条对齐：`padding $space-2 $space-3` / `background $color-fill` / `border-left $border-width-thick solid $color-primary` / `radius $radius-sm` / 正文色 `$color-text-2` | 与只读态同一个 `@include hairline-top`，外层套 `$tap-min-height` 容器承担点击 |
+| 色条实现 | `border-left` 真实节点，不再摆 `__bar` 节点（多一个节点多一套宽度口径），也**不是伪元素**                                                                                                                 | 线本身 1px，选中时换成 `$border-width-thick solid $color-primary` 加粗高亮    |
+| 事件     | `focus / blur / input / long-press`（同本件）                                                                                                                                                             | 只有 `focus`（`@tap` 即选中）与 `long-press`，没有 blur                       |
 
 两个小件都没有 README 也是有意的：契约就在各自 `types.ts` 的注释里，接法与上面一致；
 `scroll-into-view`、`blk-` 前缀、不 sanitize 这三条容易踩的坑统一写在

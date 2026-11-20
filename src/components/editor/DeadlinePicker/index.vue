@@ -32,7 +32,7 @@ const MIN_FUTURE_MS = 60_000
 const WEEK_NAMES = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 
 const props = withDefaults(defineProps<Props>(), {
-  label: '截止时间',
+  label: '截止时间'
 })
 const emit = defineEmits<Emits>()
 
@@ -110,7 +110,12 @@ function buildDays(now: number): DeadlineDay[] {
     // 今天全部档位都已过期 → 这一行不出现（14 天窗口不会因此缩到 13 天以下，明天起永远满档）
     if (daySlots.length === 0) continue
     const day = new Date(dayStart)
-    out.push({ dayStart, date: formatDate(dayStart), week: weekLabel(offset, day), slots: daySlots })
+    out.push({
+      dayStart,
+      date: formatDate(dayStart),
+      week: weekLabel(offset, day),
+      slots: daySlots
+    })
   }
   return out
 }
@@ -240,7 +245,7 @@ function confirm(): void {
         class="deadline-picker__chip"
         :class="{
           'deadline-picker__chip--last': pi === presets.length - 1,
-          'deadline-picker__chip--active': activePreset === preset.days,
+          'deadline-picker__chip--active': activePreset === preset.days
         }"
         hover-class="deadline-picker__chip--hover"
         @tap="applyPreset(preset.days)"
@@ -248,7 +253,8 @@ function confirm(): void {
         <text
           class="deadline-picker__chip-text"
           :class="{ 'deadline-picker__chip-text--active': activePreset === preset.days }"
-        >{{ preset.label }}</text>
+          >{{ preset.label }}</text
+        >
       </view>
     </view>
     <view class="deadline-picker__hint">
@@ -258,14 +264,24 @@ function confirm(): void {
     <BasePopup :visible="sheetVisible" position="bottom" @update:visible="onVisibleChange">
       <view class="deadline-picker__sheet">
         <view class="deadline-picker__bar">
-          <view class="deadline-picker__bar-btn" hover-class="deadline-picker__bar-btn--hover" @tap="closeSheet">
+          <view
+            class="deadline-picker__bar-btn"
+            hover-class="deadline-picker__bar-btn--hover"
+            @tap="closeSheet"
+          >
             <text class="deadline-picker__bar-btn-text">取消</text>
           </view>
           <view class="deadline-picker__bar-title">
             <text class="deadline-picker__bar-title-text">选择截止时间</text>
           </view>
-          <view class="deadline-picker__bar-btn" hover-class="deadline-picker__bar-btn--hover" @tap="confirm">
-            <text class="deadline-picker__bar-btn-text deadline-picker__bar-btn-text--confirm">确定</text>
+          <view
+            class="deadline-picker__bar-btn"
+            hover-class="deadline-picker__bar-btn--hover"
+            @tap="confirm"
+          >
+            <text class="deadline-picker__bar-btn-text deadline-picker__bar-btn-text--confirm"
+              >确定</text
+            >
           </view>
         </view>
 
@@ -274,7 +290,12 @@ function confirm(): void {
         </view>
 
         <view class="deadline-picker__columns">
-          <scroll-view class="deadline-picker__col" :scroll-y="true" :scroll-into-view="jumpDateId" @scroll="onColScroll">
+          <scroll-view
+            class="deadline-picker__col"
+            :scroll-y="true"
+            :scroll-into-view="jumpDateId"
+            @scroll="onColScroll"
+          >
             <view
               v-for="(day, index) in days"
               :id="cellId('d', index)"
@@ -287,15 +308,22 @@ function confirm(): void {
               <text
                 class="deadline-picker__cell-main"
                 :class="{ 'deadline-picker__cell-main--active': index === dateIndex }"
-              >{{ day.date }}</text>
+                >{{ day.date }}</text
+              >
               <text
                 class="deadline-picker__cell-sub"
                 :class="{ 'deadline-picker__cell-sub--active': index === dateIndex }"
-              >{{ day.week }}</text>
+                >{{ day.week }}</text
+              >
             </view>
           </scroll-view>
 
-          <scroll-view class="deadline-picker__col" :scroll-y="true" :scroll-into-view="jumpTimeId" @scroll="onColScroll">
+          <scroll-view
+            class="deadline-picker__col"
+            :scroll-y="true"
+            :scroll-into-view="jumpTimeId"
+            @scroll="onColScroll"
+          >
             <view
               v-for="(slot, index) in slots"
               :id="cellId('t', index)"
@@ -308,7 +336,8 @@ function confirm(): void {
               <text
                 class="deadline-picker__cell-main"
                 :class="{ 'deadline-picker__cell-main--active': index === timeIndex }"
-              >{{ slot.label }}</text>
+                >{{ slot.label }}</text
+              >
             </view>
           </scroll-view>
         </view>

@@ -15,22 +15,22 @@ export const TABBAR_ITEMS = [
     text: '首页',
     url: '/pages/home/index',
     icon: '/static/tabbar/home.png',
-    activeIcon: '/static/tabbar/home-active.png',
+    activeIcon: '/static/tabbar/home-active.png'
   },
   {
     key: 'ideas',
     text: 'Great Ideas',
     url: '/pages/ideas/index',
     icon: '/static/tabbar/idea.png',
-    activeIcon: '/static/tabbar/idea-active.png',
+    activeIcon: '/static/tabbar/idea-active.png'
   },
   {
     key: 'mine',
     text: '我的',
     url: '/pages/mine/index',
     icon: '/static/tabbar/user.png',
-    activeIcon: '/static/tabbar/user-active.png',
-  },
+    activeIcon: '/static/tabbar/user-active.png'
+  }
 ] as const
 
 export type TabBarKey = (typeof TABBAR_ITEMS)[number]['key']

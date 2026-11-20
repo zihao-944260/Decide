@@ -36,7 +36,12 @@ export function inEnum<T>(value: unknown, field: string, allowed: readonly T[]):
  * 只认 fileID 有两个作用 —— ① 防外链图片绕过内容安全审核；② 保证后续能取临时 URL 送审。
  */
 export function isImageFileID(value: unknown): boolean {
-  return typeof value === 'string' && value.startsWith('cloud://') && value.length > 16 && value.length < 512
+  return (
+    typeof value === 'string' &&
+    value.startsWith('cloud://') &&
+    value.length > 16 &&
+    value.length < 512
+  )
 }
 
 export function arrayMax(value: unknown, field: string, max: number): readonly unknown[] {
@@ -95,7 +100,12 @@ export function asArray(value: unknown, field: string, max: number): readonly un
  * 图片 fileID 列表。allowEmpty=true 时允许空串占位（选项图可留空），
  * 计划配图则必须 allowEmpty=false —— 空串会让 mediaCheckAsync 拿到无效 URL。
  */
-export function asFileIDList(value: unknown, field: string, max: number, allowEmpty: boolean): string[] {
+export function asFileIDList(
+  value: unknown,
+  field: string,
+  max: number,
+  allowEmpty: boolean
+): string[] {
   const list = asArray(value, field, max)
   const out: string[] = []
   for (const item of list) {

@@ -27,11 +27,17 @@ const IMAGE_RATIO = 16 / 9
 const NAME_MAX = Limit.OPTION_NAME_MAX
 
 const props = withDefaults(defineProps<Props>(), {
-  disabled: false,
+  disabled: false
 })
 const emit = defineEmits<Emits>()
 
-const { files, pick, retry, remove: dropFile, addExisting } = useUpload({ max: Limit.OPTION_IMAGE_MAX })
+const {
+  files,
+  pick,
+  retry,
+  remove: dropFile,
+  addExisting
+} = useUpload({ max: Limit.OPTION_IMAGE_MAX })
 const sheet = useActionSheet()
 
 /** 一卡一图，所以第 0 项就是本卡的全部上传状态 */
@@ -39,7 +45,9 @@ const item = computed(() => files.value[0])
 const isBusy = computed(() => files.value.some((entry) => entry.status !== 'done'))
 const isError = computed(() => item.value?.status === 'error')
 /** done 才认 fileID：watch 到值变化就一定代表「云端可读」，http://usr 临时路径不会外泄 */
-const doneFileID = computed<string>(() => (item.value && item.value.status === 'done' ? item.value.fileID : ''))
+const doneFileID = computed<string>(() =>
+  item.value && item.value.status === 'done' ? item.value.fileID : ''
+)
 /** 在途/失败显本地临时路径（T0.7：小程序端只有 tempFilePath、没有 fileContent），完成后显 fileID */
 const previewSrc = computed<string>(() => {
   const entry = item.value
@@ -64,7 +72,7 @@ watch(
   () => props.option.name,
   (value) => {
     if (value !== name.value) name.value = value
-  },
+  }
 )
 /** 码点计数走 utils/format.countChars（与云函数 maxLen 的 Array.from 同口径）；maxlength 已把输入硬闸在 20，这里是给用户的读数 */
 const nameLength = computed(() => countChars(name.value))
@@ -88,7 +96,7 @@ watch(doneFileID, (value) => {
 const actions = computed<ActionSheetItem[]>(() => [
   { key: 'up', text: '上移', disabled: props.index <= 0 },
   { key: 'down', text: '下移', disabled: props.index >= props.total - 1 },
-  { key: 'remove', text: '删除该选项', danger: true },
+  { key: 'remove', text: '删除该选项', danger: true }
 ])
 
 function onInput(event: unknown): void {
@@ -160,16 +168,30 @@ async function openMore(): Promise<void> {
         <text
           class="option-editor-card__counter-text"
           :class="{ 'option-editor-card__counter-text--full': nameLength >= NAME_MAX }"
-        >{{ nameLength }}/{{ NAME_MAX }}</text>
+          >{{ nameLength }}/{{ NAME_MAX }}</text
+        >
       </view>
-      <view class="option-editor-card__more" hover-class="option-editor-card__more--hover" @tap="openMore">
+      <view
+        class="option-editor-card__more"
+        hover-class="option-editor-card__more--hover"
+        @tap="openMore"
+      >
         <text class="option-editor-card__more-icon">⋯</text>
       </view>
     </view>
 
-    <view class="option-editor-card__media" :class="{ 'option-editor-card__media--tight': !hasImage }">
+    <view
+      class="option-editor-card__media"
+      :class="{ 'option-editor-card__media--tight': !hasImage }"
+    >
       <view v-if="hasImage" class="option-editor-card__thumb">
-        <BaseImage :src="previewSrc" mode="aspectFill" :ratio="IMAGE_RATIO" radius="sm" :preview="false" />
+        <BaseImage
+          :src="previewSrc"
+          mode="aspectFill"
+          :ratio="IMAGE_RATIO"
+          radius="sm"
+          :preview="false"
+        />
         <view v-if="isBusy" class="option-editor-card__mask">
           <text class="option-editor-card__mask-text">上传中 {{ progress }}%</text>
           <view class="option-editor-card__track">
@@ -182,7 +204,9 @@ async function openMore(): Promise<void> {
           hover-class="option-editor-card__mask--hover"
           @tap.stop="onRetry"
         >
-          <text class="option-editor-card__mask-text option-editor-card__mask-text--error">上传失败</text>
+          <text class="option-editor-card__mask-text option-editor-card__mask-text--error"
+            >上传失败</text
+          >
           <text class="option-editor-card__mask-action">点击重试</text>
         </view>
         <view

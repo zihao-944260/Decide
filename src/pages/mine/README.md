@@ -1,8 +1,9 @@
 # 我的页（`pages/mine/index`）
 
 WBS **T5.5**（我的页编排：`UserHeader` + `StatCards` + `PlanList` + `plan.myList` 游标分页 + 三态 + 下拉刷新）
-+ **T5.6**（我发起的计划长按管理：编辑 / 提前截止 / 删除）。
-结构依据 `技术方案.md` §8.7 与 §11，接线依据 §12 J2 的六条硬约束。**本页不新增组件、不改共享层。**
+
+- **T5.6**（我发起的计划长按管理：编辑 / 提前截止 / 删除）。
+  结构依据 `技术方案.md` §8.7 与 §11，接线依据 §12 J2 的六条硬约束。**本页不新增组件、不改共享层。**
 
 > 2026-11-18 两处变更：① 筛选切换器**只剩上方那排 `StatCards`**（四张卡，含新增的「已截止」），
 > `FilterTabs` 从本页下线 —— 两套控件同时表达同一个 `activeFilter` 是重复 UI，不是双保险；
@@ -57,8 +58,15 @@ function setActiveFilter(filter: MyFilter): void {
   activeFilter.value = filter
 }
 ```
+
 ```vue
-<StatCards :stats="stats" :active="activeFilter" :disabled="!isLoggedIn" :loading="!isLoggedIn" @select="setActiveFilter" />
+<StatCards
+  :stats="stats"
+  :active="activeFilter"
+  :disabled="!isLoggedIn"
+  :loading="!isLoggedIn"
+  @select="setActiveFilter"
+/>
 ```
 
 - `StatCards` 是**纯受控**（不 import store、不持有选中态），高亮一律从这一个 ref 读回来。
@@ -74,13 +82,13 @@ function setActiveFilter(filter: MyFilter): void {
 
 ```ts
 const fetcher: PageFetcher<PlanSummary> = (cursor, pageSize) =>
-  fetchMyPlans({ cursor, pageSize, filter: activeFilter.value })   // 调用时读 ref，不是快照
+  fetchMyPlans({ cursor, pageSize, filter: activeFilter.value }) // 调用时读 ref，不是快照
 
 watch(activeFilter, async () => {
   const list = await resolveList()
   if (!list) return
-  list.scrollToTop()      // ← 先归零，不等数据
-  await list.reload()     // 不 force：seed 命中该桶就秒出（§8.7「切回不重新请求」）
+  list.scrollToTop() // ← 先归零，不等数据
+  await list.reload() // 不 force：seed 命中该桶就秒出（§8.7「切回不重新请求」）
 })
 ```
 
@@ -94,11 +102,11 @@ watch(activeFilter, async () => {
 
 ## 2.1 滚动位置只在两种时刻归零
 
-| 触发 | 走哪条 | 为什么 |
-| --- | --- | --- |
-| 切 filter（点另一张统计卡） | 页面 `watch(activeFilter)` → `list.scrollToTop()` | 换了一桶数据还停在旧滚动深度，看到的第一张卡是新桶的中间某条 |
-| 切 tab 进本页 / 进首页 | `useTabScrollReset(() => planListRef.value?.scrollToTop())`（两页各挂一次） | 导航切页等于「重新看这个页面」 |
-| **从详情页/编辑页返回** | **不动** | §7.3 的既有不变量：返回时要停在原来读到的位置。「onShow 就归零」会把这条打断 |
+| 触发                        | 走哪条                                                                      | 为什么                                                                       |
+| --------------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| 切 filter（点另一张统计卡） | 页面 `watch(activeFilter)` → `list.scrollToTop()`                           | 换了一桶数据还停在旧滚动深度，看到的第一张卡是新桶的中间某条                 |
+| 切 tab 进本页 / 进首页      | `useTabScrollReset(() => planListRef.value?.scrollToTop())`（两页各挂一次） | 导航切页等于「重新看这个页面」                                               |
+| **从详情页/编辑页返回**     | **不动**                                                                    | §7.3 的既有不变量：返回时要停在原来读到的位置。「onShow 就归零」会把这条打断 |
 
 分得开靠 `stores/tabbar.ts` 的 `switchSeq`：它只在真的换了一个 tab 时递增（点当前项、组件 setup 期
 「认领自己」都不加），`useTabScrollReset` 记住上一次看到的 seq，seq 没变就什么都不做 ——
@@ -112,7 +120,7 @@ watch(activeFilter, async () => {
 ## 3. stats 读一处、刷新一次（主 agent 验收时改写的口径）
 
 ```ts
-const stats = computed(() => userStore.stats)                 // 唯一读数的地方，不 import api/user
+const stats = computed(() => userStore.stats) // 唯一读数的地方，不 import api/user
 // loadPage 内：void userStore.refreshStats().catch(...)       // 唯一发请求的地方
 ```
 
@@ -139,7 +147,7 @@ const stats = computed(() => userStore.stats)                 // 唯一读数的
 ```ts
 async function loadPage({ first }: PageRefreshContext): Promise<void> {
   await nextTick()
-  if (!isLoggedIn.value) return                 // ← 不发列表请求（游客调 plan.myList 只会吃 1002）
+  if (!isLoggedIn.value) return // ← 不发列表请求（游客调 plan.myList 只会吃 1002）
   const list = planListRef.value
   if (!list) throw new Error('planList instance not mounted')
   await list.reload({ force: !first })
@@ -152,12 +160,14 @@ async function onLogin(): Promise<void> {
   if (loggingIn.value || isLoggedIn.value) return
   loggingIn.value = true
   try {
-    await userStore.login(undefined, { silent: true })   // 全工程唯一登录链路（与 App.vue 同一个方法）
+    await userStore.login(undefined, { silent: true }) // 全工程唯一登录链路（与 App.vue 同一个方法）
     markStale()
     await loadPage({ first: true })
   } catch (err) {
     showToastMsg('登录失败，请检查网络后重试')
-  } finally { loggingIn.value = false }
+  } finally {
+    loggingIn.value = false
+  }
 }
 ```
 
@@ -174,10 +184,11 @@ async function onLogin(): Promise<void> {
 
 ```ts
 function onProfileUpdated(): void {
-  invalidatePage(PAGE_KEYS.home)   // 首页那些卡片也挂着同一个作者名
-  void runNow()                    // 本页立刻重拉，走 usePageRefresh 的锁（缺口 7 的落点）
+  invalidatePage(PAGE_KEYS.home) // 首页那些卡片也挂着同一个作者名
+  void runNow() // 本页立刻重拉，走 usePageRefresh 的锁（缺口 7 的落点）
 }
 ```
+
 必须重拉的原因不是「保守起见」而是字面事实：`plan.author` 是**读时 join `users` 文档**拼出来的
 （`cloudfunctions/common/src/mapper.ts:71` 的 `toPlanSummary(row, author, now, myOption)`），不是写在计划里的快照，
 所以昵称改了之后旧值只剩在**前端缓存**里 —— 不重拉就一直是旧名字。
@@ -190,10 +201,13 @@ function onProfileUpdated(): void {
 
 ```ts
 function onLongPress(planId: string): void {
-  if (activeFilter.value !== 'created') return      // 只在「我发起的」里给入口（§12 J2-5）
+  if (activeFilter.value !== 'created') return // 只在「我发起的」里给入口（§12 J2-5）
   if (mutationInFlight) return
   const summary = planStore.myLists[activeFilter.value].list.find((i) => i.planId === planId)
-  if (!summary) { showToastMsg('这条计划已不在当前列表，请下拉刷新'); return }
+  if (!summary) {
+    showToastMsg('这条计划已不在当前列表，请下拉刷新')
+    return
+  }
   void openManageSheet(summary)
 }
 ```
@@ -209,12 +223,12 @@ function onLongPress(planId: string): void {
 
 ### ActionSheet 的两条路，本页选 `openNative`
 
-| | `sheet.openNative()`（`uni.showActionSheet`） | `sheet.open()` + `<BaseActionSheet>` |
-| --- | --- | --- |
-| 宿主节点 | **不需要** | 必须在页面渲染 `<BaseActionSheet>`，漏了就是 Promise 永不 resolve + 零报错（§12 J2 点名） |
-| 能力 | 纯文案 ≤6 项，不能置灰、不能 danger 配色、无副标题 | 受控、可 `disabled`/`danger`/`desc` |
-| 渲染成本 | 0（原生弹窗，不进页面节点树） | 页面多一个常驻节点 |
-| 本页动作 | 三项纯文案，够用 | 用不上增量能力 |
+|          | `sheet.openNative()`（`uni.showActionSheet`）      | `sheet.open()` + `<BaseActionSheet>`                                                      |
+| -------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 宿主节点 | **不需要**                                         | 必须在页面渲染 `<BaseActionSheet>`，漏了就是 Promise 永不 resolve + 零报错（§12 J2 点名） |
+| 能力     | 纯文案 ≤6 项，不能置灰、不能 danger 配色、无副标题 | 受控、可 `disabled`/`danger`/`desc`                                                       |
+| 渲染成本 | 0（原生弹窗，不进页面节点树）                      | 页面多一个常驻节点                                                                        |
+| 本页动作 | 三项纯文案，够用                                   | 用不上增量能力                                                                            |
 
 选 `openNative`。理由：① 三项菜单没有一项需要 `desc`/`danger`/置灰，`open()` 的能力全部落空；
 ② 本页是第一次接长按，用原生弹窗把「忘渲染宿主 → 点了没反应」这个坑整个绕掉；
@@ -236,17 +250,18 @@ function manageActionsFor(summary: PlanSummary): ManageAction[] {
   return actions
 }
 ```
+
 `isClosed()` = `status !== Ongoing` 或 `deadline > 0 && deadline <= peekNow()`。
 已截止的计划只剩「删除」：编辑与改期都会被云端 `assertPlanUpdatable` 回 3002，
 摆一个必然报错的菜单项是用一次报错当交互。
 
 ### 三个动作各走哪个 api
 
-| 动作 | api | 云端 | 确认 |
-| --- | --- | --- | --- |
-| 编辑 | 无（纯跳转） | — | 无（编辑页自己管退出确认） |
-| 提前截止 | `fetchPlanDetail` + `updatePlan` | `plan.detail` → `plan.update` | `modal.confirm` |
-| 删除 | `removePlan` | `plan.remove`（软删 `status=3`） | `modal.confirm`（写明「不可恢复、票与评论一并失效」） |
+| 动作     | api                              | 云端                             | 确认                                                  |
+| -------- | -------------------------------- | -------------------------------- | ----------------------------------------------------- |
+| 编辑     | 无（纯跳转）                     | —                                | 无（编辑页自己管退出确认）                            |
+| 提前截止 | `fetchPlanDetail` + `updatePlan` | `plan.detail` → `plan.update`    | `modal.confirm`                                       |
+| 删除     | `removePlan`                     | `plan.remove`（软删 `status=3`） | `modal.confirm`（写明「不可恢复、票与评论一并失效」） |
 
 **编辑**：`uni.navigateTo({ url: '/pages/plan/edit/index?planId=' + planId })`。
 跳转前调 `markStale()`：编辑页改了什么、有没有记得 `invalidatePage('mine')` 都不该影响本页的正确性，
@@ -256,7 +271,10 @@ function manageActionsFor(summary: PlanSummary): ManageAction[] {
 
 ```ts
 const current = await fetchPlanDetail(planId, { silent: true }).catch(() => null)
-if (!current) { showToastMsg('没读到计划内容，未做改动'); return }
+if (!current) {
+  showToastMsg('没读到计划内容，未做改动')
+  return
+}
 const deadline = peekNow() + EARLY_CLOSE_GRACE_MS
 await updatePlan({
   planId,
@@ -265,7 +283,7 @@ await updatePlan({
   images: current.images,
   deadline,
   optionsEnabled: current.optionsEnabled,
-  options: current.options,
+  options: current.options
 })
 ```
 
@@ -299,18 +317,19 @@ dropPlanEverywhere(summary.planId)
 invalidatePage(DETAIL_PAGE_KEY)
 showToastMsg('已删除')
 ```
+
 `modal.confirm` 是 `uni.showModal` 的封装出口 —— 页面里不出现裸 `uni.showModal` / `uni.showToast`（§12-6）。
 `mutationInFlight` 是普通 `let` 而不是 `ref`：它只拦事件、模板不读，做成响应式状态是假装它参与渲染。
 
 ## 6. 删除 / 截止之后跨页怎么收敛（§12 J2-6）
 
-| 消费方 | 读什么 | 本页怎么让它收敛 |
-| --- | --- | --- |
-| 本页 `PlanList` 屏幕上那张卡 | **组件内部**的 `list` ref | `planListRef.removeItem(planId)` / `patchItem(planId, { deadline })` |
-| 首页 `PlanList` | `planStore.home.list`（桶） | `dropPlanEverywhere` 里 filter 掉；截止由 `patchPlan(planId, { deadline })` |
-| 下次进「我的」某桶 | `planStore.myLists[filter].list`（桶） | 同上，四个桶一起 filter（`MY_FILTERS` 枚举，不手写四个 key）；`seed()` 下次直接把它端出来 |
-| 页面栈里那个详情页 | 它自己的 `detail` ref | **写穿 store 到不了它** → `invalidatePage('plan-detail')`，下次 onShow 重拉，被删的那条自然走它的错误重试态 |
-| `voteCounts` / `myVotes` | `planStore` | **刻意不清**（与详情页 README §3 第 2 条同口径：清了会退回旧快照） |
+| 消费方                       | 读什么                                 | 本页怎么让它收敛                                                                                            |
+| ---------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| 本页 `PlanList` 屏幕上那张卡 | **组件内部**的 `list` ref              | `planListRef.removeItem(planId)` / `patchItem(planId, { deadline })`                                        |
+| 首页 `PlanList`              | `planStore.home.list`（桶）            | `dropPlanEverywhere` 里 filter 掉；截止由 `patchPlan(planId, { deadline })`                                 |
+| 下次进「我的」某桶           | `planStore.myLists[filter].list`（桶） | 同上，四个桶一起 filter（`MY_FILTERS` 枚举，不手写四个 key）；`seed()` 下次直接把它端出来                   |
+| 页面栈里那个详情页           | 它自己的 `detail` ref                  | **写穿 store 到不了它** → `invalidatePage('plan-detail')`，下次 onShow 重拉，被删的那条自然走它的错误重试态 |
+| `voteCounts` / `myVotes`     | `planStore`                            | **刻意不清**（与详情页 README §3 第 2 条同口径：清了会退回旧快照）                                          |
 
 **为什么每件事都要做两遍（桶 + 组件）**：这两份是**两个数组**，不是一份数据的两个视图 ——
 `usePagingList.applyPage` 每次都新建组件的容器（`src/composables/usePagingList.ts:83` 的
@@ -461,23 +480,23 @@ showToastMsg('已删除')
 
 ## 10. 与组件 README 不一致的地方（一律以源码为准）
 
-| 文档 | 说法 | 源码事实 | 本页做法 |
-| --- | --- | --- | --- |
-| `UserHeader/README.md` §Props + 缺口 3 | `nickNameMaxlength` 默认 **`-1` = 不限长**，前端没有昵称上限 | `UserHeader/index.vue:37` 默认已是 `Limit.NICKNAME_MAX`(30)，`constants/plan.ts:52` 的 `NICKNAME_MAX` 也有了这个值；`types.ts` 注释已改，README 没跟上 | 页面**不注入**这个 prop（用组件默认值即可） |
-| `UserHeader/README.md` §接线示例 | `UserHeader`/`StatCards`/`FilterTabs`/`PlanList` 全放进页面自己的 `<scroll-view type="list">` | `PlanList/index.vue` 的根节点**自己就是** `scroll-view type="list"` → 照抄就是嵌套滚动容器 + 两个滚动流 | 头部两块静态在滚动流之外（§1） |
-| `FilterTabs/README.md`（整篇） | 描述一个仍在页面里的筛选条 | **2026-11-18 该组件已从本页下线**（用户口径：上方四张卡就是切换器，下面再来一条是重复入口）；文案表 `MY_FILTER_LABELS` 早已上收到 `constants/plan.ts`，消费方只剩 `StatCards/types.ts` | 页面不 import、不渲染；`src/components/business/FilterTabs/` 目前零引用，删不删等主 agent 裁决 |
-| `UserHeader/README.md` §接线示例 | `onRefresh` 里 `await userStore.refresh()`；`:loading="refreshing"` | `user.login` 不重算 `stats`（`login.ts:9-10`）→ 这次往返拉不回新数字，要拉数字得用 `user.stats` | 不调 `refresh()`；改在 `loadPage` 里非阻塞调 `refreshStats()`（理由见 §3）；`loading` 只在未登录时给 |
-| `UserHeader/README.md` §未登录口径 | 推荐 `v-if="isLoggedIn"` 整块不渲染 `StatCards` | 组件本身支持 `disabled` + `loading` 两个 prop | 保留渲染但 `disabled` + `loading`：§12 J2-3 明确要求「传 `disabled`」，且不渲染会让登录前后版式跳一大块 |
+| 文档                                   | 说法                                                                                          | 源码事实                                                                                                                                                                               | 本页做法                                                                                                |
+| -------------------------------------- | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `UserHeader/README.md` §Props + 缺口 3 | `nickNameMaxlength` 默认 **`-1` = 不限长**，前端没有昵称上限                                  | `UserHeader/index.vue:37` 默认已是 `Limit.NICKNAME_MAX`(30)，`constants/plan.ts:52` 的 `NICKNAME_MAX` 也有了这个值；`types.ts` 注释已改，README 没跟上                                 | 页面**不注入**这个 prop（用组件默认值即可）                                                             |
+| `UserHeader/README.md` §接线示例       | `UserHeader`/`StatCards`/`FilterTabs`/`PlanList` 全放进页面自己的 `<scroll-view type="list">` | `PlanList/index.vue` 的根节点**自己就是** `scroll-view type="list"` → 照抄就是嵌套滚动容器 + 两个滚动流                                                                                | 头部两块静态在滚动流之外（§1）                                                                          |
+| `FilterTabs/README.md`（整篇）         | 描述一个仍在页面里的筛选条                                                                    | **2026-11-18 该组件已从本页下线**（用户口径：上方四张卡就是切换器，下面再来一条是重复入口）；文案表 `MY_FILTER_LABELS` 早已上收到 `constants/plan.ts`，消费方只剩 `StatCards/types.ts` | 页面不 import、不渲染；`src/components/business/FilterTabs/` 目前零引用，删不删等主 agent 裁决          |
+| `UserHeader/README.md` §接线示例       | `onRefresh` 里 `await userStore.refresh()`；`:loading="refreshing"`                           | `user.login` 不重算 `stats`（`login.ts:9-10`）→ 这次往返拉不回新数字，要拉数字得用 `user.stats`                                                                                        | 不调 `refresh()`；改在 `loadPage` 里非阻塞调 `refreshStats()`（理由见 §3）；`loading` 只在未登录时给    |
+| `UserHeader/README.md` §未登录口径     | 推荐 `v-if="isLoggedIn"` 整块不渲染 `StatCards`                                               | 组件本身支持 `disabled` + `loading` 两个 prop                                                                                                                                          | 保留渲染但 `disabled` + `loading`：§12 J2-3 明确要求「传 `disabled`」，且不渲染会让登录前后版式跳一大块 |
 
 ## 11. 刻意没做
 
-| 项 | 原因 |
-| --- | --- |
-| 「全部」tab | `MyFilter` 只有四个值；并集查询与两套游标锚点冲突（已裁决，§2） |
-| 个人主页 / 关注 / 消息 / 设置 | §1.3 非目标 |
-| 自己发 `user.stats` 拉数字 | §12 J2-2 点名禁止；改为上报缺口 1 |
-| 「立即截止」 | 云端不接受 `deadline <= now`（缺口 6） |
-| 页面自己写 `onShow` / `onHide` / 定时器 | 全部归 `usePageRefresh` + `utils/ticker` |
-| 长按菜单接 `<BaseActionSheet>` | 见 §5 的取舍表；详情页同一条路 |
-| 编辑页返回后读它的返回值 diff | 没有返回值可读（`navigateTo` 不回传），统一 `markStale()` 重拉 |
-| 列表项动画 / worklet | 兼容清单 §2.5：SharedValue 无法经 Vue 模板承载 |
+| 项                                      | 原因                                                            |
+| --------------------------------------- | --------------------------------------------------------------- |
+| 「全部」tab                             | `MyFilter` 只有四个值；并集查询与两套游标锚点冲突（已裁决，§2） |
+| 个人主页 / 关注 / 消息 / 设置           | §1.3 非目标                                                     |
+| 自己发 `user.stats` 拉数字              | §12 J2-2 点名禁止；改为上报缺口 1                               |
+| 「立即截止」                            | 云端不接受 `deadline <= now`（缺口 6）                          |
+| 页面自己写 `onShow` / `onHide` / 定时器 | 全部归 `usePageRefresh` + `utils/ticker`                        |
+| 长按菜单接 `<BaseActionSheet>`          | 见 §5 的取舍表；详情页同一条路                                  |
+| 编辑页返回后读它的返回值 diff           | 没有返回值可读（`navigateTo` 不回传），统一 `markStale()` 重拉  |
+| 列表项动画 / worklet                    | 兼容清单 §2.5：SharedValue 无法经 Vue 模板承载                  |
