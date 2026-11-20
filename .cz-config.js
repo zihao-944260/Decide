@@ -11,5 +11,15 @@ module.exports = {
   ],
   scopes: [],
   allowCustomScopes: false,
-  allowBreakingChanges: ['feat', 'fix']
+  allowBreakingChanges: ['feat', 'fix'],
+  messages: {
+    type: '请选择要提交的变更类型：',
+    scope: '\n请选择本次变更的影响范围（可直接输入自定义范围，或按 ↑↓ 选择已有范围）：',
+    customScope: '请输入自定义的影响范围：',
+    subject: '\n请简要描述本次变更（简短、祈使语气，不超过100字）：',
+    body: '\n详细描述本次变更（可选，按 | 换行）：\n',
+    breaking: '列出破坏性变更（可选）：',
+    footer: '关联关闭的问题（可选，如 #31, #34）：',
+    confirmCommit: '\n确认使用以上信息提交？(y/N/n)↑→取消 ←返回空格=多选'
+  }
 }
