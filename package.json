@@ -2,7 +2,6 @@
   "name": "decide",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "description": "计划公示与群体表决小程序（uni-app + TS + Skyline + 微信云开发）",
   "scripts": {
     "dev:mp-weixin": "uni -p mp-weixin",
