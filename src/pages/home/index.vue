@@ -128,7 +128,7 @@ useTabScrollReset(() => {
 
 <template>
   <view class="home">
-    <BaseNavbar class="home__nav" title="点子商量局1122" :backable="false" />
+    <BaseNavbar class="home__nav" title="点子商量局" :backable="false" />
 
     <PlanList
       ref="planListRef"
