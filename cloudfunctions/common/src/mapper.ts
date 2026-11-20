@@ -17,7 +17,7 @@ import type {
   UserDoc,
   UserInfo,
   UserStats,
-  VoteCounts,
+  VoteCounts
 } from './types'
 
 const EMPTY_STATS: UserStats = { created: 0, joined: 0, ongoing: 0 }
@@ -31,7 +31,7 @@ export function fallbackAuthor(openId: string): UserInfo {
     status: 0,
     stats: { ...EMPTY_STATS },
     createdAt: 0,
-    updatedAt: 0,
+    updatedAt: 0
   }
 }
 
@@ -44,10 +44,10 @@ export function toUserInfo(doc: UserDoc): UserInfo {
     stats: {
       created: doc.stats?.created ?? 0,
       joined: doc.stats?.joined ?? 0,
-      ongoing: doc.stats?.ongoing ?? 0,
+      ongoing: doc.stats?.ongoing ?? 0
     },
     createdAt: doc.createdAt ?? 0,
-    updatedAt: doc.updatedAt ?? 0,
+    updatedAt: doc.updatedAt ?? 0
   }
 }
 
@@ -60,7 +60,7 @@ export function toUserInfo(doc: UserDoc): UserInfo {
 export function toPlanOptions(
   enabled: boolean,
   options: readonly PlanOption[] | undefined,
-  optionVotes: Record<string, number> | undefined,
+  optionVotes: Record<string, number> | undefined
 ): PlanOption[] {
   if (!enabled) return []
   const counts = optionVotes ?? {}
@@ -68,7 +68,12 @@ export function toPlanOptions(
 }
 
 /** 列表投影不含 blocks 全量；options 因 #61 逐选项进度条需要而带上（单条 payload 略增，契约要求） */
-export function toPlanSummary(row: PlanRow, author: UserInfo, now: number, myOption: string): PlanSummary {
+export function toPlanSummary(
+  row: PlanRow,
+  author: UserInfo,
+  now: number,
+  myOption: string
+): PlanSummary {
   return {
     planId: row._id,
     title: row.title ?? '',
@@ -83,7 +88,7 @@ export function toPlanSummary(row: PlanRow, author: UserInfo, now: number, myOpt
     commentCount: row.commentCount ?? 0,
     status: effectiveStatus(row.status, row.deadline, now),
     author,
-    createdAt: row.createdAt ?? 0,
+    createdAt: row.createdAt ?? 0
   }
 }
 
@@ -92,7 +97,7 @@ export function toPlanDetail(
   author: UserInfo,
   myVote: number,
   now: number,
-  myOption: string,
+  myOption: string
 ): PlanDetail {
   return {
     planId: doc._id ?? '',
@@ -112,7 +117,7 @@ export function toPlanDetail(
     blocks: doc.blocks ?? [],
     images: doc.images ?? [],
     myVote,
-    updatedAt: doc.updatedAt ?? 0,
+    updatedAt: doc.updatedAt ?? 0
   }
 }
 
@@ -124,7 +129,7 @@ export function toCommentItem(doc: CommentDoc, author: UserInfo): CommentItem {
     seq: doc.seq ?? 0,
     status: doc.status ?? 0,
     author,
-    createdAt: doc.createdAt ?? 0,
+    createdAt: doc.createdAt ?? 0
   }
 }
 

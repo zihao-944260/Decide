@@ -8,7 +8,7 @@ const props = withDefaults(defineProps<Props>(), {
   ratio: 0,
   lazy: true,
   radius: 'none',
-  preview: false,
+  preview: false
 })
 const emit = defineEmits<Emits>()
 

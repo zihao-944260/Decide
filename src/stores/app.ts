@@ -17,7 +17,9 @@ export const useAppStore = defineStore('app', () => {
   const windowWidth = ref(375)
   const windowHeight = ref(667)
   const pixelRatio = ref(3)
-  const menuButtonRect = ref<{ top: number; height: number; right: number; width: number } | null>(null)
+  const menuButtonRect = ref<{ top: number; height: number; right: number; width: number } | null>(
+    null
+  )
   const globalLoading = ref(false)
 
   function initSystemInfo(): void {
@@ -34,12 +36,17 @@ export const useAppStore = defineStore('app', () => {
         left: area.left,
         right: area.right,
         width: area.width,
-        height: area.height,
+        height: area.height
       }
     }
     const rect = uni.getMenuButtonBoundingClientRect?.()
     if (rect && rect.height) {
-      menuButtonRect.value = { top: rect.top, height: rect.height, right: rect.right, width: rect.width }
+      menuButtonRect.value = {
+        top: rect.top,
+        height: rect.height,
+        right: rect.right,
+        width: rect.width
+      }
     }
   }
 
@@ -65,6 +72,6 @@ export const useAppStore = defineStore('app', () => {
     globalLoading,
     navBarHeight,
     initSystemInfo,
-    serverNow,
+    serverNow
   }
 })

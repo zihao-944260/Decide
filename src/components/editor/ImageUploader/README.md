@@ -3,10 +3,10 @@
 **计划配图**九宫格（`plans.images`，最多 `Limit.IMAGE_MAX = 3` 张）。它是 §8.1 页面结构里
 `EditorBlockList` 之后的那一段，跟正文图片块（`EditorImageBlock`）是两码事：
 
-| | 数据落点 | 状态机 | 谁触发选图 |
-| --- | --- | --- | --- |
-| `ImageUploader`（本组件） | `plans.images: string[]` | 组件内一台 `useUpload({ max: 3 })` | 九宫格的「添加」格 |
-| `EditorImageBlock` | `blocks[i].fileID` | 每块一台 `useUpload({ max: 1 })` | 块自己的空卡；**工具栏只落空块，不上传** |
+|                           | 数据落点                 | 状态机                             | 谁触发选图                               |
+| ------------------------- | ------------------------ | ---------------------------------- | ---------------------------------------- |
+| `ImageUploader`（本组件） | `plans.images: string[]` | 组件内一台 `useUpload({ max: 3 })` | 九宫格的「添加」格                       |
+| `EditorImageBlock`        | `blocks[i].fileID`       | 每块一台 `useUpload({ max: 1 })`   | 块自己的空卡；**工具栏只落空块，不上传** |
 
 两者都**不许**自己调 `wx.cloud` / `uni.chooseMedia` / `uni.chooseImage`：上传只有 `useUpload` 一个出口
 （`useUpload.ts:7-11` 全工程唯一允许直接碰云存储 SDK 的地方）。
@@ -21,12 +21,12 @@ import type { UploaderChange } from '@/components/editor/ImageUploader/types'
 
 ## Props / Emits（`types.ts` 原样）
 
-| prop | 类型 | 默认 | 说明 |
-| --- | --- | --- | --- |
-| `modelValue` | `string[]` | `[]` | v-model：`plans.images`（fileID 数组）。传云端已有值即完成编辑态回填 |
-| `max` | `number` | `Limit.IMAGE_MAX` | 只在创建 `useUpload` 实例时读一次，**运行中改此值不生效**（要改就换 key 重建组件） |
-| `disabled` | `boolean` | `false` | 提交在途时整体禁用；组件**不弹提示**（见下面「提示只有一条」） |
-| `label` | `string` | `'配图'` | 区块标题；计数 `2/3` 由组件自己拼 |
+| prop         | 类型       | 默认              | 说明                                                                               |
+| ------------ | ---------- | ----------------- | ---------------------------------------------------------------------------------- |
+| `modelValue` | `string[]` | `[]`              | v-model：`plans.images`（fileID 数组）。传云端已有值即完成编辑态回填               |
+| `max`        | `number`   | `Limit.IMAGE_MAX` | 只在创建 `useUpload` 实例时读一次，**运行中改此值不生效**（要改就换 key 重建组件） |
+| `disabled`   | `boolean`  | `false`           | 提交在途时整体禁用；组件**不弹提示**（见下面「提示只有一条」）                     |
+| `label`      | `string`   | `'配图'`          | 区块标题；计数 `2/3` 由组件自己拼                                                  |
 
 ```ts
 export type Emits = {
@@ -68,15 +68,14 @@ interface EditModel {
   deadline: number
 }
 
-const editor = useEditor({ /* getExtra: () => ({ images: model.value.images, deadline: …, optionsEnabled: …, options: … }) —— 见 useEditor.ts:46 EditorExtra */ })
-const form = useForm<EditModel>(
-  () => ({ images: [], deadline: 0 }),
-  {
-    // 配图不是必填：这里**不能**加 required，否则 0 张图永远发不出去（§8.2 允许空数组）
-    images: [{ max: Limit.IMAGE_MAX, message: `配图最多 ${Limit.IMAGE_MAX} 张` }],
-    deadline: [{ required: true, message: '请选择截止时间' }],
-  } satisfies FormRules<EditModel>,
-)
+const editor = useEditor({
+  /* getExtra: () => ({ images: model.value.images, deadline: …, optionsEnabled: …, options: … }) —— 见 useEditor.ts:46 EditorExtra */
+})
+const form = useForm<EditModel>(() => ({ images: [], deadline: 0 }), {
+  // 配图不是必填：这里**不能**加 required，否则 0 张图永远发不出去（§8.2 允许空数组）
+  images: [{ max: Limit.IMAGE_MAX, message: `配图最多 ${Limit.IMAGE_MAX} 张` }],
+  deadline: [{ required: true, message: '请选择截止时间' }]
+} satisfies FormRules<EditModel>)
 
 // ★ Ref 解包口径（CommentList/README.md 同一个坑）：form.model / form.submitting / form.valid
 //   都是对象里的嵌套 Ref，模板**不解包**，必须在 setup 顶层先取一层。
@@ -93,7 +92,7 @@ function onUploaderChange(payload: UploaderChange): void {
 }
 
 const canPublish = computed<boolean>(
-  () => !submitting.value && !imagesUploading.value && valid.value,
+  () => !submitting.value && !imagesUploading.value && valid.value
 )
 
 // 编辑态回填：detail 回来后写 model.images，组件用 addExisting() 落成 done 格子（不重传、不弹相册）
@@ -173,11 +172,11 @@ uploading = files.some((item) => item.status !== 'done') // 有任何非 done �
 
 ### v-model 的三条回流规则（`syncFromModel`）
 
-| 外部动作 | 组件行为 |
-| --- | --- |
-| 传进来本地没有的 fileID | `addExisting()` 补格子（编辑态回填） |
+| 外部动作                   | 组件行为                                               |
+| -------------------------- | ------------------------------------------------------ |
+| 传进来本地没有的 fileID    | `addExisting()` 补格子（编辑态回填）                   |
 | 把某个 fileID 从数组里去掉 | 跟着摘掉对应的 **done** 格子（发布成功重置、放弃草稿） |
-| 数组里出现重复 fileID | 只补一格（`hasFileID()` 去重） |
+| 数组里出现重复 fileID      | 只补一格（`hasFileID()` 去重）                         |
 
 **在途与失败条目不参与「外部删掉就摘格子」**：它们的 `fileID === ''`，永远匹配不上 `modelValue`，
 所以外部数组怎么变都不会打断正在跑的 `uploadFile`。组件自己发完 `update:modelValue` 后

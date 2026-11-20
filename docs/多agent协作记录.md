@@ -6,15 +6,15 @@
 
 ## 1. 仓库状态
 
-| 项 | 值 |
-| --- | --- |
-| 仓库 | `/Users/duan/Desktop/Decide`，分支 `main`（2026-11-12 初始化） |
-| 基线提交 | `d5bb797` chore: 初始化仓库，纳入 T0 预研后的工程基线 |
-| 契约提交 | `7b125a1` feat(contract): T1.1 冻结前后端接口契约与请求单一出口 |
-| 文档提交 | `e15840d` docs: 记录四路并行 agent 的指令存档与跨窗口交接状态 |
-| 工作区 | **仍无任何新提交**（HEAD 还是 `e15840d`）。A/B/C/D/D1/D2/D3/D4/E1/E2/E3/F1/G1 全部已验收但都未 commit——等用户点头。**H1/H2/H3/I1 四路在飞**（15:59 拉起，阶段 4 编辑器组件 + 阶段 5 我的页组件，0 条已验收）；阶段 3（组件 + 首页 + 详情页）已收口，页面层 `pages/plan/edit/**`（T4.11~T4.13）与 `pages/mine/**`（T5.5/T5.6）留给下一轮 |
+| 项         | 值                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 仓库       | `/Users/duan/Desktop/Decide`，分支 `main`（2026-11-12 初始化）                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 基线提交   | `d5bb797` chore: 初始化仓库，纳入 T0 预研后的工程基线                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| 契约提交   | `7b125a1` feat(contract): T1.1 冻结前后端接口契约与请求单一出口                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 文档提交   | `e15840d` docs: 记录四路并行 agent 的指令存档与跨窗口交接状态                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 工作区     | **仍无任何新提交**（HEAD 还是 `e15840d`）。A/B/C/D/D1/D2/D3/D4/E1/E2/E3/F1/G1 全部已验收但都未 commit——等用户点头。**H1/H2/H3/I1 四路在飞**（15:59 拉起，阶段 4 编辑器组件 + 阶段 5 我的页组件，0 条已验收）；阶段 3（组件 + 首页 + 详情页）已收口，页面层 `pages/plan/edit/**`（T4.11~T4.13）与 `pages/mine/**`（T5.5/T5.6）留给下一轮                                                                                                                                                                          |
 | WIP 恢复点 | `/tmp/decide-wip-1430.tar.gz`（拉起 E 路前）→ `/tmp/decide-wip-1505.tar.gz`（拉起 F1/G1 的时刻：已确认快照里 `pages/home/index.vue` 是 10:43 占位、`pages/plan/detail/index.vue` 是 14:58 占位，**两路 agent 尚未写盘**，所以这是干净的阶段 3 终点态）→ `/tmp/decide-wip-1559.tar.gz`（拉起 H1/H2/H3/I1 的时刻，274 条目：阶段 3 全量产出 + 本轮我改的 `useEditor.updateImage` / `TEXT_COLORS`；已确认快照里 `src/components/editor/**` 与 `UserHeader/StatCards/FilterTabs` **均不存在**，即阶段 4/5 起点干净） |
-| 云环境 | `cloud1-d2g9acyyhb220d834`；AppID `wx93aa8833f25d90b0` |
+| 云环境     | `cloud1-d2g9acyyhb220d834`；AppID `wx93aa8833f25d90b0`                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 ## 2. 冻结文件（所有 agent 与我都不许改，改动需先裁决）
 
@@ -22,47 +22,47 @@
 
 **这些是 agent 的禁改清单**（对 agent 而言「冻结」= 完全不许写盘，缺口只能上报）。`package.json`、`src/pages.json`、`src/App.vue`、`.gitignore`、`src/pages/**`、`src/styles/**`、`src/stores/{user,plan}.ts` 也在原文里列为冻结，但它们是本窗口**由我**改过的，逐条裁决如下，改动都在 §4/§5 有出处：
 
-| 文件 | 谁改 | 裁决依据 |
-| --- | --- | --- |
-| `package.json` | D4 + 我 | 只加一行 `build:cloud`；`esbuild` 暂时靠传递依赖，显式声明留到 ESLint 那一批 |
-| `.gitignore` | D4 + 我 | 产物治理：`dist-cloud/`、`cloudfunctions/*/**/*.js|d.ts` 通用规则（§4.10） |
-| `src/pages.json` | 我 | 页面路由是天然单写点，只能我加：`plan/detail/index`、`plan/edit/index`（§5） |
-| `src/App.vue` | 我 | T5.1 上半：`wx.cloud.init` 之后加冷启动静默登录（`silent: true`，§5） |
-| `src/pages/**` | 我建占位 → F1/G1 拥有 | 阶段 3 的交付物就是页面；**从「冻结」改成「按 §3 所有权表逐目录放行」**，两路各只有一个页面目录 |
-| `src/styles/tokens.scss` | 我 | `$ratio-bar-*` 三个专用 token（§4.7）。A 路已收口，禁飞期为零 |
-| `src/stores/user.ts` | 我 | `login()` 加可选 `options: RequestOptions` 透传，为的就是冷启动那次登录不弹错误 toast（§5） |
-| `src/constants/plan.ts` | 我 | 阶段 3 收口：只**加**一行 `CommentStatusValue`（与既有 `PlanStatusValue` / `VoteTypeValue` 同构），既有值与语义一字未动（§4.12）。阶段 4 下发前：**再加 `TEXT_COLORS` 色板**（4 项，含 `value: ''` 复位项），因为 §9.1-5 禁止组件硬编码色值、而色板是 `blocks.color` 这份**数据**的合法取值集合，SCSS 变量在 TS 里读不到，只能有个 TS 侧单点（§11） |
-| `src/composables/{usePageRefresh,useVote,useActionSheet,index}.ts`、`src/stores/feedback.ts` | 我 | F1/G1 上报的共享层缺口：`onRefresh(ctx.first)`、`toStoreVote()`、`SheetAction` 删除改渲染侧的 `ActionSheetItem`；C 路早已验收，改动时**无 agent 在飞**（§4.11 / §4.12） |
-| `src/composables/useEditor.ts` | 我 | 阶段 4 下发前的**唯一一处** composable 变更：新增 `updateImage(id, {fileID,w,h})`。缺口来源是「图片块先以空 `fileID` 落进列表、上传成功后才写回」这条 T4.4 流程 —— 既有 `EditorController` 只有 `insertImage`，没有落定已有块的入口，而 `blocks` 是裸 `Ref<Block[]>`，让页面/组件直接改它会绕过 `ensureTrailingTextBlock` 与草稿 debounce 两个不变量。加在 composable 里而不是让 H2 自己 mutate，是为了让「异步上传回调踩到已被删除的块」这种边界只处理一次（实现里对非 image 块与不存在 id 静默 return）。改动时**无 agent 在飞**，`type-check` 相关文件 0 报错（§11） |
-| `src/components/business/**`（E1/E2/E3 的目录） | 我 | 验收后所有权回到我：PlanList 补 `scroll` 转发 + 组件契约类型，CountDown / VoteRatioBar / CommentItem / OptionCardList / CommentList 的注释与 README 口径修正 |
-| `src/styles/tokens.scss` | 我 | 第二条 `$fab-size: 96rpx`（FAB 本体与让位区同源，§4.11 裁决 4） |
-| `src/styles/mixins.scss` | 接手前就有（A 路 / 第一窗口） | 删 `ellipsis-n`（兼容清单 §2.2：Skyline 下 `-webkit-line-clamp` 不生效，多行截断只能 JS 截字）、加 `flex-*` / `safe-area-bottom` / `hairline-*`。**本窗口没再动它**，列出来只为让 §1 的 `git status` 逐个对得上 |
-| `package.json` | 我 | 第二条 `check:templates`；`esbuild` 显式声明仍与 ESLint 同批（§5） |
-| `scripts/check-templates.mjs` | 我（新增） | G1 那条工具链缺口的替代方案：静态对账模板标签 ↔ import（§4.12） |
-| `docs/Skyline兼容清单.md` | 我 | §1.5 末尾补「`.a.b` 不属于禁用三类」的澄清，防止假平台限制继续流传（§4.11 裁决 6） |
+| 文件                                                                                         | 谁改                          | 裁决依据                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| -------------------------------------------------------------------------------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `package.json`                                                                               | D4 + 我                       | 只加一行 `build:cloud`；`esbuild` 暂时靠传递依赖，显式声明留到 ESLint 那一批                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `.gitignore`                                                                                 | D4 + 我                       | 产物治理：`dist-cloud/`、`cloudfunctions/_/\**/_.js                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | d.ts` 通用规则（§4.10） |
+| `src/pages.json`                                                                             | 我                            | 页面路由是天然单写点，只能我加：`plan/detail/index`、`plan/edit/index`（§5）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `src/App.vue`                                                                                | 我                            | T5.1 上半：`wx.cloud.init` 之后加冷启动静默登录（`silent: true`，§5）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `src/pages/**`                                                                               | 我建占位 → F1/G1 拥有         | 阶段 3 的交付物就是页面；**从「冻结」改成「按 §3 所有权表逐目录放行」**，两路各只有一个页面目录                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `src/styles/tokens.scss`                                                                     | 我                            | `$ratio-bar-*` 三个专用 token（§4.7）。A 路已收口，禁飞期为零                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `src/stores/user.ts`                                                                         | 我                            | `login()` 加可选 `options: RequestOptions` 透传，为的就是冷启动那次登录不弹错误 toast（§5）                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `src/constants/plan.ts`                                                                      | 我                            | 阶段 3 收口：只**加**一行 `CommentStatusValue`（与既有 `PlanStatusValue` / `VoteTypeValue` 同构），既有值与语义一字未动（§4.12）。阶段 4 下发前：**再加 `TEXT_COLORS` 色板**（4 项，含 `value: ''` 复位项），因为 §9.1-5 禁止组件硬编码色值、而色板是 `blocks.color` 这份**数据**的合法取值集合，SCSS 变量在 TS 里读不到，只能有个 TS 侧单点（§11）                                                                                                                                                                                                                     |
+| `src/composables/{usePageRefresh,useVote,useActionSheet,index}.ts`、`src/stores/feedback.ts` | 我                            | F1/G1 上报的共享层缺口：`onRefresh(ctx.first)`、`toStoreVote()`、`SheetAction` 删除改渲染侧的 `ActionSheetItem`；C 路早已验收，改动时**无 agent 在飞**（§4.11 / §4.12）                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `src/composables/useEditor.ts`                                                               | 我                            | 阶段 4 下发前的**唯一一处** composable 变更：新增 `updateImage(id, {fileID,w,h})`。缺口来源是「图片块先以空 `fileID` 落进列表、上传成功后才写回」这条 T4.4 流程 —— 既有 `EditorController` 只有 `insertImage`，没有落定已有块的入口，而 `blocks` 是裸 `Ref<Block[]>`，让页面/组件直接改它会绕过 `ensureTrailingTextBlock` 与草稿 debounce 两个不变量。加在 composable 里而不是让 H2 自己 mutate，是为了让「异步上传回调踩到已被删除的块」这种边界只处理一次（实现里对非 image 块与不存在 id 静默 return）。改动时**无 agent 在飞**，`type-check` 相关文件 0 报错（§11） |
+| `src/components/business/**`（E1/E2/E3 的目录）                                              | 我                            | 验收后所有权回到我：PlanList 补 `scroll` 转发 + 组件契约类型，CountDown / VoteRatioBar / CommentItem / OptionCardList / CommentList 的注释与 README 口径修正                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `src/styles/tokens.scss`                                                                     | 我                            | 第二条 `$fab-size: 96rpx`（FAB 本体与让位区同源，§4.11 裁决 4）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `src/styles/mixins.scss`                                                                     | 接手前就有（A 路 / 第一窗口） | 删 `ellipsis-n`（兼容清单 §2.2：Skyline 下 `-webkit-line-clamp` 不生效，多行截断只能 JS 截字）、加 `flex-*` / `safe-area-bottom` / `hairline-*`。**本窗口没再动它**，列出来只为让 §1 的 `git status` 逐个对得上                                                                                                                                                                                                                                                                                                                                                         |
+| `package.json`                                                                               | 我                            | 第二条 `check:templates`；`esbuild` 显式声明仍与 ESLint 同批（§5）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `scripts/check-templates.mjs`                                                                | 我（新增）                    | G1 那条工具链缺口的替代方案：静态对账模板标签 ↔ import（§4.12）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `docs/Skyline兼容清单.md`                                                                    | 我                            | §1.5 末尾补「`.a.b` 不属于禁用三类」的澄清，防止假平台限制继续流传（§4.11 裁决 6）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## 3. 并行 agent（第二窗口拉起：D1/D2 续做 → E1/E2/E3 组件 → D4 打包 → F1/G1 页面 → H1/H2/H3/I1 阶段 4/5 组件 → J1/J2 阶段 4/5 页面）
 
-| 代号 | agentId | 所有权 | 状态 | 接手方式 |
-| --- | --- | --- | --- | --- |
-| A 设计系统 | `ageneral-purpose-bdbb167de7f3b3a3` | `src/styles/**`、`src/uni.scss`、`src/components/base/**` | **已交付并验收**，见 §4.1 | 续做完成：12 个 base 组件齐 + 2 个类型错误已修 |
-| B 服务层 | —（第一窗口已完成） | `src/api/{user,plan,vote,comment,index}.ts`、`src/stores/{user,plan}.ts` | **已验收**，见 §4 | 无需重拉 |
-| C 工具层 | `ageneral-purpose-41914bbbcee1e1b2` | `src/utils/**`（logger 除外）、`src/composables/**`、`src/stores/feedback.ts` | **已交付并验收**，见 §4.3 | 从零重做完成：2530 行，14 个文件 |
-| D1 云函数·plan 域 | `ageneral-purpose-06a107812535f84c` | `cloudfunctions/plan/**` | **已交付并验收**，见 §4.4 | 6 个 action + `writeShared.ts`，tsc 0 错误 |
-| D2 云函数·其余 | `ageneral-purpose-358fac6f7fae6768` | `cloudfunctions/{vote,comment,scheduler}/**` | **已交付并验收**，见 §4.5 | 12 个文件，三目录 tsc 各 0 错误 |
-| D3 云函数·参与轨 | `ageneral-purpose-13ac9a9b03dd2956` | `common/src/{constants,paging,dao/participationDao,dao/index}.ts` + `{vote,comment}/src/**` + `plan/src/handlers/{helpers,myList}.ts` + `user/src/handlers/stats.ts` | **已交付并验收**，见 §4.6 | 重建后产物 hash 一致，无手抄漂移 |
-| E1 业务·列表 | `ageneral-purpose-e2c862c7645c2198` | `src/components/business/{CountDown,VoteRatioBar,PlanCard,PlanList}/**` | **已交付并验收**，见 §4.7 | 4 组件 710 行，无越界改动 |
-| E2 业务·详情内容 | `ageneral-purpose-20d9f6a160932014` | `src/components/business/{ContentRenderer,OptionCardList,OptionCard,VoteActions}/**` | **已交付并验收**，见 §4.8 | 被明令禁止改 `utils/blocks.ts` 与重写 `useVote`；这两处由主 agent 修 |
-| E3 业务·评论 | `ageneral-purpose-2ea978672c395391` | `src/components/business/{CommentItem,CommentList,CommentInput}/**` | **已交付并验收**，见 §4.9 | `CommentItem` 组件名与 `types/models.ts` 同名 interface 已用 import 别名隔开 |
-| D4 云函数·打包 | `ageneral-purpose-4f8fd968ae4be963` | `scripts/build-cloud.mjs`、`dist-cloud/**`、根 `package.json` 的 `build:cloud`、`.gitignore` | **已交付并验收**，见 §4.10 | esbuild 单文件 bundle，解掉 `file:../common` 部署死结；主 agent 补做了产物治理 |
-| F1 页面·首页 | `ageneral-purpose-e0c65db4943d8f3a` | `src/pages/home/**` | **已交付并验收**，见 §4.11 | 15:05 与 G1 同时拉起；上报 6 条共享层缺口，全部由我收口（页面自己一条没碰） |
-| G1 页面·详情页 | `ageneral-purpose-37a57b12b81814cf` | `src/pages/plan/detail/**` | **已交付并验收**，见 §4.12 | 与 F1 同时拉起、约 21 分钟返回；自己发现「模板用了未 import 的组件而 vue-tsc 不报」并修掉，催生 `check:templates` |
-| H1 编辑器·块组件 | `ageneral-purpose-fb589add5cce78ab` | `src/components/editor/{EditorBlockList,EditorTextBlock,EditorQuoteBlock,EditorDividerBlock}/**` | **已交付并验收**，见 §4.13（T4.2/T4.5/T4.7，1090 行） | 四类块单元与它的宿主同源，否则宿主与子件的 props 由两路各发明一套；`EditorBlockList` 消费 H2 的 `EditorImageBlock`，契约字面量两侧 prompt 逐字相同（§11）—— **两侧落盘逐字一致，这是本轮唯一真正被验证的跨路契约** |
-| H2 编辑器·图片与工具栏 | `ageneral-purpose-e2dc0d4353834088` | `src/components/editor/{EditorImageBlock,EditorToolbar,ImageUploader}/**` | **已交付并验收**，见 §4.13（T4.4/T4.6/T4.8，1521 行） | 唯一被授权使用 `useUpload` 的一路（§11 的例外条款）；色板必须 import `TEXT_COLORS`；`updateImage` 契约依赖我 15:59 的 composable 变更 |
-| H3 编辑器·截止与选项 | `ageneral-purpose-acc69d9ea4249440` | `src/components/editor/{DeadlinePicker,OptionsSection,OptionEditorCard}/**` | **已交付并验收**，见 §4.13（T4.9/T4.10，1498 行；**发现一处 uid 计数器缺陷，已由我修**） | 已明令**禁用原生 `<picker>`/`<picker-view>`**（兼容清单在 Skyline 下对它们零实测条目），自定义改 `BasePopup` + 两列可点选；给出「DeadlinePicker 先交」的优先级，避免两头半成品 |
-| I1 组件·我的页 | `ageneral-purpose-f56af70b860e4d23` | `src/components/business/{UserHeader,StatCards,FilterTabs}/**` | **已交付并验收**，见 §4.13（T5.2/T5.3/T5.4，1183 行） | 与编辑器三路零交集；已裁决 `FilterTabs` 四项用 flex 一行放下、**不做横向滚动**（§8.7 原文那句是为一个不存在的问题引入未验证风险）；`chooseAvatar`/`nickname` 无 Skyline 实测条目，要求 README 标待真机复核 + 必须有「只改昵称」兜底 |
-| J1 页面·编辑页 | —（**agentId 未归档**，16:35 与 J2 同时下发；指令原文见 `docs/agent-prompts.md` §12） | `src/pages/plan/edit/**` | **已交付并验收**，见 §4.14（T4.11/T4.12/T4.13，上报 10 条共享层缺口、自己一条没碰） | 首跑就覆盖了 §4.13 遗留的「编辑器组件 WXML 生成未验」；它抓到的 `onBackPress` 在 mp-weixin 不生效，是本轮最有价值的一条上报 |
-| J2 页面·我的页 | —（同上） | `src/pages/mine/**` | **已交付并验收**，见 §4.14（T5.5/T5.6，上报 8 条） | 它把「stats 随 `userInfo` 走」这条**我的旧裁决**顶了回来：`user.login` 不重算 stats，`user.stats` 零调用方 ⇒ 三张卡必然与列表条数不一致。指令已按它改写（§12 J2 第 2 条） |
+| 代号                   | agentId                                                                               | 所有权                                                                                                                                                               | 状态                                                                                     | 接手方式                                                                                                                                                                                                                            |
+| ---------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A 设计系统             | `ageneral-purpose-bdbb167de7f3b3a3`                                                   | `src/styles/**`、`src/uni.scss`、`src/components/base/**`                                                                                                            | **已交付并验收**，见 §4.1                                                                | 续做完成：12 个 base 组件齐 + 2 个类型错误已修                                                                                                                                                                                      |
+| B 服务层               | —（第一窗口已完成）                                                                   | `src/api/{user,plan,vote,comment,index}.ts`、`src/stores/{user,plan}.ts`                                                                                             | **已验收**，见 §4                                                                        | 无需重拉                                                                                                                                                                                                                            |
+| C 工具层               | `ageneral-purpose-41914bbbcee1e1b2`                                                   | `src/utils/**`（logger 除外）、`src/composables/**`、`src/stores/feedback.ts`                                                                                        | **已交付并验收**，见 §4.3                                                                | 从零重做完成：2530 行，14 个文件                                                                                                                                                                                                    |
+| D1 云函数·plan 域      | `ageneral-purpose-06a107812535f84c`                                                   | `cloudfunctions/plan/**`                                                                                                                                             | **已交付并验收**，见 §4.4                                                                | 6 个 action + `writeShared.ts`，tsc 0 错误                                                                                                                                                                                          |
+| D2 云函数·其余         | `ageneral-purpose-358fac6f7fae6768`                                                   | `cloudfunctions/{vote,comment,scheduler}/**`                                                                                                                         | **已交付并验收**，见 §4.5                                                                | 12 个文件，三目录 tsc 各 0 错误                                                                                                                                                                                                     |
+| D3 云函数·参与轨       | `ageneral-purpose-13ac9a9b03dd2956`                                                   | `common/src/{constants,paging,dao/participationDao,dao/index}.ts` + `{vote,comment}/src/**` + `plan/src/handlers/{helpers,myList}.ts` + `user/src/handlers/stats.ts` | **已交付并验收**，见 §4.6                                                                | 重建后产物 hash 一致，无手抄漂移                                                                                                                                                                                                    |
+| E1 业务·列表           | `ageneral-purpose-e2c862c7645c2198`                                                   | `src/components/business/{CountDown,VoteRatioBar,PlanCard,PlanList}/**`                                                                                              | **已交付并验收**，见 §4.7                                                                | 4 组件 710 行，无越界改动                                                                                                                                                                                                           |
+| E2 业务·详情内容       | `ageneral-purpose-20d9f6a160932014`                                                   | `src/components/business/{ContentRenderer,OptionCardList,OptionCard,VoteActions}/**`                                                                                 | **已交付并验收**，见 §4.8                                                                | 被明令禁止改 `utils/blocks.ts` 与重写 `useVote`；这两处由主 agent 修                                                                                                                                                                |
+| E3 业务·评论           | `ageneral-purpose-2ea978672c395391`                                                   | `src/components/business/{CommentItem,CommentList,CommentInput}/**`                                                                                                  | **已交付并验收**，见 §4.9                                                                | `CommentItem` 组件名与 `types/models.ts` 同名 interface 已用 import 别名隔开                                                                                                                                                        |
+| D4 云函数·打包         | `ageneral-purpose-4f8fd968ae4be963`                                                   | `scripts/build-cloud.mjs`、`dist-cloud/**`、根 `package.json` 的 `build:cloud`、`.gitignore`                                                                         | **已交付并验收**，见 §4.10                                                               | esbuild 单文件 bundle，解掉 `file:../common` 部署死结；主 agent 补做了产物治理                                                                                                                                                      |
+| F1 页面·首页           | `ageneral-purpose-e0c65db4943d8f3a`                                                   | `src/pages/home/**`                                                                                                                                                  | **已交付并验收**，见 §4.11                                                               | 15:05 与 G1 同时拉起；上报 6 条共享层缺口，全部由我收口（页面自己一条没碰）                                                                                                                                                         |
+| G1 页面·详情页         | `ageneral-purpose-37a57b12b81814cf`                                                   | `src/pages/plan/detail/**`                                                                                                                                           | **已交付并验收**，见 §4.12                                                               | 与 F1 同时拉起、约 21 分钟返回；自己发现「模板用了未 import 的组件而 vue-tsc 不报」并修掉，催生 `check:templates`                                                                                                                   |
+| H1 编辑器·块组件       | `ageneral-purpose-fb589add5cce78ab`                                                   | `src/components/editor/{EditorBlockList,EditorTextBlock,EditorQuoteBlock,EditorDividerBlock}/**`                                                                     | **已交付并验收**，见 §4.13（T4.2/T4.5/T4.7，1090 行）                                    | 四类块单元与它的宿主同源，否则宿主与子件的 props 由两路各发明一套；`EditorBlockList` 消费 H2 的 `EditorImageBlock`，契约字面量两侧 prompt 逐字相同（§11）—— **两侧落盘逐字一致，这是本轮唯一真正被验证的跨路契约**                  |
+| H2 编辑器·图片与工具栏 | `ageneral-purpose-e2dc0d4353834088`                                                   | `src/components/editor/{EditorImageBlock,EditorToolbar,ImageUploader}/**`                                                                                            | **已交付并验收**，见 §4.13（T4.4/T4.6/T4.8，1521 行）                                    | 唯一被授权使用 `useUpload` 的一路（§11 的例外条款）；色板必须 import `TEXT_COLORS`；`updateImage` 契约依赖我 15:59 的 composable 变更                                                                                               |
+| H3 编辑器·截止与选项   | `ageneral-purpose-acc69d9ea4249440`                                                   | `src/components/editor/{DeadlinePicker,OptionsSection,OptionEditorCard}/**`                                                                                          | **已交付并验收**，见 §4.13（T4.9/T4.10，1498 行；**发现一处 uid 计数器缺陷，已由我修**） | 已明令**禁用原生 `<picker>`/`<picker-view>`**（兼容清单在 Skyline 下对它们零实测条目），自定义改 `BasePopup` + 两列可点选；给出「DeadlinePicker 先交」的优先级，避免两头半成品                                                      |
+| I1 组件·我的页         | `ageneral-purpose-f56af70b860e4d23`                                                   | `src/components/business/{UserHeader,StatCards,FilterTabs}/**`                                                                                                       | **已交付并验收**，见 §4.13（T5.2/T5.3/T5.4，1183 行）                                    | 与编辑器三路零交集；已裁决 `FilterTabs` 四项用 flex 一行放下、**不做横向滚动**（§8.7 原文那句是为一个不存在的问题引入未验证风险）；`chooseAvatar`/`nickname` 无 Skyline 实测条目，要求 README 标待真机复核 + 必须有「只改昵称」兜底 |
+| J1 页面·编辑页         | —（**agentId 未归档**，16:35 与 J2 同时下发；指令原文见 `docs/agent-prompts.md` §12） | `src/pages/plan/edit/**`                                                                                                                                             | **已交付并验收**，见 §4.14（T4.11/T4.12/T4.13，上报 10 条共享层缺口、自己一条没碰）      | 首跑就覆盖了 §4.13 遗留的「编辑器组件 WXML 生成未验」；它抓到的 `onBackPress` 在 mp-weixin 不生效，是本轮最有价值的一条上报                                                                                                         |
+| J2 页面·我的页         | —（同上）                                                                             | `src/pages/mine/**`                                                                                                                                                  | **已交付并验收**，见 §4.14（T5.5/T5.6，上报 8 条）                                       | 它把「stats 随 `userInfo` 走」这条**我的旧裁决**顶了回来：`user.login` 不重算 stats，`user.stats` 零调用方 ⇒ 三张卡必然与列表条数不一致。指令已按它改写（§12 J2 第 2 条）                                                           |
 
 > **阶段 3 拆三条线而不是两条**：E2/E3 各自的组件数（4 / 3）看着不多，但 `ContentRenderer` 要吃透 `utils/blocks.ts` 的块解析、`CommentInput` 要吃透 Skyline 的 textarea 限制，都是要反复读源码的活。按 D 路撞 150 轮上限的教训，宁可多开一路，也不让一个 agent 横跨「渲染 + 投票 + 评论」三域。
 > **E 路的公共新增约束**（此前 A/B/C/D 没有的冲突面）：三条线同时往 `src/components/business/` 写，`npm run type-check` 会互相污染 → 已要求每条线只 grep 自己路径的报错、别人的半成品一律不碰，并且**禁止创建 `src/components/business/index.ts` 这类共享桶文件**（否则三路同写一文件必然互相覆盖）。页面层 import 用完整路径 `@/components/business/Xxx/index.vue`。**这条纪律在阶段 4 被原样继承到 `src/components/editor/`（见 §11），说明它是通用的，不是 business 目录专属。**
@@ -211,8 +211,6 @@ v1 已裁决不做的两点：BaseButton 没有「赞同绿」变体，赞同按
 3. 技术方案 §6.6 改写：「就地编译到 index.js」的旧口径、`build-cloud.ts` 文件名、以及「脚本内置部署重试」的要求都已更正——**部署与重试归主 agent，构建脚本不产生任何云端副作用**。
 
 已知假设（不改，但要记着）：脚本 `import esbuild from 'esbuild'` 依赖 esbuild 由 `vite` / `@dcloudio/uni-cli-shared` 提升到根 `node_modules`（当前 0.20.2）。npm 的扁平安装满足这一点；若将来换 pnpm 或升级后不再提升，需要把 esbuild 显式写进 `devDependencies`（与 ESLint/husky 一起补，避免与运行中的 agent 抢 node_modules）。
-
-
 
 ## 4.11 F1 路（首页编排 T3.5）：已交付并验收 + 六条共享层裁决
 
@@ -432,20 +430,21 @@ cloud.callFunction:fail errCode: -501000  FunctionName parameter could not be fo
 
 **用户裁定**：给了掘金 @Xchen 的编辑器截图（标题/创建人/详情 三段表单 + 两行图标工具栏 + WYSIWYG），要求「按这个样式实现富文本编辑」。在平台与冻结契约内能映射的全映射了：
 
-| 参考稿控件 | 实现落点 |
-| --- | --- |
-| B | 加粗当前聚焦块（TextBlock.bold） |
-| 对齐三条横线 ×2 | 左/居中（右对齐契约 §8.1 没有，不做） |
-| H1 / H2 / 正文 | level 1/2/3（字形文本，Skyline 无 SVG/pseudo） |
-| 四色板 | TEXT_COLORS 空心=默认 + 三实色 |
-| 引用 / 分割线 / 图片 | 既有 insert 动作 |
-| 删除（新增） | **删当前聚焦块**：`canRemove` prop → `remove` emit → 页面 `onToolbarRemove` → `useEditor.removeBlock`（焦点自动落邻居块） |
+| 参考稿控件           | 实现落点                                                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| B                    | 加粗当前聚焦块（TextBlock.bold）                                                                                          |
+| 对齐三条横线 ×2      | 左/居中（右对齐契约 §8.1 没有，不做）                                                                                     |
+| H1 / H2 / 正文       | level 1/2/3（字形文本，Skyline 无 SVG/pseudo）                                                                            |
+| 四色板               | TEXT_COLORS 空心=默认 + 三实色                                                                                            |
+| 引用 / 分割线 / 图片 | 既有 insert 动作                                                                                                          |
+| 删除（新增）         | **删当前聚焦块**：`canRemove` prop → `remove` emit → 页面 `onToolbarRemove` → `useEditor.removeBlock`（焦点自动落邻居块） |
 
 **不能映射的（有证据，不是偷懒）**：I/U 斜体/下划线 —— Skyline rich-text 内联流对全库皆坏（§2.4）且契约 §8.1 冻结为段落级；undo/redo/缩进 —— 契约无此通道。已向用户报备。
 
 **实现**（全在 `src/components/editor/EditorToolbar/` 与 `src/pages/plan/edit/`）：工具栏两行重写（行1 B/对齐横条/H1·H2·正文，行2 色板+分隔+四个插入项；`canRemove && !disabled` 才点亮删除）；编辑页两卡合一（标题+计数 / 创建人 / 详情 同卡三段），EditorToolbar 吸底接线。四道静态门全绿：type-check、check:templates 41、check:docrefs 134/0/0、build:mp-weixin。
 
 **miniprogram-automator 能力矩阵（本轮硬换来的，下次直接照用）**：
+
 - **prod 构建 `setupState` 是空的**（inline 模式），不能靠它喂数据驱动页面。
 - 类选择器在**页面级** 0 命中，但**自定义组件内部的作用域查询可用**：`page.$('editor-toolbar')` → `.$$('.editor-toolbar__item')` 拿得到元素；两跳 `ebl.$('editor-text-block').$$('textarea')` 也通。
 - **组件内部节点的 `tap()`/`input()` 静默无效**（事件不进 handler）；**组件根元素 tap 能真实派发**（`et.tap()` 端到端触发过 insert-quote）。
@@ -462,6 +461,7 @@ cloud.callFunction:fail errCode: -501000  FunctionName parameter could not be fo
 **用户裁定（愤怒原话）**：「你知道什么叫富文本编辑框吗？？？？？有你这样写的吗，多个输入框组成，你糊弄谁呢？……我给你样式了你为什么不按照我的样式实现，有很多三方包能实现你为什么不用」。§4.19 的「多 textarea 拼块 + 段落级样式」被彻底否决。本窗口把正文换成**单一原生 `<editor>`（Quill 内核）真 WYSIWYG 编辑面**，按参考稿样式落地。
 
 **架构（不重新部署云函数）**：
+
 - 原生 `<editor>` 只在 **WebView 渲染页**可用（Skyline 不支持）。故 `pages.json` 给 edit + detail 两页加 `"renderer":"webview"`，全局仍 Skyline（首页/我的页是纯文本摘要，不受影响）。
 - 线上契约仍是 `blocks`：已部署云函数 `validateBlock` 对 `block.text` 原样存储（asString 不消毒），所以**行内 HTML 标记直接住在 `block.text` 里**，无损往返。新增桥 `src/utils/richhtml.ts`：`blocksToEditorHtml`（加载→`setContents`）/ `editorHtmlToBlocks`（输入→`useEditor.replaceBlocks`，草稿/计数/提交沿用）。详情侧 `blocks.ts` 的 `cleanInline` 白名单消毒 + mp-html 渲染，编辑=发布一致。
 - 行内样式规则：块级（text-align）落 p/h，行内（color/font-weight）必须落 span/strong。Quill 输出 color 为 `rgb(...)`，`COLOR_RE` 同时认 hex 与 rgb/rgba。对齐输出内联 `style="text-align:center"`，桥也认 `ql-align-center` class。
@@ -469,11 +469,13 @@ cloud.callFunction:fail errCode: -501000  FunctionName parameter could not be fo
 - 工具栏两行页面级，`@touchend.stop` → 编译成 `catchtouchend`（官方保选区写法）。`onFormatTap` 对 bold/italic/underline/strike 用显式 `!isOn(name)` 布尔切换（与点亮态一致、SDK 稳定）。
 
 **automator 能力矩阵更正（本轮硬换来，覆盖 §4.19 的一条）**：
+
 - **WebView 渲染页里 `page.$('#rich-editor')` / `page.$$('.plan-edit__tb-item')` 这类元素句柄拿不到**（整页 DOM 在独立 WebView 上下文，逻辑层元素查询返回 null，`$$` 甚至会挂起超时）。§4.19 说「组件内部作用域查询可用」只对 Skyline 页成立。
 - **正确姿势**：一切走 `mp.evaluate()` 在 app 上下文里跑 `wx.createSelectorQuery().select('#rich-editor').context(res=>res.context)` 拿 EditorContext，再 `ctx.setContents/getContents/format/insertText`；视觉证据用 `mp.screenshot()`。EditorContext 是逻辑层 API，webview 页照样可用。
 - 工具栏真实 `catchtouchend` 路径在 Skyline 页用 `element.trigger('touchend')` 验过（§4.19）；webview 页改为直驱 `ctx.format(...)`（与工具栏同一 API）证明格式链路。
 
 **运行时验收（本窗口新鲜复跑，SDK 3.17.6 / devtools）**：
+
 - 单一编辑面：截图 `/tmp/rt/rt-relaunch.png` 显示「详情」是**一整块**编辑面（placeholder「写点什么，支持加粗 / 斜体 / 标题 / 对齐 / 插图…」），不再是多 textarea。
 - EditorContext obtained: **true**。
 - WYSIWYG 渲染（`/tmp/rt/rt-2-rich.png`，23:46 新鲜）：H1「众议富文本验收」大字、**加粗强调**、<span style="color:#e8544b">红色重点</span>、居中一行、分割线、结尾段落，全部在单面内实时渲染。
@@ -492,6 +494,7 @@ cloud.callFunction:fail errCode: -501000  FunctionName parameter could not be fo
 **用户裁定（愤怒原话 + 掘金参考图）**：「我让你按照这个图来，工具栏呢？？？？」。§4.20 把工具栏**吸底**放错位置、图标集也不符（色板/H2/正文/分割线），首屏根本看不到 → 被否决。参考图的工具栏是**详情标签下、编辑面上方的圆角灰卡、两行图标**。
 
 **按图落地**（全在 `src/pages/plan/edit/index.vue` + 新增 `src/static/editor/*.png`）：
+
 - 位置：移进标题卡，「详情」标签与 `<editor>` 之间，圆角灰卡（`$color-fill`+`$radius-md`），随内容滚动、首屏可见。删除旧吸底工具栏与色板行。
 - 行1：B/I/U（字形）+ 左/中/右/justify 四对齐；行2：撤销/重做/缩进减/缩进加/H1/图片/删除。与参考图逐一对应。
 - 图标：PIL 4× 超采样 + LANCZOS 生成 14 个真透明线性 PNG（10 深色 + 4 对齐蓝色激活态），角落 alpha=0 验证过。
@@ -520,12 +523,14 @@ cloud.callFunction:fail errCode: -501000  FunctionName parameter could not be fo
 **用户原话**（三张标注截图）：「其他页面的滑动和间距不改吗，首页和详情页？同时这间距呢，样式调整好了行吗，你整体检查一下样式，把间距不对的都调整好。同时下拉刷新有问题，一直处于刷新态，在刷新是清空数据，不要又展示loading骨架屏又展示一些真实数据」。截图标注：编辑页工具栏左右溢出（绿框）、选项卡开关 OFF 却露出「添加选项」按钮且卡右缘溢出、提示「点下面按钮」但按钮在上方。
 
 **根因与修复（四组）**：
+
 1. **盒模型分裂**（工具栏/按钮溢出根因）：Skyline 默认 border-box，WebView 渲染页（edit/detail）默认 content-box → `width:100% + 左右 padding` 只在 WebView 页溢出父容器。`src/styles/global.scss` 加标签选择器 `box-sizing: border-box` 重置（view/scroll-view/button/input/editor/image/text 等）；组件运行时 `styleIsolation: 'apply-shared'`（dist common/vendor.js 证实），app.wxss 能进组件内部，一条规则修掉 BaseButton/工具栏/选项卡全部溢出。
 2. **v-show/hidden 在 WebView 被覆盖**（选项收不起根因）：v-show 编译为 `hidden="{{!x}}"`，WebView 下类 `display:flex` 与框架 `[hidden]` 同优先级、后写赢 → body 永不收起（Skyline 原生处理 hidden，故只有 WebView 页暴露）。OptionsSection 改显式类名 `options-section__body--off { display:none }`（两渲染器都收得起；保活 useUpload 实例，不用 v-if）；提示文案改「还没有选项，点上方按钮加第一个」（按钮在提示上方）。
 3. **下拉刷新状态机**（卡刷新态 + 骨架/真数据同屏根因）：`usePagingList.reload()` 旧版立即复位 refreshing=false，原生 scroll-view 的 `refresher-triggered` 拿不到 true→false 过渡，spinner 永不收回；`refresh()` 还在 busy 时忽略下拉手势，同样卡死。现：reload 全程保持 refreshing=true（继承下拉态），run() finally 的 true→false 才是收回信号；refresh() 不再查 busy（reload 以 seq 作废在途请求接管）；reload 请求路径清空 `list.value=[]` + `error.value=''`，PlanList 模板用 `<template v-else>` 包真列表 + BaseLoadMore ⇒ 骨架独占整屏，与真数据永不同屏（用户裁定）。
 4. **全页间距审计**：PlanList 滚动内容首子加真实节点 `.plan-list__top { height: $card-gap }`（滚动内容里 :first-child 不可靠），提供首页 navbar→首卡 / 我的 tabs→首卡的 40rpx；我的页 `__tabs` margin-bottom 删除（间距单点由 spacer 提供，避免叠加）；首页 `__list`、我的 `__list` 补 `flex:1 + min-height:0`（§4.22 同款滚动坑）。编辑/详情卡距 §4.22 已统一，本轮复验无漂移。
 
 **运行时验收（SDK 3.17.6，automator，本窗口新鲜跑）**：
+
 - 溢出几何：工具栏 L/R 24→366、外卡 12→378 ⇒ 左右对称收容；选项 ON 按钮 24→366 H45 contained=true；OFF section H61、无按钮无提示（`/tmp/rt/rt-fix-options-on.png` / `rt-fix-options-off.png`）。
 - 下拉刷新：首页与我的均 mid `{triggered:"true", skeleton:true, items:false}`（`/tmp/rt/rt-fix-refreshing.png` 仅骨架卡 + 原生刷新点）、after `{triggered:"false", skeleton:false, items:true}`（`rt-fix-refreshed.png` / `rt-fix-mine.png`）⇒ spinner 收回、不卡、不同屏。
 - 间距：首页 navbar→首卡、我的 tabs→首卡实测 20.8px ≈ 40rpx（截图宽 750、逻辑 375）；详情页滚动 + 卡距复验（`rt-fix-detail.png`，滚动条可见 ⇒ 可滚）。
@@ -540,11 +545,13 @@ cloud.callFunction:fail errCode: -501000  FunctionName parameter could not be fo
 **用户原话**（两张编辑页标注截图，绿框圈 标题/配图/截止时间/添加选项 四个模块头）：「把这些每一个小模块里的标题字体大小颜色和上下间距统一一下 同时编辑页面的发布按钮放到页面底部，标题栏的文字剧中对齐，包括首页」。
 
 **规格与修复（三组）**：
+
 1. **模块标题统一规格**：`src/styles/mixins.scss` 新增 `section-head`（flex-between + width:100% + min-height:$tap-min-height=88rpx）与 `section-title`（$font-md=30rpx、$font-weight-semibold=600、$line-tight=1.3、$color-text-1）。编辑页标题行、ImageUploader、OptionsSection 直接 include；DeadlinePicker 走 BaseCell 新增 `section` 变体（padding:0，标题节点挂 `base-cell__title--section` 修饰类：semibold + line-tight——Skyline 无后代选择器，修饰类必须挂节点自身）。卡内衬统一 $space-3=24rpx，标题行→内容间距 0，纵向留白由行高自身提供。
 2. **发布按钮置底**：编辑页 BaseNavbar 不再放 #right 按钮；页脚 `plan-edit__footer`（flex-shrink:0 + safe-area-bottom + hairline-top）内 BaseButton primary/lg/block，`:disabled="!canSubmit" :loading="submitting"`，状态行留在页脚上方。
 3. **导航标题真居中**：BaseNavbar body `position:relative`，标题 `absolute left:50% translateX(-50%) max-width:50%`，right 插槽 `margin-left:auto`。左右插槽不对称（返回键 vs 胶囊/消息）时 flex:1 居中必偏，绝对定位与两侧宽度解耦；首页/我的/详情/编辑共用同一组件一次修全。
 
 **运行时验收（SDK 3.17.6，automator，/tmp/rt/rt-unify.js + rt-final.js）**：
+
 - 四标题 computed 全同：15px / 600 / rgb(26,29,36)，行高统一后 h 全 19.5；四标题行 h45 / left24 / w342；卡与 section 内衬 12px。
 - 导航标题 centerX：首页 195.0、编辑页 195（=390/2）；旧导航栏提交按钮 count 0；底栏按钮 366×49 全宽、截图完整可见（`rt-unify-home.png` / `rt-unify-edit-top.png` / `rt-unify-edit-bottom.png`）。
 - 置底按钮接线证明：空内容触发点击回调 → toast「先给计划起个标题」（`rt-final-toast.png`）。WebView 页 automator 合成 tap（宿主或内层 view 句柄）不派发 Vue @tap，改走逻辑层事件槽直调（兼容清单 §0.2 新增）。
@@ -569,6 +576,7 @@ cloud.callFunction:fail errCode: -501000  FunctionName parameter could not be fo
 **用户原话**：「包括详情页面的卡片，同时详情页面滚动不了」。
 
 **改动（两组）**：
+
 1. **滚动根因**：`type="list"` 是 Skyline 专属虚拟列表属性（官方 scroll-view 文档），详情页恒 WebView 渲染（pages.json）——留着触摸滚不动（程序化 `scrollTo` 仍可用，§4.22/§4.23 的几何验收因此漏检）。详情页 scroll-view 移除 type 属性，编译产物 `grep -c 'type="list"'` = 0。首页/我的（Skyline，PlanList 根节点）保留 type="list" 不变。
 2. **标题行规格并入详情页**（#36 当时明确不扩 scope，本轮用户补裁）：投票卡 `__section-head/__section-title` 改 include `section-head/section-title` mixin（padding: 0 0 $space-3、无 min-height；30rpx/600/1.3/主文本色），`__ratio` 的 margin-top 删除（间距单点在 head pb）；评论卡 `__comments-head` 同规格 + 上/左右衬 $space-3；CommentItem 新增 `first` prop（CommentList 传 `:first="index === 0"`）首项顶 padding 归零，避免与 head pb 双倍。
 
@@ -583,23 +591,27 @@ cloud.callFunction:fail errCode: -501000  FunctionName parameter could not be fo
 **用户原话**：「全部填写完之后，发布提示第5个内容块正文不能为空」。
 
 **根因（四条，前三客户端、第四云端）**：
+
 1. **p 包 img 被桥接吞掉**：Quill 把 `<img>` 包在 `<p>` 里，`cleanInline` 白名单不含 img → 该段剥行内后成空文本块且图丢失。修 `src/utils/richhtml.ts`：新增 `splitImages/parseImage`，段落级把 img 抽成独立 image 块，文本部分仅在有可见文字时产块。
 2. **空段落 / 纯 br 段产块**：编辑面空段、`<p><br></p>` 经桥接成空正文文本块，云端 `validateBlock→required()` 拒收。`src/utils/blocks.ts` 新导出 `hasVisibleText`（剥标签与占位实体后判可见文字），桥接对空段 / 空引用不产块。
 3. **末尾光标占位随提交发送**：`useEditor.replaceBlocks→ensureTrailingTextBlock` 末尾垫空文本段给光标（草稿保留是对的），提交原样带上。修 `src/pages/plan/edit/index.vue` `writeAction` payload：滤掉空文本块（image/divider 保留）。连带修：Quill 序列化把 src 的 `&` 转义成 `&amp;`，`withCloudSrc` 查 imgMap 前先解转义，否则临时链换不回 fileID。
 4. **云端配图必填违反契约**：契约 §5.2 `images` 长度 ≤3 无下限、§8.6 明说配图可选，但 `normalizePlanWrite` 的 `asArray→required()` 拒空数组 → 空块修好后无配图用户必撞「计划配图不能为空」。修 `cloudfunctions/common/src/planPayload.ts:123-124`：空列表放行、非空仍全量校验。**§4.20「源码允许空」的断言当时即错**（那时源码也拒空），本轮才让源码真正符合契约。
 
 **运行时证据（automator，/tmp/rt/rt-emptyblock.js）**：
+
 - 修复前直调提交槽复现用户原话「第 5 个内容块正文不能为空」（彼时草稿 = 4 文本 + 空文本块，图被旧桥接吞）。
 - 修复后包 `wx.cloud.callFunction` 抓真实提交 payload：4 非空文本 + 1 `cloud://` 图、**无空文本块**；配图经 v-model 槽写入；toast 不再出现空正文措辞（`rt-emptyblock-post-toast.png`）。
 - 桥接回归扩到 26 断言全过（`bridge-test.mjs`：p 包 img / 空段 / 文图混排顺序 / 往返稳定）。
 - 当前云源码 `validatePlanWrite` 5 断言全过（`cloud-validate-test.mjs`，esbuild bundle + wx-server-sdk stub）：旧桥接形态→用户原话；末尾占位→第 6 块拒收；修复后 payload→通过；配图空列表→通过。
 
 **live create 残余 5000 的排查（「旧快照」假设已被 #39 证伪，真根因见 §4.28）**：
+
 - 修复后提交仍失败，toast 为通用兜底「服务开小差了」，抓得 `ApiError code 5000 detail 空`。二分探针：`plan.create` 纯文本块 + 配图（与用户昨日成功计划 123123 同形态）→5000；`comment.create`→5000；`plan.list/detail` 读正常；无配图→1001「计划配图不能为空」。
 - 当时假设「云上跑的是更旧快照」。**#39 重部署后证伪**：探针 C（无配图）从 1001 变 5000，说明新代码已生效、空配图过了校验；5000 来自校验之后的 DB 写入。临时诊断（toFailure 透出裸异常）抓得真根因：**控制台错建唯一索引**（plans.openId / comments.planId），详见 §4.28。
 - 排查教训：dist-cloud 中文串是 `\uXXXX` 转义，按中文原文 grep 假阴性（一度误判 bundle 无容错），须按转义形搜或直读调用点；「读正常 + 写 5000 + detail 空」优先怀疑 DB 约束（索引/权限），而不是审核或快照漂移。
 
 **automator 教训（补兼容清单 §0.2）**：
+
 - 组件 v-model 事件槽（如 ImageUploader `bindupdateModelValue`）直调时真实参来自 `detail.__args__` 数组（vendor `createInvoker` 解包），喂 `{detail:{__args__:[[fileID]]}}` 才能写 `model.images`。
 - 判「代码旧还是报错真」**先读 toast 截图**再看草稿：草稿末尾空段是预期（滤除只作用于 payload），别误判修复未生效。
 - 包 `wx.cloud.callFunction` 抓提交 payload 是客户端修复的直接证据，比草稿推断强。
@@ -619,27 +631,29 @@ cloud.callFunction:fail errCode: -501000  FunctionName parameter could not be fo
 **定位方法（TEMP-DIAG，已撤）**：云端日志读不到（控制台闸门），静态排查又穷尽 SDK 序列化路径（`@cloudbase/database` 的 flatten 对 undefined 键直接 delete、add 走 serialize+EJSON 不抛普通值）⇒ 临时改 `common/src/router.ts` `toFailure`：非 BizError 时把 `name/message/stack` 放进 `data.diag` 透出 → build:cloud → 部署 plan/comment → 探针抓真实报错 → **撤诊断、重建、重部署干净版**（产物 grep diag=0）。内部错误串只在定位窗口短暂可见，未留生产。
 
 **真根因（E11000 duplicate key，两条写路径各一条）**：
+
 - `plan.create`：`collection: plans index: openId dup key: { openId: "oprg…" }` —— plans 上建了 **openId 单字段唯一索引**，同一用户第 2 条计划起必撞。用户已有 123123 ⇒ 之后所有发布全 5000。
 - `comment.create`：`collection: comments index: planId dup key: { planId: "0b8a…" }` —— comments 上建了 **planId 单字段唯一索引**，同一计划第 2 条评论起必撞。
 - 读路径 / user.login 不受影响（不同集合或首条写入），与全部观测吻合。代码无问题，**索引只能控制台建/删（SDK/CLI 均不可，§5 前言 T0.2 实测）**，修复归用户闸门。
 
 **正确索引规格（技术方案 §5.1/5.2/5.3/5.4/§8.7，控制台照此核对全部六集合）**：
 
-| 集合 | 应有索引 | 唯一性 |
-| --- | --- | --- |
-| users | `openId` | **唯一** |
-| plans | `status + createdAt(desc)`；`openId + status + createdAt(desc)` | 均非唯一（现 openId 唯一索引需删除） |
-| votes | `planId + openId` | **唯一**（防重复投票兜底） |
-| comments | `planId + seq(asc)` | 非唯一（现 planId 唯一索引需删除） |
-| counters | 仅 `_id` | — |
-| participations | `openId + lastActionAt(desc)` | 非唯一 |
+| 集合           | 应有索引                                                        | 唯一性                               |
+| -------------- | --------------------------------------------------------------- | ------------------------------------ |
+| users          | `openId`                                                        | **唯一**                             |
+| plans          | `status + createdAt(desc)`；`openId + status + createdAt(desc)` | 均非唯一（现 openId 唯一索引需删除） |
+| votes          | `planId + openId`                                               | **唯一**（防重复投票兜底）           |
+| comments       | `planId + seq(asc)`                                             | 非唯一（现 planId 唯一索引需删除）   |
+| counters       | 仅 `_id`                                                        | —                                    |
+| participations | `openId + lastActionAt(desc)`                                   | 非唯一                               |
 
 **状态：已闭环（2026-11-13 用户控制台修索引后复验）**。用户删改错索引后复跑：
+
 - `rt-createprobe.js`：C 无配图 / A 文本+配图 / B 正文图块 **三探针全 code 0**，remove 清理全 0；
 - `rt-writeprobe.js`：comment.create code 0（seq=4，counters 事务正常）+ remove code 0；探针脚本曾取错 commentId 路径（`data.commentId` 应为 `data.comment.commentId`）漏清理，已补删并修脚本，123123 commentCount 回落 1（用户自有评论未动）；
 - `rt-emptyblock.js post` 完整 UI 链路：payload 4 非空文本 + 1 cloud 图无空块 → 发布成功跳详情（`rt-emptyblock-post-detail.png` 目检：标题/作者/倒计时/封面/四段正文+插图块/评论区全渲染）→ remove/deleteFile/清草稿全清理；
 - 唯一捕获 warn 为既有缺陷（草稿恢复弹窗 cancelText 超 4 字），见 §4.29，与发布链路无关。
-**未 commit / 未碰控制台**（索引由用户本人修改）。
+  **未 commit / 未碰控制台**（索引由用户本人修改）。
 
 ## 4.29 草稿恢复弹窗 cancelText 超微信上限致静默丢草稿（2026-11-13，本窗口，#40）
 
@@ -672,7 +686,7 @@ showModal fail 0 条、console error 0 条、弹窗期间草稿仍在 storage（
 - **阶段 4/5 组件线派发前的两件共享活（本窗口 15:59，全部我动手、派发前落盘，与 §5 上一条同样的原则）**：
   1. `useEditor` 新增 `updateImage(id, {fileID,w,h})` —— T4.4 的「空图块先落地、上传成功后落定」这条流程在既有 controller 里没有入口；不给它一个方法，H1/H2 就只能直接 mutate 裸 `Ref<Block[]>`，绕过 `ensureTrailingTextBlock` 与草稿 debounce 两个不变量（§2 表格里记了完整理由）。
   2. `constants/plan.ts` 新增 `TEXT_COLORS` —— §9.1-5 禁止硬编码色值，而 SCSS 变量在 TS 里读不到，所以「允许哪几个正文色」必须有一个 TS 侧单点，否则 `EditorToolbar` 会自己写一份、渲染侧将来又要认一份。
-  派发前基线已复跑：`npm run type-check` 全绿（只有既有的 `[Vue] Load plugin failed: @dcloudio/uni-app-types` 噪声）、`npm run check:templates` 28 个 .vue 全绿。
+     派发前基线已复跑：`npm run type-check` 全绿（只有既有的 `[Vue] Load plugin failed: @dcloudio/uni-app-types` 噪声）、`npm run check:templates` 28 个 .vue 全绿。
 - **技术方案随阶段 4/5 下发同步回写（本窗口 16:00~16:06，四路在飞期间由我做，agent 不许动这个文件）**：把本轮 prompt 里的裁决写回它该在的位置，免得下一轮再靠 prompt 口头传。
   1. §8.1 页面结构 + 交互与选区：标题路径改 `pages/plan/edit/index.vue`（与 §4 的「一页一目录」一致）；新增 4 条口径修正（`EditorBlockList` 不嵌 scroll-view / 定位只用 `scroll-into-view` 不测量 / 工具栏的吸底由页面做 / **禁用原生 `picker`、`picker-view`**）；补齐 `blk-` id 前缀契约、ActionSheet 归页面、`ensureTrailingTextBlock` 三条路径、`stylable=false` 置灰而非隐藏、`TEXT_COLORS` 单点、图片块「空 fileID 落块 → `updateImage` 落定」的完整链路、截止时间的校准时间与两层过去拦截。
   2. §8.2 新增第 5→6 条：**提交门禁用 `!uploading` 而不是 `done`**（`done` 要求「至少一张」，配图可选，用错就是空表单永远提交不了）。这条现在只写在 prompt 里，页面 agent 一漏就会写出静默 bug，所以进文档。
@@ -713,6 +727,7 @@ showModal fail 0 条、console error 0 条、弹窗期间草稿仍在 storage（
 ## 8. 批次 #41–#47 验收与 plan 重部署（2026-11-13）
 
 七项用户反馈全部修复并运行时验收（automator 几何 + 截图 + 直连云探针）：
+
 - **#41 发布后删草稿**：edit 页加 `published` 沿，拦 `onEditorInput` 与 `persistBeforeLeave`，`afterWritten` 先置位再 `clearDraft`。实测：发布前草稿在 → 发布跳详情 → 草稿立即消失 → +2s 不回写 → 测试计划清理 code 0。
 - **#42 详情排版**：作者行（头像+昵称+CountDown）置顶 → 标题 → 正文同卡；配图独立卡。几何 author<title<body、sameCard、gallerySeparate 全 true。
 - **#43 详情滚到底**：tail 改 `safe-area-bottom($tap-min-height + $space-4 + $space-2)`（实测 104px=136rpx+env），末条评论+「没有更多了」完整露在输入条上方。
@@ -722,6 +737,7 @@ showModal fail 0 条、console error 0 条、弹窗期间草稿仍在 storage（
 - **#47 选项间距**：OptionsSection `__desc` margin-top 归 `$space-1`（对齐 BaseCell）。
 
 工程坑（本轮新增，供后续窗口）：
+
 1. **dev watcher 内存类型缓存会丢新增 prop**：types.ts/index.vue 都加了 fabClearance，但编译产物 props 块没有它（渲染读 `_ctx.fabClearance` 恒 undefined）→ touch 无效，**重启 watcher 才愈**。加 prop 后行为不生效，先 grep dist props 块再怀疑源码。
 2. **automator Element 无 boundingBox**，用 `offset()+size()`（字符串需 parseFloat）；跨组件 = `page.$('组件标签')` 再 `Element.$`，**仅 Skyline 页有效；webview 页（detail/edit）组件内部量不到，只能截图验收**。
 3. **不要 wrap `wx.cloud.callFunction`**：request.ts 走 success/fail 回调，wrap 会致客户端报「网络异常」但服务端已创建 → 留孤儿计划。取 planId 从跳转路由读，别 wrap。本轮两条孤儿「草稿删除验证」已清理，用户 123123 未动。
@@ -729,6 +745,7 @@ showModal fail 0 条、console error 0 条、弹窗期间草稿仍在 storage（
 ## 9. 批次 #48–#49 验收（2026-11-13）
 
 两项用户反馈修复并运行时验收（automator 几何 + 首页/我的/详情截图）：
+
 - **#48 详情排版**：作者行下加浅色分割线（Skyline 无伪元素 → 真实节点 `.plan-detail__author-divider` + `hairline-bottom`，width:100% 落在卡内衬里故两边各留 $space-3 不顶边）；标题→正文 `margin-top` $space-3→$space-4；配图 `.plan-detail__gallery` 加 `padding: $space-1 0`，使四边距与每格左右 $space-1 对齐（以左右为准）。截图确认分割线/放大间距/四边等距。
 - **#49 我的页 + PlanList**：退出登录改 `position:absolute` 页底透明浮层（wrapper 无底色、`flex-center` + safe-area；按钮改紧凑 pill：去 width:100%、radius-round + shadow），列表 flex:1 延伸页底从按钮四周透出（「被遮住的列表」）。PlanList 删 `plan-list__top` 占位节点（上间距改容器 margin-top），容器 `margin: $card-gap $space-3 0` + `border-radius: $radius-lg` + `overflow:hidden`，卡片行去左右内缩贴容器边 → 滚动时进出顶/底被遮的卡片被容器圆角裁切。首页同组件同口径一致生效（FAB 是 fixed 兄弟节点不受容器 overflow 影响）。
 - **工程坑（本轮新增）**：Skyline `scroll-view type=list` **不吃 flex stretch 减 margin**——去掉 `width:100%` 后仍按视口宽（390）算，`margin-left` 把容器整体右推、右缘被宿主 overflow 裁掉（左右不对称、倒计时 chip 被切）。必须显式 `width: calc(100% - 左右margin)`。修后实测容器 x=12.5 / w=365.1（右缘 377.6=390−12.4）对称。

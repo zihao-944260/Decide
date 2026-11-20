@@ -30,7 +30,7 @@ import {
   type NormalizedPlanWrite,
   type PlanDoc,
   type PlanWritePayload,
-  type UpdatePayload,
+  type UpdatePayload
 } from 'common'
 
 /**
@@ -64,7 +64,11 @@ export function readPlanId(payload: Record<string, unknown>): string {
  * 服务端权威校验（§11.3）。
  * `keepDeadline` 只在编辑时传：允许原样保留旧截止时间，改个错别字不该被迫重新选日期。
  */
-export function validatePlanWrite(payload: unknown, now: number, keepDeadline?: number): NormalizedPlanWrite {
+export function validatePlanWrite(
+  payload: unknown,
+  now: number,
+  keepDeadline?: number
+): NormalizedPlanWrite {
   const normalized = normalizePlanWrite(payload, now, keepDeadline)
   assertOptionQuota(normalized.payload)
   assertImagesInThisEnv(normalized.payload)
@@ -91,7 +95,9 @@ function assertOptionQuota(payload: PlanWritePayload): void {
  */
 function assertImagesInThisEnv(payload: PlanWritePayload): void {
   const env = currentEnv()
-  payload.images.forEach((fileID, index) => assertOwnFileID(fileID, env, `第 ${index + 1} 张计划配图`))
+  payload.images.forEach((fileID, index) =>
+    assertOwnFileID(fileID, env, `第 ${index + 1} 张计划配图`)
+  )
   payload.blocks.forEach((block, index) => {
     if (block.type === 'image') assertOwnFileID(block.fileID, env, `第 ${index + 1} 个内容块图片`)
   })
@@ -101,7 +107,8 @@ function assertImagesInThisEnv(payload: PlanWritePayload): void {
 }
 
 function assertOwnFileID(fileID: string, env: string, field: string): void {
-  if (!fileID.startsWith('cloud://')) throw new BizError(ErrorCode.INVALID_PARAM, `${field}请使用本小程序上传的图片`)
+  if (!fileID.startsWith('cloud://'))
+    throw new BizError(ErrorCode.INVALID_PARAM, `${field}请使用本小程序上传的图片`)
   if (env && !fileID.startsWith(`cloud://${env}.`)) {
     throw new BizError(ErrorCode.INVALID_PARAM, `${field}不属于当前云环境`)
   }
@@ -116,7 +123,11 @@ function currentEnv(): string {
 
 /** summary 只有这一个生成点：列表页展示用，纯文本前 60 字（§5.2 / §11.1） */
 export function planContentFields(normalized: NormalizedPlanWrite): PlanContentFields {
-  return { ...normalized.payload, summary: buildSummary(normalized.payload.blocks), optionCount: normalized.optionCount }
+  return {
+    ...normalized.payload,
+    summary: buildSummary(normalized.payload.blocks),
+    optionCount: normalized.optionCount
+  }
 }
 
 export function buildPlanDoc(openId: string, now: number, fields: PlanContentFields): PlanDoc {
@@ -130,7 +141,7 @@ export function buildPlanDoc(openId: string, now: number, fields: PlanContentFie
     commentCount: 0,
     status: PlanStatus.Ongoing,
     createdAt: now,
-    updatedAt: now,
+    updatedAt: now
   }
 }
 
@@ -164,7 +175,11 @@ export function assertPlanUpdatable(doc: PlanDoc, now: number): void {
  * checkText 内部已按 2000 字分片、最多 4 片，合并后既省往返又仍在预算内。
  * scene 取 3（论坛）：计划正文对外可见，和配图送审用的是同一个场景值。
  */
-export async function reviewText(openId: string, payload: PlanWritePayload, startedAt: number): Promise<void> {
+export async function reviewText(
+  openId: string,
+  payload: PlanWritePayload,
+  startedAt: number
+): Promise<void> {
   await checkText(openId, textForReview(payload), SecScene.Forum, startedAt)
 }
 
@@ -183,11 +198,20 @@ function textForReview(payload: PlanWritePayload): string {
  * 送审范围是「本篇出现过的全部图片」= 配图 + 正文块图 + 选项图；
  * 去重是因为同一 fileID 可能同时出现在配图与正文块里，重复提交只会白烧配额。
  */
-export async function reviewImages(openId: string, payload: PlanWritePayload, ctx: ActionContext): Promise<void> {
+export async function reviewImages(
+  openId: string,
+  payload: PlanWritePayload,
+  ctx: ActionContext
+): Promise<void> {
   const fileIDs = collectImages(payload)
   if (fileIDs.length === 0) return
   if (ServerLimit.TIME_BUDGET_MS - (Date.now() - ctx.startedAt) < REVIEW_MIN_LEFT_MS) {
-    log.warn('计划图片未送审（超出时间预算）', { fn: ctx.fn, action: ctx.action, openId, count: fileIDs.length })
+    log.warn('计划图片未送审（超出时间预算）', {
+      fn: ctx.fn,
+      action: ctx.action,
+      openId,
+      count: fileIDs.length
+    })
     return
   }
   await submitImagesForReview(openId, fileIDs, ctx.startedAt)

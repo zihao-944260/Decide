@@ -6,30 +6,35 @@
 
 ## Props
 
-| prop | 类型 | 默认 | 说明 |
-| --- | --- | --- | --- |
-| `visible` | `boolean` | 必填 | 受控显隐 |
-| `type` | `'text' \| 'success' \| 'error' \| 'loading'` | `'text'` | 图标类型，`text` 无图标 |
-| `message` | `string` | `''` | 文案；有默认插槽时以插槽为准 |
-| `duration` | `number` | `2000` | 自动收起 ms，`<=0` 不自动收起 |
+| prop       | 类型                                          | 默认     | 说明                          |
+| ---------- | --------------------------------------------- | -------- | ----------------------------- |
+| `visible`  | `boolean`                                     | 必填     | 受控显隐                      |
+| `type`     | `'text' \| 'success' \| 'error' \| 'loading'` | `'text'` | 图标类型，`text` 无图标       |
+| `message`  | `string`                                      | `''`     | 文案；有默认插槽时以插槽为准  |
+| `duration` | `number`                                      | `2000`   | 自动收起 ms，`<=0` 不自动收起 |
 
 ## Emits
 
-| 事件 | 参数 | 说明 |
-| --- | --- | --- |
-| `update:visible` | `boolean` | v-model |
-| `closed` | — | 到时自动收起（调用方主动置 false 不触发） |
+| 事件             | 参数      | 说明                                      |
+| ---------------- | --------- | ----------------------------------------- |
+| `update:visible` | `boolean` | v-model                                   |
+| `closed`         | —         | 到时自动收起（调用方主动置 false 不触发） |
 
 ## Slots
 
-| slot | 说明 |
-| --- | --- |
+| slot    | 说明                                                 |
+| ------- | ---------------------------------------------------- |
 | default | 替换 `message` 的自定义内容（调用方自行包 `<text>`） |
 
 ## 示例
 
 ```vue
-<BaseToast v-model:visible="toast.show" :type="toast.type" :message="toast.message" :duration="1500" />
+<BaseToast
+  v-model:visible="toast.show"
+  :type="toast.type"
+  :message="toast.message"
+  :duration="1500"
+/>
 ```
 
 ## 注意

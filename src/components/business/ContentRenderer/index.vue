@@ -26,7 +26,7 @@ const props = withDefaults(defineProps<Props>(), {
   radius: 'md',
   lazy: true,
   preview: true,
-  emptyText: '暂无内容',
+  emptyText: '暂无内容'
 })
 
 const blocks = computed(() => sanitizeBlocks(props.blocks))
@@ -34,7 +34,9 @@ const html = computed(() => blocksToHtml(blocks.value))
 
 /** 预览时把全文图片一次性喂给 previewImage，用户可左右滑动连续看图 */
 const imageURLs = computed(() =>
-  blocks.value.filter((block): block is ImageBlock => block.type === 'image').map((block) => block.fileID)
+  blocks.value
+    .filter((block): block is ImageBlock => block.type === 'image')
+    .map((block) => block.fileID)
 )
 
 /** radius 档位 → rpx：TS 侧拿不到 SCSS 变量，与 tokens.scss 的 $radius-* 同值（改动需两处同步） */
@@ -43,16 +45,16 @@ const RADIUS_CSS: Record<NonNullable<Props['radius']>, string> = {
   sm: '8rpx',
   md: '16rpx',
   lg: '24rpx',
-  round: '999rpx',
+  round: '999rpx'
 }
 
 /** 容器级样式（引用块外框/分割线/图片圆角）；颜色一律 var() 桥接 tokens */
 const tagStyle = computed(() => ({
   blockquote:
-    'margin:0 0 16rpx;padding:16rpx 24rpx;background-color:var(--cr-fill);'
-    + 'border-left:4rpx solid var(--cr-primary);border-radius:8rpx;',
+    'margin:0 0 16rpx;padding:16rpx 24rpx;background-color:var(--cr-fill);' +
+    'border-left:4rpx solid var(--cr-primary);border-radius:8rpx;',
   hr: 'width:100%;margin:24rpx 0;border:none;border-top:2rpx solid var(--cr-border);',
-  img: `margin:0 0 8rpx;border-radius:${RADIUS_CSS[props.radius] ?? RADIUS_CSS.md};`,
+  img: `margin:0 0 8rpx;border-radius:${RADIUS_CSS[props.radius] ?? RADIUS_CSS.md};`
 }))
 
 function onImageTap(attrs: { src?: string }): void {
@@ -61,7 +63,7 @@ function onImageTap(attrs: { src?: string }): void {
     urls: imageURLs.value,
     current: attrs.src,
     // 云端 fileID 直喂 previewImage 在真机仍可能失败（BaseImage README 同口径），失败要有反馈
-    fail: () => showToastMsg('图片预览失败，请稍后重试'),
+    fail: () => showToastMsg('图片预览失败，请稍后重试')
   })
 }
 </script>

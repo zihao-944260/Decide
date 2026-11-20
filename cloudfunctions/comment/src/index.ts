@@ -12,7 +12,7 @@ import { remove } from './handlers/remove'
 const actions: ActionMap = {
   create,
   list,
-  remove,
+  remove
 }
 
 const route = createRouter('comment', actions)

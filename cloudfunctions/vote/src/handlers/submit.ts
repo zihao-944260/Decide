@@ -53,7 +53,7 @@ import {
   type Transaction,
   type VoteCounts,
   type VoteDoc,
-  type VoteTypeValue,
+  type VoteTypeValue
 } from 'common'
 
 const ALLOWED_TYPES: readonly VoteTypeValue[] = [VoteType.Agree, VoteType.Disagree]
@@ -97,19 +97,28 @@ async function rollbackQuiet(tx: Transaction, err: unknown): Promise<void> {
 }
 
 /** 单次尝试：要么完整落库并 commit，要么回滚后抛错，绝不留下中间态 */
-async function castOnce(openId: string, planId: string, mode: VoteMode, now: number): Promise<VoteOutcome> {
+async function castOnce(
+  openId: string,
+  planId: string,
+  mode: VoteMode,
+  now: number
+): Promise<VoteOutcome> {
   const tx = await startTransaction()
   try {
     const plan = await planDao.txGetPlan(tx, planId)
     if (!plan) throw new BizError(ErrorCode.NOT_FOUND, '计划不存在或已删除')
-    if (plan.status === PlanStatus.Removed) throw new BizError(ErrorCode.NOT_FOUND, '计划不存在或已删除')
+    if (plan.status === PlanStatus.Removed)
+      throw new BizError(ErrorCode.NOT_FOUND, '计划不存在或已删除')
     // §8.3「主态不显示投票按钮」的服务端对应物：前端藏按钮挡不住构造请求，作者票会带偏比例条
     if (plan.openId === openId) throw new BizError(ErrorCode.FORBIDDEN, '不能给自己发起的计划投票')
     if (!isOpenForAction(plan.status, plan.deadline ?? 0, now)) {
       throw new BizError(ErrorCode.PLAN_CLOSED, '该计划已截止，无法投票')
     }
     // 选项模式：optionId 必须真实存在于 plan.options。既挡住伪造选项，也挡住用点号构造 _.inc 路径注入
-    if (mode.kind === 'option' && !(plan.options ?? []).some((option) => option.id === mode.optionId)) {
+    if (
+      mode.kind === 'option' &&
+      !(plan.options ?? []).some((option) => option.id === mode.optionId)
+    ) {
       throw new BizError(ErrorCode.INVALID_PARAM, '投票选项不存在')
     }
 
@@ -128,7 +137,7 @@ async function castOnce(openId: string, planId: string, mode: VoteMode, now: num
         votes,
         myVote: myVoteOf(mine.type),
         options,
-        myOption: mine.optionId ?? '',
+        myOption: mine.optionId ?? ''
       })
     }
 
@@ -136,7 +145,15 @@ async function castOnce(openId: string, planId: string, mode: VoteMode, now: num
     let myOption = ''
     if (mode.kind === 'option') {
       // 选项票 type=0，不计入 vote.agree/disagree（对账 countAllTypes 只数 1|2，天然忽略选项票）
-      const doc: VoteDoc = { _id: voteId, planId, openId, type: 0, optionId: mode.optionId, createdAt: now, updatedAt: now }
+      const doc: VoteDoc = {
+        _id: voteId,
+        planId,
+        openId,
+        type: 0,
+        optionId: mode.optionId,
+        createdAt: now,
+        updatedAt: now
+      }
       await voteDao.txInsert(tx, doc)
       await planDao.txIncOptionVote(tx, planId, mode.optionId, 1)
       for (const option of options) {
@@ -144,7 +161,14 @@ async function castOnce(openId: string, planId: string, mode: VoteMode, now: num
       }
       myOption = mode.optionId
     } else {
-      const doc: VoteDoc = { _id: voteId, planId, openId, type: mode.type, createdAt: now, updatedAt: now }
+      const doc: VoteDoc = {
+        _id: voteId,
+        planId,
+        openId,
+        type: mode.type,
+        createdAt: now,
+        updatedAt: now
+      }
       await voteDao.txInsert(tx, doc)
       const key = countKeyOf(mode.type)
       await planDao.txIncVote(tx, planId, key, 1)
@@ -175,7 +199,7 @@ async function authoritative(planId: string, fallback: VoteOutcome): Promise<Vot
       votes: { agree: fresh.vote?.agree ?? 0, disagree: fresh.vote?.disagree ?? 0 },
       myVote: fallback.myVote,
       options: toPlanOptions(fresh.optionsEnabled === true, fresh.options, fresh.optionVotes),
-      myOption: fallback.myOption,
+      myOption: fallback.myOption
     }
   } catch (err) {
     log.warn('权威计数回读失败，回落事务内计算值', { planId, error: String(err) })
@@ -196,7 +220,7 @@ async function correctOrFail(planId: string, openId: string): Promise<never> {
     votes: { agree: plan?.vote?.agree ?? 0, disagree: plan?.vote?.disagree ?? 0 },
     myVote: myVoteOf(mine.type),
     options: toPlanOptions(plan?.optionsEnabled === true, plan?.options, plan?.optionVotes),
-    myOption: mine.optionId,
+    myOption: mine.optionId
   })
 }
 
@@ -224,10 +248,15 @@ export const submit: ActionSpec = {
         if (err instanceof BizError) throw err
         const retryable = isDuplicateKeyError(err) || isTransactionConflict(err)
         if (!retryable) throw err
-        log.warn('投票事务需重试', { planId, attempt, duplicate: isDuplicateKeyError(err), error: String(err) })
+        log.warn('投票事务需重试', {
+          planId,
+          attempt,
+          duplicate: isDuplicateKeyError(err),
+          error: String(err)
+        })
       }
     }
 
     return correctOrFail(planId, openId)
-  },
+  }
 }

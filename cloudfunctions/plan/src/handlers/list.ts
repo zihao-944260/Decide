@@ -15,8 +15,8 @@ export const list: ActionSpec = {
     const rows = await planDao.listPublic({
       sort: args.cursor === null ? null : args.cursor.sort,
       afterId: args.cursor === null ? '' : args.cursor.id,
-      limit: args.limit,
+      limit: args.limit
     })
     return assembleSummaryPage(rows, args.cursor, args.size, ctx.openId)
-  },
+  }
 }

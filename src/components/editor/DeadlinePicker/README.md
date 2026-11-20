@@ -22,7 +22,12 @@ interface EditModel {
 }
 
 // 页面唯一的表单状态源：deadline 是 ms 时间戳，0 = 未设置
-const form = useForm<EditModel>(() => ({ title: '', deadline: 0, optionsEnabled: false, options: [] }))
+const form = useForm<EditModel>(() => ({
+  title: '',
+  deadline: 0,
+  optionsEnabled: false,
+  options: []
+}))
 const deadline = computed(() => form.model.value.deadline)
 
 function onDeadlineChange(value: number): void {
@@ -54,13 +59,13 @@ function deadlineOk(): boolean {
 
 ## Props / Emits（与 `types.ts` 逐字一致）
 
-| prop | 类型 | 默认 | 说明 |
-| --- | --- | --- | --- |
-| `deadline` | `number` | 必填 | 当前截止时间 ms；`0` = 未设置（云端 `resolveDeadline` 对 0 直接放行，表示不限截止） |
-| `label` | `string?` | `'截止时间'` | 行标题 |
+| prop       | 类型      | 默认         | 说明                                                                                |
+| ---------- | --------- | ------------ | ----------------------------------------------------------------------------------- |
+| `deadline` | `number`  | 必填         | 当前截止时间 ms；`0` = 未设置（云端 `resolveDeadline` 对 0 直接放行，表示不限截止） |
+| `label`    | `string?` | `'截止时间'` | 行标题                                                                              |
 
-| 事件 | 载荷 | 说明 |
-| --- | --- | --- |
+| 事件     | 载荷                 | 说明                                                                        |
+| -------- | -------------------- | --------------------------------------------------------------------------- |
 | `change` | `(deadline: number)` | 快捷项点击 / 弹层点确定。**没有第二个事件**：文案、索引、档位结构都不往外发 |
 
 导出的辅助（同一个 `types.ts`）：`DEADLINE_UNSET_TEXT`、`deadlineText(ts)`、结构类型 `DeadlineDay` / `DeadlineSlot`。
@@ -73,12 +78,12 @@ function deadlineOk(): boolean {
 
 替代实现用的全是已实测的零件：
 
-| 零件 | 清单条目 |
-| --- | --- |
-| `BasePopup` → fixed 遮罩+面板 | #78 起弃 page-container（兼容清单 §2.3.2）；fixed/transform 过渡两渲染器 §2.2 ✅ |
+| 零件                                                       | 清单条目                                                                            |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `BasePopup` → fixed 遮罩+面板                              | #78 起弃 page-container（兼容清单 §2.3.2）；fixed/transform 过渡两渲染器 §2.2 ✅    |
 | 两列普通 `scroll-view :scroll-y="true"`（显式定高 440rpx） | WebView 页 `type="list"` 触摸滚动失效（#37/#73）；百分比高度链不可靠（#78），故定高 |
-| 点格选中（`@tap` + index） | §2.2 `position/tap` 常规能力 |
-| 定位到当前值 `scroll-into-view` | §2.2 ✅ |
+| 点格选中（`@tap` + index）                                 | §2.2 `position/tap` 常规能力                                                        |
+| 定位到当前值 `scroll-into-view`                            | §2.2 ✅                                                                             |
 
 **不测高、不用 `scroll-top`**（§2.2 实测 `scroll-top` 在 Skyline 下设置 99999 页面都不动），也不对视口外节点取矩形（§2.3 实测会**永久挂起**，不是返回 null）。选中态纯粹由 `dateIndex` / `timeIndex` 决定。
 

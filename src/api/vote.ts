@@ -23,7 +23,7 @@ export interface VoteSubmitResult {
 export function submitVote(
   planId: string,
   payload: VoteSubmitPayload,
-  options?: RequestOptions,
+  options?: RequestOptions
 ): Promise<VoteSubmitResult> {
   return request('vote.submit', { planId, ...payload }, options)
 }

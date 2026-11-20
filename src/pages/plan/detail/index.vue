@@ -44,7 +44,7 @@ import {
   usePageRefresh,
   useServerNow,
   useShare,
-  useVote,
+  useVote
 } from '@/composables'
 import { useAppStore } from '@/stores/app'
 import { usePlanStore } from '@/stores/plan'
@@ -92,7 +92,7 @@ function syncStore(data: PlanDetail): void {
     data.votes,
     toStoreVote(data.myVote),
     data.options,
-    data.myOption,
+    data.myOption
   )
   // 刻意不带 votes：上面那行已经是唯一权威写入口，patchPlan 再带一次就变成两处覆盖
   planStore.patchPlan(data.planId, {
@@ -103,7 +103,7 @@ function syncStore(data: PlanDetail): void {
     optionsEnabled: data.optionsEnabled,
     optionCount: data.optionCount,
     status: data.status,
-    commentCount: data.commentCount,
+    commentCount: data.commentCount
   })
 }
 
@@ -160,7 +160,7 @@ const vote = useVote(() => planId.value, {
   onOptionVoted: () => onVoted(),
   onClosed: () => {
     void onServerClosed()
-  },
+  }
 })
 
 const myOpenId = computed(() => userStore.userInfo?.openId ?? '')
@@ -201,7 +201,7 @@ const view = computed<DetailView>(() => {
     locked: vote.locked.value,
     commentCount: data.commentCount,
     closed: closed.value,
-    isAuthor: isAuthor.value,
+    isAuthor: isAuthor.value
   }
 })
 
@@ -212,7 +212,7 @@ function onImageTap(src: string): void {
   uni.previewImage({
     urls: imagesForPreview.value,
     current: src,
-    fail: () => showToastMsg('图片预览失败，请稍后重试'),
+    fail: () => showToastMsg('图片预览失败，请稍后重试')
   })
 }
 
@@ -241,7 +241,7 @@ const comments = useComments(() => planId.value, {
     bumpCommentCount(1)
     void scrollToBottom()
   },
-  onRemoved: () => bumpCommentCount(-1),
+  onRemoved: () => bumpCommentCount(-1)
 })
 
 /**
@@ -279,7 +279,7 @@ async function confirmAndRemove(commentId: string): Promise<void> {
   const confirmed = await modal.confirm({
     title: '删除评论',
     content: '删除后这条评论将显示为「已删除」，确定删除？',
-    confirmText: '删除',
+    confirmText: '删除'
   })
   if (!confirmed) return
   // 失败回滚与提示都在 useComments.remove 内部（它对 api 传了 silent，自己弹那一条），页面不补第二条
@@ -345,7 +345,7 @@ useShare(() => ({
   title: detail.value?.title || '来表个态',
   path: `/pages/plan/detail/index?planId=${planId.value}`,
   imageUrl: detail.value?.cover || undefined,
-  query: { planId: planId.value },
+  query: { planId: planId.value }
 }))
 </script>
 

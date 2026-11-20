@@ -7,7 +7,7 @@ const props = withDefaults(defineProps<Props>(), {
   size: 'md',
   loading: false,
   disabled: false,
-  block: false,
+  block: false
 })
 const emit = defineEmits<Emits>()
 
@@ -17,11 +17,11 @@ const rootClass = computed(() => [
   `base-button--${props.size}`,
   {
     'base-button--block': props.block,
-    'base-button--disabled': props.disabled,
-  },
+    'base-button--disabled': props.disabled
+  }
 ])
 const spinnerClass = computed(() => ({
-  'base-button__spinner--dark': props.type === 'secondary' || props.type === 'text',
+  'base-button__spinner--dark': props.type === 'secondary' || props.type === 'text'
 }))
 
 function onTap(): void {

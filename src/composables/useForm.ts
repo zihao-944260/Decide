@@ -72,7 +72,7 @@ function sizeOf(value: unknown): number {
 export function useForm<M extends object>(
   createModel: () => M,
   rules: FormRules<M> = {},
-  options: UseFormOptions<M> = {},
+  options: UseFormOptions<M> = {}
 ): FormController<M> {
   const initial = createModel()
   const model = ref(createModel()) as Ref<M>
@@ -206,7 +206,7 @@ export function useForm<M extends object>(
           saveDraft()
         }, options.debounceMs ?? 1500)
       },
-      { deep: true },
+      { deep: true }
     )
   }
 
@@ -223,6 +223,6 @@ export function useForm<M extends object>(
     saveDraft,
     restoreDraft,
     clearDraft,
-    flushDraft,
+    flushDraft
   }
 }

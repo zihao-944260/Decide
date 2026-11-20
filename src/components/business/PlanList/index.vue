@@ -20,7 +20,7 @@ const props = withDefaults(defineProps<Props>(), {
   animated: true,
   lowerThreshold: 60,
   floatClearance: false,
-  innerTopGap: false,
+  innerTopGap: false
 })
 const emit = defineEmits<Emits>()
 
@@ -43,7 +43,7 @@ const paging = usePagingList<PlanSummary>((cursor, size) => props.fetcher(cursor
   },
   onError: (err: unknown) => {
     props.onError?.(err)
-  },
+  }
 })
 
 // usePagingList 返回的都是顶层 Ref/函数，模板里 Ref 自动解包，页面通过 defineExpose 拿同一批引用
@@ -61,7 +61,7 @@ const {
   patchItem,
   removeItem,
   setList,
-  reset,
+  reset
 } = paging
 
 // 三态互斥（§11.2）：骨架屏 → 空态 → 列表 + 底部状态条
@@ -165,7 +165,7 @@ defineExpose({
   removeItem,
   setList,
   reset,
-  scrollToTop,
+  scrollToTop
 })
 </script>
 

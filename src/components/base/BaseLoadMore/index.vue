@@ -5,7 +5,7 @@ import type { Props, Emits } from './types'
 const props = withDefaults(defineProps<Props>(), {
   loadingText: '加载中…',
   nomoreText: '没有更多了',
-  errorText: '加载失败，点击重试',
+  errorText: '加载失败，点击重试'
 })
 const emit = defineEmits<Emits>()
 

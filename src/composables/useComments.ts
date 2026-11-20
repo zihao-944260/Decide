@@ -40,7 +40,7 @@ function findCachedSummary(planId: string): PlanSummary | undefined {
 
 export function useComments(
   planId: MaybeRefOrGetter<string>,
-  options: UseCommentsOptions = {},
+  options: UseCommentsOptions = {}
 ): CommentsController {
   const id = () => toValue(planId)
   const userStore = useUserStore()
@@ -55,8 +55,8 @@ export function useComments(
     },
     {
       pageSize: options.pageSize ?? Limit.COMMENT_PAGE_SIZE,
-      getId: (item) => item.commentId,
-    },
+      getId: (item) => item.commentId
+    }
   )
 
   const posting = ref(false)
@@ -132,6 +132,6 @@ export function useComments(
     post,
     remove,
     canRemove,
-    isEmpty: computed(() => paging.list.value.length === 0),
+    isEmpty: computed(() => paging.list.value.length === 0)
   }
 }

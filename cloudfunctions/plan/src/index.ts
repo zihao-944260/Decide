@@ -21,7 +21,7 @@ const actions: ActionMap = {
   remove,
   detail,
   list,
-  myList,
+  myList
 }
 
 const route = createRouter('plan', actions)

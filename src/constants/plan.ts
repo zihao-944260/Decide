@@ -2,26 +2,26 @@ export const PlanStatus = {
   Draft: 0,
   Ongoing: 1,
   Ended: 2,
-  Removed: 3,
+  Removed: 3
 } as const
 export type PlanStatusValue = (typeof PlanStatus)[keyof typeof PlanStatus]
 
 export const VoteType = {
   Agree: 1,
-  Disagree: 2,
+  Disagree: 2
 } as const
 export type VoteTypeValue = (typeof VoteType)[keyof typeof VoteType]
 
 export const CommentStatus = {
   Normal: 0,
-  Removed: 1,
+  Removed: 1
 } as const
 export type CommentStatusValue = (typeof CommentStatus)[keyof typeof CommentStatus]
 
 export const UserStatus = {
   Normal: 0,
   Muted: 1,
-  Banned: 2,
+  Banned: 2
 } as const
 
 export type MyFilter = 'created' | 'joined' | 'ongoing' | 'ended'
@@ -37,7 +37,7 @@ export const MY_FILTER_LABELS: Record<MyFilter, string> = {
   created: '我发起的',
   joined: '我参与的',
   ongoing: '进行中',
-  ended: '已截止',
+  ended: '已截止'
 }
 
 export const Limit = {
@@ -56,7 +56,7 @@ export const Limit = {
   BLOCK_TEXT_MAX: 2000,
   PAGE_SIZE: 10,
   PAGE_SIZE_MAX: 20,
-  COMMENT_PAGE_SIZE: 20,
+  COMMENT_PAGE_SIZE: 20
 } as const
 
 /**
@@ -69,13 +69,13 @@ export const TextInput = {
   /** 光标与键盘的间距（px）。真机键盘高度不一，留的就是「别把光标顶进键盘」那口气 */
   CURSOR_SPACING: 16,
   /** 剩余字数 ≤ 该值时计数器进入「将满」态（染警告色），与云端上限无关 */
-  WARN_REMAINING: 100,
+  WARN_REMAINING: 100
 } as const
 
 export const DeadlinePreset = [
   { label: '1 天', days: 1 },
   { label: '3 天', days: 3 },
-  { label: '7 天', days: 7 },
+  { label: '7 天', days: 7 }
 ] as const
 
 /**
@@ -89,5 +89,5 @@ export const TEXT_COLORS = [
   { label: '默认', value: '' },
   { label: '墨黑', value: '#1a1d24' },
   { label: '主题蓝', value: '#2b6de8' },
-  { label: '强调红', value: '#e8544b' },
+  { label: '强调红', value: '#e8544b' }
 ] as const

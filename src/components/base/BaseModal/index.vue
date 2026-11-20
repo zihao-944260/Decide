@@ -11,7 +11,7 @@ const props = withDefaults(defineProps<Props>(), {
   cancelText: '取消',
   showCancel: true,
   danger: false,
-  maskClosable: false,
+  maskClosable: false
 })
 const emit = defineEmits<Emits>()
 

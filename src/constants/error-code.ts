@@ -7,7 +7,7 @@ export const ErrorCode = {
   PLAN_CLOSED: 3002,
   DUPLICATED: 3003,
   RATE_LIMITED: 4001,
-  SERVER_ERROR: 5000,
+  SERVER_ERROR: 5000
 } as const
 
 export type ErrorCodeValue = (typeof ErrorCode)[keyof typeof ErrorCode]

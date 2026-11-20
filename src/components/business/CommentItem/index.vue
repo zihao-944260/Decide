@@ -11,7 +11,7 @@ const props = withDefaults(defineProps<Props>(), {
   deletable: undefined,
   now: 0,
   separated: true,
-  first: false,
+  first: false
 })
 const emit = defineEmits<Emits>()
 
@@ -22,7 +22,7 @@ const NICK_MAX_WIDTH = 12
 
 const removed = computed(() => props.comment.status !== CommentStatus.Normal)
 const removedText = computed(() =>
-  props.comment.status === CommentStatus.Removed ? '该评论已删除' : '该评论不可见',
+  props.comment.status === CommentStatus.Removed ? '该评论已删除' : '该评论不可见'
 )
 const canDelete = computed(() => props.deletable ?? props.isSelf ?? false)
 const nickText = computed(() => {
@@ -33,7 +33,9 @@ const nickText = computed(() => {
  * now 优先用外层注入的单一时间源（页面一个 useServerNow 订阅，§11.1 禁止每条评论挂定时器）；
  * 未注入时兜底读一次校准时间，只在本次渲染算一次，不订阅 ticker。
  */
-const timeText = computed(() => relativeTime(props.comment.createdAt, props.now > 0 ? props.now : peekNow()))
+const timeText = computed(() =>
+  relativeTime(props.comment.createdAt, props.now > 0 ? props.now : peekNow())
+)
 
 function onDelete(): void {
   emit('delete', props.comment.commentId, props.comment)
@@ -46,7 +48,10 @@ function onLongPress(): void {
 </script>
 
 <template>
-  <view class="comment-item" :class="{ 'comment-item--separated': separated, 'comment-item--first': first }">
+  <view
+    class="comment-item"
+    :class="{ 'comment-item--separated': separated, 'comment-item--first': first }"
+  >
     <!-- 已删除 / 被拦截：内容不可见但整条仍占位，seq 时间线不塌陷（§8.4） -->
     <view v-if="removed" class="comment-item__removed">
       <text class="comment-item__removed-text">{{ removedText }}</text>

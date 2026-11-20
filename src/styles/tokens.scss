@@ -96,7 +96,9 @@ $shadow-card: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
 $shadow-popup: 0 -4rpx 24rpx rgba(0, 0, 0, 0.06);
 // 悬浮胶囊：导航去掉底色之后，胶囊与列表之间只剩这一层阴影，所以给到两层（贴合的近影 + 散开的远影）
 // 才浮得住。Skyline 是否吃多段 box-shadow 见兼容清单 §2.2 实测行 —— 若整条被丢弃，胶囊会完全没有阴影。
-$shadow-tabbar: 0 2rpx 6rpx rgba(26, 29, 36, 0.06), 0 12rpx 32rpx rgba(26, 29, 36, 0.14);
+$shadow-tabbar:
+  0 2rpx 6rpx rgba(26, 29, 36, 0.06),
+  0 12rpx 32rpx rgba(26, 29, 36, 0.14);
 
 // 动效时长（Skyline 实测仅 CSS transition/animation 可用，见兼容清单 §2.5）
 $duration-fast: 150ms;

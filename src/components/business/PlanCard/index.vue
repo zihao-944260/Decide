@@ -21,7 +21,7 @@ import { compactCount } from '@/utils/format'
 import type { Props, Emits } from './types'
 
 const props = withDefaults(defineProps<Props>(), {
-  animated: true,
+  animated: true
 })
 const emit = defineEmits<Emits>()
 
@@ -94,7 +94,7 @@ onMounted(() => {
       riseTimer = null
       riseState.value = 'done'
     },
-    RISE_START_DELAY + seq * RISE_STAGGER_STEP,
+    RISE_START_DELAY + seq * RISE_STAGGER_STEP
   )
 })
 

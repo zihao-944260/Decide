@@ -20,19 +20,19 @@ export type ParagraphStyle = Partial<Pick<TextBlock, 'bold' | 'color' | 'align' 
 const FONT_SIZE: Record<TextBlock['level'], string> = {
   1: '40rpx',
   2: '34rpx',
-  3: '30rpx',
+  3: '30rpx'
 }
 
 const LINE_HEIGHT: Record<TextBlock['level'], string> = {
   1: '56rpx',
   2: '50rpx',
-  3: '46rpx',
+  3: '46rpx'
 }
 
 const FONT_WEIGHT: Record<TextBlock['level'], string> = {
   1: '600',
   2: '600',
-  3: '400',
+  3: '400'
 }
 
 /**
@@ -110,7 +110,8 @@ export function blocksToText(blocks: Block[], separator = '\n'): string {
 export function blocksCharCount(blocks: Block[]): number {
   let count = 0
   for (const block of blocks) {
-    if (block.type === 'text' || block.type === 'quote') count += countChars(stripTags(block.text).replace(/\s/g, ''))
+    if (block.type === 'text' || block.type === 'quote')
+      count += countChars(stripTags(block.text).replace(/\s/g, ''))
   }
   return count
 }
@@ -126,7 +127,7 @@ export function blockStyle(block: Block): BlockStyle {
       fontSize: FONT_SIZE[block.level],
       lineHeight: LINE_HEIGHT[block.level],
       fontWeight: block.bold ? '700' : FONT_WEIGHT[block.level],
-      textAlign: block.align,
+      textAlign: block.align
     }
     if (block.color) style.color = block.color
     return style
@@ -201,7 +202,7 @@ export function sanitizeBlocks(raw: unknown): Block[] {
         level: asLevel(record.level),
         align: asAlign(record.align),
         ...(record.bold === true ? { bold: true } : {}),
-        ...(typeof record.color === 'string' && record.color ? { color: record.color } : {}),
+        ...(typeof record.color === 'string' && record.color ? { color: record.color } : {})
       })
     } else if (record.type === 'quote') {
       blocks.push({ id, type: 'quote', text: asString(record.text, Limit.BLOCK_TEXT_MAX) })
@@ -214,7 +215,7 @@ export function sanitizeBlocks(raw: unknown): Block[] {
         fileID,
         w: asNumber(record.w),
         h: asNumber(record.h),
-        ...(typeof record.caption === 'string' && record.caption ? { caption: record.caption } : {}),
+        ...(typeof record.caption === 'string' && record.caption ? { caption: record.caption } : {})
       })
     } else {
       blocks.push({ id, type: 'divider' })
@@ -250,10 +251,29 @@ function escapeAngle(text: string): string {
 
 /** 去掉标签与占位实体后还有可见文字：空段落 / 纯 br 不算正文（云端拒收空文本块） */
 export function hasVisibleText(html: string): boolean {
-  return html.replace(/<[^>]*>/g, '').replace(/&(nbsp|#160);/gi, ' ').trim() !== ''
+  return (
+    html
+      .replace(/<[^>]*>/g, '')
+      .replace(/&(nbsp|#160);/gi, ' ')
+      .trim() !== ''
+  )
 }
 
-const INLINE_TAGS = new Set(['b', 'strong', 'i', 'em', 'u', 's', 'strike', 'ins', 'del', 'sub', 'sup', 'br', 'span'])
+const INLINE_TAGS = new Set([
+  'b',
+  'strong',
+  'i',
+  'em',
+  'u',
+  's',
+  'strike',
+  'ins',
+  'del',
+  'sub',
+  'sup',
+  'br',
+  'span'
+])
 const COLOR_RE = /^(#[0-9a-fA-F]{3,8}|rgba?\([\d\s.,%]+\))$/
 
 /**

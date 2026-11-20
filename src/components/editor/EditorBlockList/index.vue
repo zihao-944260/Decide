@@ -12,7 +12,7 @@ import type { Block, DividerBlock, ImageBlock, QuoteBlock, TextBlock } from '@/t
 import type { EditorBlockLongPressEvent, Emits, ImageUpdatePayload, Props } from './types'
 
 const props = withDefaults(defineProps<Props>(), {
-  focusId: '',
+  focusId: ''
 })
 const emit = defineEmits<Emits>()
 
@@ -90,7 +90,9 @@ function onRemove(id: string): void {
 function onLongPress(id: string): void {
   // index 用原始 props.blocks 的下标：过滤掉的脏块不该把序号挪位，
   // 页面的 moveBlock/上移下移 disabled 判定都以那份数组为准
-  const index = (Array.isArray(props.blocks) ? props.blocks : []).findIndex((block) => block?.id === id)
+  const index = (Array.isArray(props.blocks) ? props.blocks : []).findIndex(
+    (block) => block?.id === id
+  )
   if (index < 0) return
   const payload: EditorBlockLongPressEvent = { id, index }
   emit('long-press', payload)

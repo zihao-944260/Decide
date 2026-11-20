@@ -14,7 +14,7 @@ import OptionsSection from '@/components/editor/OptionsSection/index.vue'
 import {
   firstInvalidOptionIndex,
   optionCardId,
-  optionsProblem,
+  optionsProblem
 } from '@/components/editor/OptionsSection/types'
 import { showToastMsg, useActionSheet } from '@/composables'
 import type { PlanOption } from '@/types/models'
@@ -36,9 +36,7 @@ function onOptionsUploading(value: boolean): void {
   optionsUploading.value = value
 }
 // 开关关着时根本没有要提交的选项，门禁也应该跟着放行
-const canSubmit = computed(
-  () => !form.model.value.optionsEnabled || !optionsUploading.value,
-)
+const canSubmit = computed(() => !form.model.value.optionsEnabled || !optionsUploading.value)
 
 // ---- 3. 提交校验：判据由本目录给全，页面只负责调 ----
 const scrollTarget = ref('')
@@ -93,36 +91,36 @@ function onSheetVisible(value: boolean): void {
 
 ### OptionsSection
 
-| prop | 类型 | 默认 | 说明 |
-| --- | --- | --- | --- |
-| `enabled` | `boolean` | 必填 | 「添加选项」开关。页面初始值给 `false`（§8.6 默认关闭） |
-| `options` | `PlanOption[]` | 必填 | 选项列表；组件输出的每一项都带连续 `order` |
-| `disabled` | `boolean?` | `false` | 只读态，开关/添加/卡片输入一起冻住（页面给「已截止计划」出只读视图时用；不需要就别传） |
+| prop       | 类型           | 默认    | 说明                                                                                   |
+| ---------- | -------------- | ------- | -------------------------------------------------------------------------------------- |
+| `enabled`  | `boolean`      | 必填    | 「添加选项」开关。页面初始值给 `false`（§8.6 默认关闭）                                |
+| `options`  | `PlanOption[]` | 必填    | 选项列表；组件输出的每一项都带连续 `order`                                             |
+| `disabled` | `boolean?`     | `false` | 只读态，开关/添加/卡片输入一起冻住（页面给「已截止计划」出只读视图时用；不需要就别传） |
 
-| 事件 | 载荷 | 说明 |
-| --- | --- | --- |
-| `toggle` | `(enabled: boolean)` | 开关点击，**取反后的值**。组件不改自己的 props，也不清 `options` |
-| `change` | `(options: PlanOption[])` | 增 / 删 / 排序 / 改名 / 换图后的**整包新数组** |
-| `uploading` | `(uploading: boolean)` | 任一选项配图在途（含失败待重试）。页面提交门禁用它 |
+| 事件        | 载荷                      | 说明                                                             |
+| ----------- | ------------------------- | ---------------------------------------------------------------- |
+| `toggle`    | `(enabled: boolean)`      | 开关点击，**取反后的值**。组件不改自己的 props，也不清 `options` |
+| `change`    | `(options: PlanOption[])` | 增 / 删 / 排序 / 改名 / 换图后的**整包新数组**                   |
+| `uploading` | `(uploading: boolean)`    | 任一选项配图在途（含失败待重试）。页面提交门禁用它               |
 
 **只有这一套事件**（`toggle` + `change`）。另一条路（`update` / `remove` / `move` 逐字段）刻意没有做：逐字段事件会让页面自己去重排 `order`，同一个不变量两处实现必然漂移。选整包 `change` 的代价是页面每次拿整包替换，收益是 `order` 只有一个写入点。
 
 ### OptionEditorCard（`OptionsSection` 的子件，页面一般不直接用）
 
-| prop | 类型 | 说明 |
-| --- | --- | --- |
-| `option` | `PlanOption` | 一条选项；宿主 `v-for` 必须 `:key="option.id"` |
-| `index` | `number` | 0 基序号（徽标 `pad2(index + 1)`，与展示态 OptionCard 同口径） |
-| `total` | `number` | 总数，决定上移/下移的禁用边界 |
-| `disabled` | `boolean?` | 只读态 |
+| prop       | 类型         | 说明                                                           |
+| ---------- | ------------ | -------------------------------------------------------------- |
+| `option`   | `PlanOption` | 一条选项；宿主 `v-for` 必须 `:key="option.id"`                 |
+| `index`    | `number`     | 0 基序号（徽标 `pad2(index + 1)`，与展示态 OptionCard 同口径） |
+| `total`    | `number`     | 总数，决定上移/下移的禁用边界                                  |
+| `disabled` | `boolean?`   | 只读态                                                         |
 
-| 事件 | 载荷 |
-| --- | --- |
-| `rename` | `(name: string)` 原文，未 trim |
-| `image` | `(fileID: string)`，`''` = 删掉配图 |
-| `uploading` | `(uploading: boolean)` |
-| `move` | `(delta: number)` `-1` 上移 / `1` 下移 |
-| `remove` | `()` |
+| 事件        | 载荷                                   |
+| ----------- | -------------------------------------- |
+| `rename`    | `(name: string)` 原文，未 trim         |
+| `image`     | `(fileID: string)`，`''` = 删掉配图    |
+| `uploading` | `(uploading: boolean)`                 |
+| `move`      | `(delta: number)` `-1` 上移 / `1` 下移 |
+| `remove`    | `()`                                   |
 
 ## 折叠为什么用 `v-show`，为什么绝不清空
 
@@ -138,7 +136,10 @@ function onSheetVisible(value: boolean): void {
 
 ```ts
 function commit(list: PlanOption[]): void {
-  emit('change', list.map((option, index) => ({ ...option, order: index })))
+  emit(
+    'change',
+    list.map((option, index) => ({ ...option, order: index }))
+  )
 }
 ```
 
@@ -155,13 +156,13 @@ function commit(list: PlanOption[]): void {
 
 规则属页面（T4.11 `useForm`），但判据的字面量在本目录 `types.ts` 里给全，页面 import 即用，**不要再抄一份**：
 
-| 出口 | 用途 |
-| --- | --- |
-| `OPTION_MIN_COUNT`（= 2） | §8.6 的下界字面量 |
-| `optionsProblem(list, enabled)` | 返回 `''` = 通过；否则是可直接 toast 的文案。`enabled=false` 一律放行（云端 `validateOptions(raw,false)` 直接 `return []`，开关关了还去数数量就是凭空拦截） |
-| `firstInvalidOptionIndex(list)` | 第一个 `name.trim() === ''` 的下标，`-1` = 都填了 |
-| `optionCardId(id)` | §8.6「定位到第一个错误卡片」的 `scroll-into-view` 目标 id。**组件模板里挂的就是这个 id，页面必须用同一个函数生成**，两处各写一遍就一定跳不过去 |
-| `createEmptyOption()` | 空选项工厂，`id` 前缀（`createBlockId('o')`）的唯一来源。组件内部「添加选项」用的就是它；页面如果想「一打开开关就补两个空卡」（少一次点击，但会静默改 model，属产品决策）**也调它**，别自己写 `Date.now()` —— 云端对重复 id 抛 `3003 选项标识重复` |
+| 出口                            | 用途                                                                                                                                                                                                                                               |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OPTION_MIN_COUNT`（= 2）       | §8.6 的下界字面量                                                                                                                                                                                                                                  |
+| `optionsProblem(list, enabled)` | 返回 `''` = 通过；否则是可直接 toast 的文案。`enabled=false` 一律放行（云端 `validateOptions(raw,false)` 直接 `return []`，开关关了还去数数量就是凭空拦截）                                                                                        |
+| `firstInvalidOptionIndex(list)` | 第一个 `name.trim() === ''` 的下标，`-1` = 都填了                                                                                                                                                                                                  |
+| `optionCardId(id)`              | §8.6「定位到第一个错误卡片」的 `scroll-into-view` 目标 id。**组件模板里挂的就是这个 id，页面必须用同一个函数生成**，两处各写一遍就一定跳不过去                                                                                                     |
+| `createEmptyOption()`           | 空选项工厂，`id` 前缀（`createBlockId('o')`）的唯一来源。组件内部「添加选项」用的就是它；页面如果想「一打开开关就补两个空卡」（少一次点击，但会静默改 model，属产品决策）**也调它**，别自己写 `Date.now()` —— 云端对重复 id 抛 `3003 选项标识重复` |
 
 判 `name.trim()` 而不是 `name`：云函数 `asString` 走 `required()`（`trim()` 后判空）再 `maxLen`，前端不 trim 就会放过全空格、被云端 `1001` 拒。
 

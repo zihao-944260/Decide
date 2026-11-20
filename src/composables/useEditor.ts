@@ -17,7 +17,7 @@ import {
   isStylable,
   sanitizeBlocks,
   serializeBlocks,
-  type ParagraphStyle,
+  type ParagraphStyle
 } from '@/utils/blocks'
 import { clipChars, countChars } from '@/utils/format'
 import { hasStorage, readJson, removeStorage, writeJson } from '@/utils/storage'
@@ -142,7 +142,12 @@ export function useEditor(options: UseEditorOptions = {}): EditorController {
   const activeStyle = computed<ParagraphStyle | null>(() => {
     const block = focusedBlock()
     if (!isStylable(block)) return null
-    return { level: block.level, align: block.align, bold: Boolean(block.bold), color: block.color ?? '' }
+    return {
+      level: block.level,
+      align: block.align,
+      bold: Boolean(block.bold),
+      color: block.color ?? ''
+    }
   })
 
   function replaceAt(index: number, next: Block): void {
@@ -254,7 +259,9 @@ export function useEditor(options: UseEditorOptions = {}): EditorController {
   function duplicateBlock(id: string): string | null {
     const index = indexOf(id)
     if (index < 0) return null
-    const clone = sanitizeBlocks([Object.assign({}, blocks.value[index], { id: createBlockId() })])[0]
+    const clone = sanitizeBlocks([
+      Object.assign({}, blocks.value[index], { id: createBlockId() })
+    ])[0]
     if (!clone) return null
     return insertBlock(clone, id)
   }
@@ -312,7 +319,7 @@ export function useEditor(options: UseEditorOptions = {}): EditorController {
       deadline: extra.deadline,
       optionsEnabled: extra.optionsEnabled,
       options: extra.options,
-      savedAt: peekNow(),
+      savedAt: peekNow()
     }
   }
 
@@ -410,6 +417,6 @@ export function useEditor(options: UseEditorOptions = {}): EditorController {
     restoreDraft,
     clearDraft,
     scheduleDraft,
-    flushDraft,
+    flushDraft
   }
 }

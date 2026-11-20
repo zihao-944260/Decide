@@ -37,12 +37,12 @@ export type Emits = {
 事件载荷**不带块 id**：一个实例只服务一个块，id 由 `props.block.id` 与宿主的透传补齐
 （H1 那边是 `@update="(next) => onImageUpdate(item.id, next)"`）。
 
-| 事件 | 什么时候发 | 页面做什么 |
-| --- | --- | --- |
-| `focus` | 点块任意位置（含空卡、进度遮罩、重试）→ 冒泡到根节点 | `editor.setFocus(id)`：图片块不是 text 块，`stylable` 随之变 false，工具栏样式项自动置灰 |
-| `update` | `useUpload` 的条目进入 `done` 且有 fileID 时**发一次** | `editor.updateImage(id, next)`（useEditor.ts:224） |
-| `remove` | 点右上角 × | `editor.removeBlock(id)`；组件顺手 `clear()` 掉本地上传条目 |
-| `long-press` | 长按块 | 页面弹 ActionSheet（上移/下移/删除/复制），组件自己不弹（§11） |
+| 事件         | 什么时候发                                             | 页面做什么                                                                               |
+| ------------ | ------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `focus`      | 点块任意位置（含空卡、进度遮罩、重试）→ 冒泡到根节点   | `editor.setFocus(id)`：图片块不是 text 块，`stylable` 随之变 false，工具栏样式项自动置灰 |
+| `update`     | `useUpload` 的条目进入 `done` 且有 fileID 时**发一次** | `editor.updateImage(id, next)`（useEditor.ts:224）                                       |
+| `remove`     | 点右上角 ×                                             | `editor.removeBlock(id)`；组件顺手 `clear()` 掉本地上传条目                              |
+| `long-press` | 长按块                                                 | 页面弹 ActionSheet（上移/下移/删除/复制），组件自己不弹（§11）                           |
 
 ## 页面接线（逐字可抄）
 
@@ -58,7 +58,7 @@ import type { ImageUpdatePayload } from '@/components/editor/EditorBlockList/typ
 import { useEditor } from '@/composables'
 import type { Block } from '@/types/models'
 
-const editor = useEditor({ /* getExtra / openId / onDraftSaved */ })
+const editor = useEditor({/* getExtra / openId / onDraftSaved */})
 
 // ① 图片块回写：容器补 id，页面落到 useEditor 唯一的写入口
 function onImageUpdate(id: string, next: ImageUpdatePayload): void {
@@ -76,9 +76,11 @@ function onInsertImage(): void {
 //    它既过不了云端校验（planPayload.ts:37-41「只能使用上传过的图片」），
 //    也会在下次草稿恢复时被 sanitizeBlocks 丢掉，所以发布前必须拦。
 const hasPendingImageBlock = computed<boolean>(() =>
-  editor.blocks.value.some((block: Block) => block.type === 'image' && !block.fileID),
+  editor.blocks.value.some((block: Block) => block.type === 'image' && !block.fileID)
 )
-const canPublish = computed<boolean>(() => !hasPendingImageBlock.value /* && !配图在途，见 ImageUploader README */)
+const canPublish = computed<boolean>(
+  () => !hasPendingImageBlock.value /* && !配图在途，见 ImageUploader README */
+)
 
 // onBlockLongPress（长按弹 ActionSheet）见 EditorBlockList/README.md 的接线一节，本例省略
 </script>
@@ -110,12 +112,12 @@ const canPublish = computed<boolean>(() => !hasPendingImageBlock.value /* && !�
 
 ## 四态
 
-| state | 条件 | 渲染 |
-| --- | --- | --- |
-| `empty` | 无本地条目且 `block.fileID === ''` | 「点击选择图片」卡片（`+` 由两个真实节点拼，Skyline 无伪元素） |
-| `uploading` | 本地条目 `pending` / `uploading` | 本地临时路径占位 + 半透明遮罩 + 自绘进度条（`width: %`，不用未实测的原生 `progress`） |
-| `error` | 本地条目 `error` | 本地图保留 + 遮罩「上传失败 / 点击重试」，整块可点重试（天然满足 88rpx 最小可点尺寸） |
-| `ready` | `block.fileID` 非空（或宿主漏接 `update` 时兜本地条目的 fileID） | `BaseImage` 出图 |
+| state       | 条件                                                             | 渲染                                                                                  |
+| ----------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `empty`     | 无本地条目且 `block.fileID === ''`                               | 「点击选择图片」卡片（`+` 由两个真实节点拼，Skyline 无伪元素）                        |
+| `uploading` | 本地条目 `pending` / `uploading`                                 | 本地临时路径占位 + 半透明遮罩 + 自绘进度条（`width: %`，不用未实测的原生 `progress`） |
+| `error`     | 本地条目 `error`                                                 | 本地图保留 + 遮罩「上传失败 / 点击重试」，整块可点重试（天然满足 88rpx 最小可点尺寸） |
+| `ready`     | `block.fileID` 非空（或宿主漏接 `update` 时兜本地条目的 fileID） | `BaseImage` 出图                                                                      |
 
 `ready` 态的兜底值得记一笔：**即使页面忘了接 `@update`，图也不会消失**（`src` 取 `block.fileID || 条目.fileID`）。
 但数据里仍然是空 fileID，草稿/发布都会丢图 —— 门禁必须照上面第 ③ 段写。

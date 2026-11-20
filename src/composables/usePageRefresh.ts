@@ -131,6 +131,6 @@ export function usePageRefresh(options: UsePageRefreshOptions): PageRefreshContr
     runNow: async () => {
       // 第一次拿到 false = 共享了别人在途的那一次（发起于本事件之前）→ 等它落地，再跑自己的一次
       if (!(await run())) await run()
-    },
+    }
   }
 }

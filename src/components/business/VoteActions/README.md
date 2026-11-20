@@ -6,22 +6,22 @@
 
 ## Props
 
-| prop | 类型 | 默认 | 说明 |
-| --- | --- | --- | --- |
-| `planId` | `string` | 必填 | 以 getter 传给 `useVote`，页面换 id 时状态自动跟随 |
-| `closed` | `boolean` | `false` | 已截止（`status=2` / 过了 `deadline`）或软删（`status=3`）：禁用置灰，点击提示 |
-| `isAuthor` | `boolean` | `false` | 发起人主态：**整块不渲染**（不是禁用）。v1 禁止自投 |
-| `showCount` | `boolean` | `false` | 按钮内票数 + 底部「共 N 人表态 / 我的选择」脚注。详情页若已摆 `VoteRatioBar`，保持关闭：比例与计数的唯一展示出口是 §8.3 的比例条 |
-| `closedText` | `string` | `'该计划已截止'` | 截止态点击提示文案 |
-| `optionsEnabled` | `boolean` | `false` | 选项表决模式（#60）：**整块不渲染**，投票入口改由 `OptionCardList` 的卡片承担 |
-| `locked` | `boolean` | `false` | 已投过：两颗按钮禁用置灰，但「已选」标记照常显示（投过不能改票） |
+| prop             | 类型      | 默认             | 说明                                                                                                                             |
+| ---------------- | --------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `planId`         | `string`  | 必填             | 以 getter 传给 `useVote`，页面换 id 时状态自动跟随                                                                               |
+| `closed`         | `boolean` | `false`          | 已截止（`status=2` / 过了 `deadline`）或软删（`status=3`）：禁用置灰，点击提示                                                   |
+| `isAuthor`       | `boolean` | `false`          | 发起人主态：**整块不渲染**（不是禁用）。v1 禁止自投                                                                              |
+| `showCount`      | `boolean` | `false`          | 按钮内票数 + 底部「共 N 人表态 / 我的选择」脚注。详情页若已摆 `VoteRatioBar`，保持关闭：比例与计数的唯一展示出口是 §8.3 的比例条 |
+| `closedText`     | `string`  | `'该计划已截止'` | 截止态点击提示文案                                                                                                               |
+| `optionsEnabled` | `boolean` | `false`          | 选项表决模式（#60）：**整块不渲染**，投票入口改由 `OptionCardList` 的卡片承担                                                    |
+| `locked`         | `boolean` | `false`          | 已投过：两颗按钮禁用置灰，但「已选」标记照常显示（投过不能改票）                                                                 |
 
 ## Emits
 
-| 事件 | 载荷 | 页面层要做什么 |
-| --- | --- | --- |
-| `voted` | `myVote: VoteTypeValue`（1/2） | 服务端权威计数已写入 `planStore`；用来刷「我参与的」统计（`user.stats`） |
-| `closed` | 无 | 服务端判定已截止/已删除 → 重拉 `plan.detail`，把 `closed` 置 true 并刷新倒计时 |
+| 事件     | 载荷                           | 页面层要做什么                                                                 |
+| -------- | ------------------------------ | ------------------------------------------------------------------------------ |
+| `voted`  | `myVote: VoteTypeValue`（1/2） | 服务端权威计数已写入 `planStore`；用来刷「我参与的」统计（`user.stats`）       |
+| `closed` | 无                             | 服务端判定已截止/已删除 → 重拉 `plan.detail`，把 `closed` 置 true 并刷新倒计时 |
 
 ## Slots
 
@@ -44,7 +44,11 @@
 
 ```vue
 <!-- 比例条 + 按钮是两件事：条展示共识，按钮负责改票，计数不要在两处各显示一遍 -->
-<VoteRatioBar :votes="planStore.voteCounts[detail.planId] ?? detail.votes" :my-vote="myVote" show-count />
+<VoteRatioBar
+  :votes="planStore.voteCounts[detail.planId] ?? detail.votes"
+  :my-vote="myVote"
+  show-count
+/>
 <VoteActions
   :plan-id="detail.planId"
   :closed="isClosed"

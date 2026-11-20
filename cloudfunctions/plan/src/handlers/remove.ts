@@ -18,5 +18,5 @@ export const remove: ActionSpec = {
     // 只翻状态 + updatedAt：不动 blocks/options，将来做「回收站」还留得住原文
     await planDao.softRemove(planId, Date.now())
     return { ok: true }
-  },
+  }
 }

@@ -19,7 +19,26 @@ page {
 // 盒模型统一：Skyline 默认 border-box，WebView 渲染页（edit/detail）默认 content-box。
 // 不显式统一，width:100% + 左右 padding 在 WebView 页必然溢出父容器（工具栏/块按钮实测溢出）。
 // 组件运行时 styleIsolation=apply-shared，本规则可进组件内部。
-view, scroll-view, swiper, swiper-item, button, input, textarea, editor, image, text,
-navigator, label, form, picker, rich-text, video, map, canvas, web-view, cover-view, cover-image {
+view,
+scroll-view,
+swiper,
+swiper-item,
+button,
+input,
+textarea,
+editor,
+image,
+text,
+navigator,
+label,
+form,
+picker,
+rich-text,
+video,
+map,
+canvas,
+web-view,
+cover-view,
+cover-image {
   box-sizing: border-box;
 }

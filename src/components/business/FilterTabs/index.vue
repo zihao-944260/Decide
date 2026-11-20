@@ -19,12 +19,12 @@ import { type Emits, type Props } from './types'
 
 const props = withDefaults(defineProps<Props>(), {
   filters: () => MY_FILTERS,
-  disabled: false,
+  disabled: false
 })
 const emit = defineEmits<Emits>()
 
 const tabs = computed(() =>
-  props.filters.map((filter) => ({ filter, label: MY_FILTER_LABELS[filter] })),
+  props.filters.map((filter) => ({ filter, label: MY_FILTER_LABELS[filter] }))
 )
 
 /**

@@ -16,7 +16,7 @@ import { STAT_CARDS, type Emits, type Props, type StatCard } from './types'
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
-  disabled: false,
+  disabled: false
 })
 const emit = defineEmits<Emits>()
 
@@ -35,7 +35,7 @@ function readCount(value: number | undefined): string {
 }
 
 const cards = computed<CardView[]>(() =>
-  STAT_CARDS.map((card) => ({ ...card, text: readCount(card.count(props.stats)) })),
+  STAT_CARDS.map((card) => ({ ...card, text: readCount(card.count(props.stats)) }))
 )
 
 function itemClass(card: CardView): string[] {

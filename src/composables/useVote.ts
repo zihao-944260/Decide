@@ -84,11 +84,14 @@ function shiftCounts(base: VoteCounts, from: MyVote, to: VoteTypeValue): VoteCou
 /** 乐观选项计数：只给被投选项 +1（锁定后不会改票，故无需 -1 分支） */
 function shiftOptions(base: PlanOption[], optionId: string): PlanOption[] {
   return base.map((option) =>
-    option.id === optionId ? { ...option, count: option.count + 1 } : option,
+    option.id === optionId ? { ...option, count: option.count + 1 } : option
   )
 }
 
-export function useVote(planId: MaybeRefOrGetter<string>, options: UseVoteOptions = {}): VoteController {
+export function useVote(
+  planId: MaybeRefOrGetter<string>,
+  options: UseVoteOptions = {}
+): VoteController {
   const planStore = usePlanStore()
   const voting = ref(false)
 
@@ -108,7 +111,7 @@ export function useVote(planId: MaybeRefOrGetter<string>, options: UseVoteOption
       counts: raw ? { ...raw } : null,
       myVote: planStore.myVotes[currentId] ?? NO_VOTE,
       options: rawOptions ? rawOptions.map((option) => ({ ...option })) : null,
-      myOption: planStore.myOptions[currentId] ?? '',
+      myOption: planStore.myOptions[currentId] ?? ''
     }
   }
 
@@ -136,7 +139,7 @@ export function useVote(planId: MaybeRefOrGetter<string>, options: UseVoteOption
         detail.votes,
         toStoreVote(detail.myVote),
         detail.options,
-        detail.myOption,
+        detail.myOption
       )
     } catch (err) {
       logger.warn('useVote', 'correct failed', err)
@@ -147,7 +150,7 @@ export function useVote(planId: MaybeRefOrGetter<string>, options: UseVoteOption
   async function handleSubmitError(
     currentId: string,
     snap: VoteSnapshot,
-    err: unknown,
+    err: unknown
   ): Promise<void> {
     restore(currentId, snap)
     if (err instanceof ApiError) {
@@ -209,7 +212,7 @@ export function useVote(planId: MaybeRefOrGetter<string>, options: UseVoteOption
         res.votes,
         toStoreVote(res.myVote),
         res.options,
-        res.myOption,
+        res.myOption
       )
       if (res.myOption) options.onOptionVoted?.(res.myOption)
     } catch (err) {
@@ -230,6 +233,6 @@ export function useVote(planId: MaybeRefOrGetter<string>, options: UseVoteOption
     cast,
     castOption,
     agree: () => cast(VoteType.Agree),
-    disagree: () => cast(VoteType.Disagree),
+    disagree: () => cast(VoteType.Disagree)
   }
 }

@@ -82,7 +82,9 @@ export async function resolveTempUrls(fileIDs: readonly string[]): Promise<Map<s
  * 一次性上传一张正文插图并回临时链：选图面板已把本地路径交给页面，这里只做「上传→拿 fileID→换临时链」。
  * 不进 files 队列（正文图不是配图网格的一员），失败抛给调用方弹一条提示。
  */
-export async function uploadInlineImage(localPath: string): Promise<{ fileID: string; tempURL: string }> {
+export async function uploadInlineImage(
+  localPath: string
+): Promise<{ fileID: string; tempURL: string }> {
   const cloudPath = `plans/inline/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.jpg`
   const up = await wx.cloud.uploadFile({ cloudPath, filePath: localPath })
   const temp = await resolveTempUrls([up.fileID])
@@ -105,7 +107,9 @@ export function useUpload(options: UseUploadOptions = {}) {
   const userStore = useUserStore()
 
   /** 上传失败的条目 id，页面用来标红 + 出「重试」按钮 */
-  const failedIds = computed(() => files.value.filter((item) => item.status === 'error').map((item) => item.id))
+  const failedIds = computed(() =>
+    files.value.filter((item) => item.status === 'error').map((item) => item.id)
+  )
 
   function fail(message: string): void {
     logger.warn('useUpload', message)
@@ -139,16 +143,17 @@ export function useUpload(options: UseUploadOptions = {}) {
     const task = wx.cloud.uploadFile({
       cloudPath,
       filePath: item.localPath,
-      success: (res) => patch(item.id, { fileID: res.fileID, status: 'done', progress: 100, message: '' }),
+      success: (res) =>
+        patch(item.id, { fileID: res.fileID, status: 'done', progress: 100, message: '' }),
       fail: (err) => {
         logger.warn('useUpload', `upload ${cloudPath} fail`, err)
         // errMsg 进 message：页面/组件要分清「网络断了」和「存储权限没开」，只有「上传失败」四个字就只能重吹一次
         patch(item.id, {
           status: 'error',
           progress: 0,
-          message: err.errMsg ? `上传失败：${err.errMsg}` : '上传失败',
+          message: err.errMsg ? `上传失败：${err.errMsg}` : '上传失败'
         })
-      },
+      }
     })
 
     if (task && typeof task.onProgressUpdate === 'function') {
@@ -189,7 +194,7 @@ export function useUpload(options: UseUploadOptions = {}) {
               ext: extOf(picked.path) || 'jpg',
               status: 'pending',
               progress: 0,
-              message: '',
+              message: ''
             }
             added.push(item)
             files.value = [...files.value, item]
@@ -202,7 +207,7 @@ export function useUpload(options: UseUploadOptions = {}) {
           // 用户主动取消会走 fail(cancel)，不该弹错误提示
           logger.debug('useUpload', 'chooseMedia cancel', err)
           resolve([])
-        },
+        }
       })
     })
   }
@@ -219,7 +224,7 @@ export function useUpload(options: UseUploadOptions = {}) {
       ext: extOf(fileID) || 'png',
       status: 'done',
       progress: 100,
-      message: '',
+      message: ''
     }
     files.value = [...files.value, item]
     return item
@@ -238,7 +243,7 @@ export function useUpload(options: UseUploadOptions = {}) {
    */
   function uploadLocal(
     localPath: string,
-    meta: { size?: number; width?: number; height?: number } = {},
+    meta: { size?: number; width?: number; height?: number } = {}
   ): UploadItem | undefined {
     if (!localPath) return undefined
     if (remaining() <= 0) {
@@ -261,7 +266,7 @@ export function useUpload(options: UseUploadOptions = {}) {
       ext: extOf(picked.path) || 'png',
       status: 'pending',
       progress: 0,
-      message: '',
+      message: ''
     }
     files.value = [...files.value, item]
     upload(item)
@@ -292,10 +297,12 @@ export function useUpload(options: UseUploadOptions = {}) {
     uploadLocal,
     failedIds,
     /** 全部上传完成且至少一张时才可提交 */
-    done: computed(() => files.value.length > 0 && files.value.every((item) => item.status === 'done')),
+    done: computed(
+      () => files.value.length > 0 && files.value.every((item) => item.status === 'done')
+    ),
     uploading: computed(() => files.value.some((item) => item.status !== 'done')),
     isFull: computed(() => files.value.length >= max),
     fileIDs: computed(() => files.value.filter((item) => item.fileID).map((item) => item.fileID)),
-    max,
+    max
   }
 }

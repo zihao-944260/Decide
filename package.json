@@ -14,7 +14,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "commit": "git-cz"
+    "commit": "npx git-cz"
   },
   "lint-staged": {
     "*.{vue,ts,js,json,css,scss}": [

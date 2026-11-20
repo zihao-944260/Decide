@@ -21,12 +21,22 @@ const props = withDefaults(defineProps<Props>(), {
   modelValue: () => [],
   max: Limit.IMAGE_MAX,
   disabled: false,
-  label: '配图',
+  label: '配图'
 })
 const emit = defineEmits<Emits>()
 
-const { files, pick, retry, remove: dropItem, addExisting, fileIDs, uploading, done, isFull, failedIds } =
-  useUpload({ max: props.max })
+const {
+  files,
+  pick,
+  retry,
+  remove: dropItem,
+  addExisting,
+  fileIDs,
+  uploading,
+  done,
+  isFull,
+  failedIds
+} = useUpload({ max: props.max })
 
 /** 一行三格：32% + 2% 间隙 ×3 = 100%，末格不留右距（Skyline 无后代选择器，间距只能算在节点自己身上） */
 const COLS = 3
@@ -35,7 +45,7 @@ const CELL_GAP = '2%'
 
 const countText = computed<string>(() => `${files.value.length}/${props.max}`)
 const hintText = computed<string>(() =>
-  isFull.value ? `最多 ${props.max} 张，点右上角 × 可移除` : UPLOAD_HINT,
+  isFull.value ? `最多 ${props.max} 张，点右上角 × 可移除` : UPLOAD_HINT
 )
 
 /** 上传中显本地临时路径（T0.7：小程序端只有 tempFilePath，这条路不闪）；完成后换成 fileID */
@@ -87,7 +97,8 @@ function hasFileID(id: string): boolean {
 function syncFromModel(incomingValue: string[]): void {
   const incoming = incomingValue.filter(Boolean)
   for (const entry of files.value.slice()) {
-    if (entry.status === 'done' && entry.fileID && !incoming.includes(entry.fileID)) dropItem(entry.id)
+    if (entry.status === 'done' && entry.fileID && !incoming.includes(entry.fileID))
+      dropItem(entry.id)
   }
   for (const id of incoming) {
     if (!hasFileID(id)) addExisting(id)
@@ -101,7 +112,7 @@ const changePayload = computed<UploaderChange>(() => ({
   done: done.value,
   count: files.value.length,
   failed: failedIds.value.length,
-  max: props.max,
+  max: props.max
 }))
 const changeKey = computed<string>(() => {
   const payload = changePayload.value
@@ -109,7 +120,11 @@ const changeKey = computed<string>(() => {
 })
 
 /** 外部不管是换数组引用还是原地改，都跟着同步（syncFromModel 幂等，多跑一次没有副作用） */
-watch(() => props.modelValue, (next) => syncFromModel(next ?? []), { immediate: true, deep: true })
+watch(
+  () => props.modelValue,
+  (next) => syncFromModel(next ?? []),
+  { immediate: true, deep: true }
+)
 
 watch(fileIDKey, () => {
   const next = fileIDs.value
@@ -129,7 +144,12 @@ watch(changeKey, () => emit('change', changePayload.value), { immediate: true })
     </view>
 
     <view class="image-uploader__grid">
-      <view v-for="(entry, index) in files" :key="entry.id" class="image-uploader__cell" :style="cellStyle(index)">
+      <view
+        v-for="(entry, index) in files"
+        :key="entry.id"
+        class="image-uploader__cell"
+        :style="cellStyle(index)"
+      >
         <view class="image-uploader__frame">
           <BaseImage :src="srcOf(entry)" mode="aspectFill" :ratio="1" :lazy="false" radius="md" />
 
@@ -140,7 +160,11 @@ watch(changeKey, () => emit('change', changePayload.value), { immediate: true })
             </view>
           </view>
 
-          <view v-else-if="entry.status === 'error'" class="image-uploader__mask" @tap="onRetry(entry.id)">
+          <view
+            v-else-if="entry.status === 'error'"
+            class="image-uploader__mask"
+            @tap="onRetry(entry.id)"
+          >
             <text class="image-uploader__mask-title">上传失败</text>
             <text class="image-uploader__mask-text">点击重试</text>
           </view>

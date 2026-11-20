@@ -5,7 +5,7 @@ import type { Props } from './types'
 const props = withDefaults(defineProps<Props>(), {
   src: '',
   size: 'md',
-  shape: 'circle',
+  shape: 'circle'
 })
 
 const slots = useSlots()
@@ -29,7 +29,13 @@ function onError(): void {
 
 <template>
   <view class="base-avatar" :class="rootClass">
-    <image v-if="showImage" class="base-avatar__img" :src="src" mode="aspectFill" @error="onError" />
+    <image
+      v-if="showImage"
+      class="base-avatar__img"
+      :src="src"
+      mode="aspectFill"
+      @error="onError"
+    />
     <view v-else-if="hasFallbackSlot" class="base-avatar__fallback">
       <slot />
     </view>

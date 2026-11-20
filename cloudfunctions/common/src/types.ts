@@ -21,13 +21,7 @@ export type DbUpdateCommand = ReturnType<DbCommand['inc']>
 
 /** where 条件值：字面量或 command（gt/in/or…） */
 export type QueryValue =
-  | string
-  | number
-  | boolean
-  | null
-  | DbQueryCommand
-  | DbLogicCommand
-  | readonly (string | number)[]
+  string | number | boolean | null | DbQueryCommand | DbLogicCommand | readonly (string | number)[]
 
 export type Condition = Record<string, QueryValue>
 
@@ -35,7 +29,10 @@ export type Condition = Record<string, QueryValue>
 export type WherePart = Condition | DbLogicCommand
 
 /** 更新载荷：字段值或原子命令（_.inc 等） */
-export type UpdatePayload = Record<string, string | number | boolean | null | DbUpdateCommand | object>
+export type UpdatePayload = Record<
+  string,
+  string | number | boolean | null | DbUpdateCommand | object
+>
 
 // === 事务 ===
 /**

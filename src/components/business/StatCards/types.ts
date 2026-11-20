@@ -31,7 +31,7 @@ export const STAT_CARDS: readonly StatCard[] = [
   //   ended   = 我发起 且 (status = 2 或 (status = 1 且 0 < deadline ≤ now))      ← #46 的现算口径
   // 于是 created − ongoing = status=2 ∪ (status=1 且已过期) = ended，一字不差，
   // 而且 ongoing ⊂ created，差值恒 ≥ 0。scheduler 还没把 1 翻成 2 的窗口期也落在这条减法里。
-  { filter: 'ended', label: MY_FILTER_LABELS.ended, count: (s) => s.created - s.ongoing },
+  { filter: 'ended', label: MY_FILTER_LABELS.ended, count: (s) => s.created - s.ongoing }
 ]
 
 export interface Props {

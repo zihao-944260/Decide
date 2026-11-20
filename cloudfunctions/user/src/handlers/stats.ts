@@ -23,7 +23,7 @@ export const stats: ActionSpec = {
     const [created, joined, ongoing] = await Promise.all([
       planDao.countByAuthor(openId, 'created', now),
       participationDao.countByUser(openId),
-      planDao.countByAuthor(openId, 'ongoing', now),
+      planDao.countByAuthor(openId, 'ongoing', now)
     ])
     const result: UserStats = { created, joined, ongoing }
 
@@ -34,5 +34,5 @@ export const stats: ActionSpec = {
       /* 静默：stats 只是冗余展示字段 */
     }
     return result
-  },
+  }
 }

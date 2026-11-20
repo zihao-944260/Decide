@@ -24,20 +24,20 @@
 
 ## Props
 
-| 组件 | prop | 类型 | 默认 | 说明 |
-| --- | --- | --- | --- | --- |
-| OptionCardList | `options` | `PlanOption[]` | 必填 | `PlanDetail.options`；`length < 2` 时整块不渲染也不占位（§8.6 开关关闭） |
-| OptionCardList | `previewable` | `boolean` | `true` | 透传给每张卡的配图预览开关（表决态下让位给投票点击） |
-| OptionCardList | `votable` | `boolean` | `false` | 选项表决态：卡片可点投票 |
-| OptionCardList | `myOption` | `string` | `''` | 我投的选项 id；命中的卡 `selected=true` |
-| OptionCardList | `locked` | `boolean` | `false` | 已投过即锁定：除 `myOption` 外全部 `disabled` |
-| OptionCardList | `closed` | `boolean` | `false` | 已截止/软删：全部 `disabled`（含我投的那一项） |
-| OptionCard | `option` | `PlanOption` | 必填 | 单条选项 |
-| OptionCard | `index` | `number` | 必填 | 0 基序号，徽标显示 `pad2(index + 1)` → 01/02/03 |
-| OptionCard | `previewable` | `boolean` | `true` | 配图可点击放大（`uni.previewImage`） |
-| OptionCard | `votable` | `boolean` | `false` | 整卡可点，点中 `emit('vote', option.id)` |
-| OptionCard | `selected` | `boolean` | `false` | 主色描边/底色 + 名称主色加粗 + 「已选」；优先于 `disabled` |
-| OptionCard | `disabled` | `boolean` | `false` | 置灰不可点（`selected` 时不置灰） |
+| 组件           | prop          | 类型           | 默认    | 说明                                                                     |
+| -------------- | ------------- | -------------- | ------- | ------------------------------------------------------------------------ |
+| OptionCardList | `options`     | `PlanOption[]` | 必填    | `PlanDetail.options`；`length < 2` 时整块不渲染也不占位（§8.6 开关关闭） |
+| OptionCardList | `previewable` | `boolean`      | `true`  | 透传给每张卡的配图预览开关（表决态下让位给投票点击）                     |
+| OptionCardList | `votable`     | `boolean`      | `false` | 选项表决态：卡片可点投票                                                 |
+| OptionCardList | `myOption`    | `string`       | `''`    | 我投的选项 id；命中的卡 `selected=true`                                  |
+| OptionCardList | `locked`      | `boolean`      | `false` | 已投过即锁定：除 `myOption` 外全部 `disabled`                            |
+| OptionCardList | `closed`      | `boolean`      | `false` | 已截止/软删：全部 `disabled`（含我投的那一项）                           |
+| OptionCard     | `option`      | `PlanOption`   | 必填    | 单条选项                                                                 |
+| OptionCard     | `index`       | `number`       | 必填    | 0 基序号，徽标显示 `pad2(index + 1)` → 01/02/03                          |
+| OptionCard     | `previewable` | `boolean`      | `true`  | 配图可点击放大（`uni.previewImage`）                                     |
+| OptionCard     | `votable`     | `boolean`      | `false` | 整卡可点，点中 `emit('vote', option.id)`                                 |
+| OptionCard     | `selected`    | `boolean`      | `false` | 主色描边/底色 + 名称主色加粗 + 「已选」；优先于 `disabled`               |
+| OptionCard     | `disabled`    | `boolean`      | `false` | 置灰不可点（`selected` 时不置灰）                                        |
 
 Emits：`OptionCardList` 与 `OptionCard` 各发一个 `vote(optionId: string)`，容器原样上抛子卡事件。Slots：无。
 

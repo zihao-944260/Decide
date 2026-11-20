@@ -27,7 +27,7 @@ import {
   log,
   planDao,
   voteDao,
-  type VoteCounts,
+  type VoteCounts
 } from 'common'
 
 /**
@@ -37,8 +37,17 @@ import {
  */
 const VOTE_SCAN_LIMIT = 1000
 
-function hasDrift(stored: VoteCounts, storedCommentCount: number, real: VoteCounts, realCommentCount: number): boolean {
-  return stored.agree !== real.agree || stored.disagree !== real.disagree || storedCommentCount !== realCommentCount
+function hasDrift(
+  stored: VoteCounts,
+  storedCommentCount: number,
+  real: VoteCounts,
+  realCommentCount: number
+): boolean {
+  return (
+    stored.agree !== real.agree ||
+    stored.disagree !== real.disagree ||
+    storedCommentCount !== realCommentCount
+  )
 }
 
 export async function reconcileCounts(startedAt: number): Promise<Record<string, unknown>> {
@@ -65,12 +74,14 @@ export async function reconcileCounts(startedAt: number): Promise<Record<string,
         counted.total >= VOTE_SCAN_LIMIT
           ? {
               agree: await voteDao.countByType(row._id, VoteType.Agree),
-              disagree: await voteDao.countByType(row._id, VoteType.Disagree),
+              disagree: await voteDao.countByType(row._id, VoteType.Disagree)
             }
           : { agree: counted.agree, disagree: counted.disagree }
       const commentCount = await commentDao.countNormal(row._id)
 
-      if (hasDrift(row.vote ?? { agree: 0, disagree: 0 }, row.commentCount ?? 0, votes, commentCount)) {
+      if (
+        hasDrift(row.vote ?? { agree: 0, disagree: 0 }, row.commentCount ?? 0, votes, commentCount)
+      ) {
         await planDao.setCounts(row._id, votes, commentCount)
         fixed += 1
         log.info('对账修正计数', { planId: row._id, votes, commentCount })

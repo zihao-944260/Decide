@@ -8,7 +8,7 @@ import { createRouter, type ActionMap, type ApiResult } from 'common'
 import { submit } from './handlers/submit'
 
 const actions: ActionMap = {
-  submit,
+  submit
 }
 
 const route = createRouter('vote', actions)

@@ -78,13 +78,17 @@ const fillStyle = computed<string>(() => `width: ${progress.value}%;`)
 const ratio = computed<number>(() => {
   const entry = item.value
   if (!entry) return imageBlockRatio(props.block)
-  return imageBlockRatio({ ...props.block, w: entry.width || props.block.w, h: entry.height || props.block.h })
+  return imageBlockRatio({
+    ...props.block,
+    w: entry.width || props.block.w,
+    h: entry.height || props.block.h
+  })
 })
 /** 有 w/h 先按比例占位（§11.1 防加载顶跳），没有则让图片自撑 —— 与 ContentRenderer 一致 */
 const mode = computed<BaseImageMode>(() => (ratio.value > 0 ? 'aspectFill' : 'widthFix'))
 
 const rootClass = computed<string>(() =>
-  props.focused ? 'editor-image-block editor-image-block--focused' : 'editor-image-block',
+  props.focused ? 'editor-image-block editor-image-block--focused' : 'editor-image-block'
 )
 
 /**
@@ -93,7 +97,7 @@ const rootClass = computed<string>(() =>
  * 对象引用不变，`watch(item)` 的 hasChanged 判等会直接吞掉回调（useUpload.ts:73-77 的注释就是这件事的另一面）。
  */
 const doneFileID = computed<string>(() =>
-  item.value && item.value.status === 'done' ? item.value.fileID : '',
+  item.value && item.value.status === 'done' ? item.value.fileID : ''
 )
 
 watch(doneFileID, (fileID) => {

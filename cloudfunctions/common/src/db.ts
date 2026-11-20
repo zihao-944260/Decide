@@ -17,7 +17,7 @@ import type {
   GetResult,
   RemoveResult,
   Transaction,
-  UpdateResult,
+  UpdateResult
 } from './types'
 
 /** 环境按调用方动态解析：写死 envId 会让多个环境的函数互相打脏数据 */

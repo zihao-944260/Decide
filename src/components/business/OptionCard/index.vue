@@ -12,7 +12,7 @@ const props = withDefaults(defineProps<Props>(), {
   previewable: true,
   votable: false,
   selected: false,
-  disabled: false,
+  disabled: false
 })
 const emit = defineEmits<Emits>()
 
@@ -50,11 +50,7 @@ function onTap(): void {
 </script>
 
 <template>
-  <view
-    :class="rootClass"
-    :hover-class="interactive ? 'option-card--hover' : 'none'"
-    @tap="onTap"
-  >
+  <view :class="rootClass" :hover-class="interactive ? 'option-card--hover' : 'none'" @tap="onTap">
     <view class="option-card__head">
       <view :class="badgeClass">
         <text :class="badgeTextClass">{{ pad2(index + 1) }}</text>

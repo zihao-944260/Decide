@@ -9,14 +9,14 @@ import type { PlanDetail, PlanSummary } from '@/types/models'
 
 export function createPlan(
   payload: PlanWritePayload,
-  options?: RequestOptions,
+  options?: RequestOptions
 ): Promise<{ planId: string }> {
   return request('plan.create', payload, options)
 }
 
 export function updatePlan(
   payload: PlanWritePayload & { planId: string },
-  options?: RequestOptions,
+  options?: RequestOptions
 ): Promise<{ ok: true }> {
   return request('plan.update', payload, options)
 }
@@ -31,14 +31,14 @@ export function fetchPlanDetail(planId: string, options?: RequestOptions): Promi
 
 export function fetchPlanList(
   query: PageQuery = {},
-  options?: RequestOptions,
+  options?: RequestOptions
 ): Promise<PageResult<PlanSummary>> {
   return request('plan.list', query, options)
 }
 
 export function fetchMyPlans(
   query: PageQuery & { filter: MyFilter },
-  options?: RequestOptions,
+  options?: RequestOptions
 ): Promise<PageResult<PlanSummary>> {
   return request('plan.myList', query as CloudContract['plan.myList']['req'], options)
 }

@@ -20,13 +20,13 @@ const props = withDefaults(defineProps<Props>(), {
   showCount: false,
   closedText: '该计划已截止',
   optionsEnabled: false,
-  locked: false,
+  locked: false
 })
 const emit = defineEmits<Emits>()
 
 const { myVote, counts, total, voting, agree, disagree } = useVote(() => props.planId, {
   onVoted: (type) => emit('voted', type),
-  onClosed: () => emit('closed'),
+  onClosed: () => emit('closed')
 })
 
 /** 只用于「哪颗按钮在转」；重复提交的拦截在 useVote 里，这里不兜第二份 */

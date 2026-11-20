@@ -4,20 +4,20 @@
 
 ## Props
 
-| prop | 类型 | 默认 | 说明 |
-| --- | --- | --- | --- |
-| `visible` | `boolean` | 必填 | 受控显隐，支持 `v-model:visible` |
-| `actions` | `ActionSheetItem[]` | 必填 | `{ key?, text, desc?, disabled?, danger? }` |
-| `title` | `string` | `''` | 顶部灰色说明文字 |
-| `cancelText` | `string` | `'取消'` | 取消按钮文案 |
+| prop         | 类型                | 默认     | 说明                                        |
+| ------------ | ------------------- | -------- | ------------------------------------------- |
+| `visible`    | `boolean`           | 必填     | 受控显隐，支持 `v-model:visible`            |
+| `actions`    | `ActionSheetItem[]` | 必填     | `{ key?, text, desc?, disabled?, danger? }` |
+| `title`      | `string`            | `''`     | 顶部灰色说明文字                            |
+| `cancelText` | `string`            | `'取消'` | 取消按钮文案                                |
 
 ## Emits
 
-| 事件 | 参数 | 说明 |
-| --- | --- | --- |
-| `update:visible` | `boolean` | v-model |
-| `select` | `(action, index)` | 点击可用动作（不自动关闭，由调用方决定） |
-| `cancel` | — | 取消按钮或蒙层关闭时触发 |
+| 事件             | 参数              | 说明                                     |
+| ---------------- | ----------------- | ---------------------------------------- |
+| `update:visible` | `boolean`         | v-model                                  |
+| `select`         | `(action, index)` | 点击可用动作（不自动关闭，由调用方决定） |
+| `cancel`         | —                 | 取消按钮或蒙层关闭时触发                 |
 
 ## 示例
 
@@ -25,7 +25,10 @@
 <BaseActionSheet
   v-model:visible="sheetVisible"
   title="块操作"
-  :actions="[{ key: 'up', text: '上移' }, { key: 'remove', text: '删除', danger: true }]"
+  :actions="[
+    { key: 'up', text: '上移' },
+    { key: 'remove', text: '删除', danger: true }
+  ]"
   @select="onAction"
 />
 ```

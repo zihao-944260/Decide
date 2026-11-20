@@ -23,7 +23,11 @@ function structured(): StructuredLogger | null {
   return cached
 }
 
-function emit(level: 'info' | 'warn' | 'error', message: string, extra: Record<string, unknown>): void {
+function emit(
+  level: 'info' | 'warn' | 'error',
+  message: string,
+  extra: Record<string, unknown>
+): void {
   const line = { level, message, ...extra }
   const logger = structured()
   if (logger) logger[level](line)
@@ -32,9 +36,12 @@ function emit(level: 'info' | 'warn' | 'error', message: string, extra: Record<s
 }
 
 export const log = {
-  info: (message: string, extra: Record<string, unknown> = {}): void => emit('info', message, extra),
-  warn: (message: string, extra: Record<string, unknown> = {}): void => emit('warn', message, extra),
-  error: (message: string, extra: Record<string, unknown> = {}): void => emit('error', message, extra),
+  info: (message: string, extra: Record<string, unknown> = {}): void =>
+    emit('info', message, extra),
+  warn: (message: string, extra: Record<string, unknown> = {}): void =>
+    emit('warn', message, extra),
+  error: (message: string, extra: Record<string, unknown> = {}): void =>
+    emit('error', message, extra)
 }
 
 /** openId 是排查必需，但全文落日志会放大泄露面，取前 8 位足够定位同一用户 */

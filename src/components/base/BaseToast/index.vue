@@ -5,7 +5,7 @@ import type { Props, Emits } from './types'
 const props = withDefaults(defineProps<Props>(), {
   type: 'text',
   message: '',
-  duration: 2000,
+  duration: 2000
 })
 const emit = defineEmits<Emits>()
 

@@ -16,7 +16,7 @@ const LIST_FIELDS: Record<string, boolean> = {
   content: true,
   seq: true,
   status: true,
-  createdAt: true,
+  createdAt: true
 }
 
 export const commentDao = {
@@ -25,15 +25,23 @@ export const commentDao = {
    * 带 _id 是因为 counters 并发自增理论上可能给出重复 seq，
    * 只用 seq 做游标会在重复值处漏掉一条。
    */
-  async listByPlan(planId: string, seq: number | null, afterId: string, limit: number): Promise<CommentDoc[]> {
+  async listByPlan(
+    planId: string,
+    seq: number | null,
+    afterId: string,
+    limit: number
+  ): Promise<CommentDoc[]> {
     const cmd = getCommand()
-    const base: Condition = { planId, status: cmd.in([CommentStatus.Normal, CommentStatus.Removed]) }
+    const base: Condition = {
+      planId,
+      status: cmd.in([CommentStatus.Normal, CommentStatus.Removed])
+    }
     const cond: WherePart =
       seq === null
         ? base
         : cmd.and(
             base,
-            cmd.or({ seq: cmd.gt(seq) } as Condition, { seq, _id: cmd.gt(afterId) } as Condition),
+            cmd.or({ seq: cmd.gt(seq) } as Condition, { seq, _id: cmd.gt(afterId) } as Condition)
           )
     const raw = await collection(Collection.Comments)
       .where(cond)
@@ -80,5 +88,5 @@ export const commentDao = {
       .get()
     const row = rowOf<{ seq: number }>(raw)
     return typeof row?.seq === 'number' ? row.seq : 0
-  },
+  }
 }

@@ -116,7 +116,7 @@ usePageRefresh({
     // 而不是把页面永久停在骨架屏上。这条分支正常情况下不应该命中。
     if (!list) throw new Error('planList instance not mounted')
     await list.reload({ force: !first })
-  },
+  }
 })
 
 // 切 tab 回到本页 → 列表回到顶部（用户 2026-11-18 口径）。从详情页返回那一次不动位置，
@@ -128,7 +128,7 @@ useTabScrollReset(() => {
 
 <template>
   <view class="home">
-    <BaseNavbar class="home__nav" title="点子商量局" :backable="false" />
+    <BaseNavbar class="home__nav" title="点子商量局11" :backable="false" />
 
     <PlanList
       ref="planListRef"
@@ -207,7 +207,9 @@ useTabScrollReset(() => {
   border-radius: $radius-round;
   box-shadow: $shadow-popup;
   // 动效只走 CSS transition（兼容清单 §2.5：worklet 跟手在本工程不可用）
-  transition: opacity $duration-base, transform $duration-base;
+  transition:
+    opacity $duration-base,
+    transform $duration-base;
 }
 
 .home__fab--collapsed {

@@ -30,7 +30,7 @@ export function countdownParts(remaining: number): CountdownParts {
     days: Math.floor(left / DAY),
     hours: Math.floor(left / HOUR) % 24,
     minutes: Math.floor(left / MINUTE) % 60,
-    seconds: Math.floor(left / SECOND) % 60,
+    seconds: Math.floor(left / SECOND) % 60
   }
 }
 
@@ -55,7 +55,10 @@ export function countdownPrecision(level: CountdownLevel): TickPrecision {
   }
 }
 
-export function formatCountdown(remaining: number, level: CountdownLevel = countdownLevel(remaining)): string {
+export function formatCountdown(
+  remaining: number,
+  level: CountdownLevel = countdownLevel(remaining)
+): string {
   const parts = countdownParts(remaining)
   switch (level) {
     case 'ended':
@@ -193,7 +196,12 @@ export function truncate(text: string, maxWidth: number, ellipsis = '…'): stri
  * 多行截断：每行预算 charsPerLine 个中文字宽、共 lines 行。
  * 供摘要/标题在「不用 line-clamp」的前提下稳定占满指定行数。
  */
-export function clipLines(text: string, charsPerLine: number, lines: number, ellipsis = '…'): string {
+export function clipLines(
+  text: string,
+  charsPerLine: number,
+  lines: number,
+  ellipsis = '…'
+): string {
   const max = charsPerLine * Math.max(1, lines)
   return truncate(text, max, ellipsis)
 }

@@ -62,7 +62,9 @@ interface SecurityApi {
 }
 
 interface StorageApi {
-  getTempFileURL(param: { fileList: { fileID: string; maxAge?: number }[] }): Promise<{ fileList: TempFileItem[] }>
+  getTempFileURL(param: {
+    fileList: { fileID: string; maxAge?: number }[]
+  }): Promise<{ fileList: TempFileItem[] }>
 }
 
 const openapi = cloud.openapi as unknown as Record<string, unknown>
@@ -89,13 +91,17 @@ export async function checkText(
   openId: string,
   content: string,
   scene: SecSceneValue,
-  startedAt: number,
+  startedAt: number
 ): Promise<void> {
   const text = content.trim()
   if (!text) return
 
   const chunks: string[] = []
-  for (let i = 0; i < text.length && chunks.length < ServerLimit.SEC_CHECK_MAX_CHUNKS; i += ServerLimit.SEC_CHECK_CHUNK) {
+  for (
+    let i = 0;
+    i < text.length && chunks.length < ServerLimit.SEC_CHECK_MAX_CHUNKS;
+    i += ServerLimit.SEC_CHECK_CHUNK
+  ) {
     chunks.push(text.slice(i, i + ServerLimit.SEC_CHECK_CHUNK))
   }
 
@@ -112,7 +118,12 @@ export async function checkText(
       continue
     }
     if (callFailed(res)) {
-      log.warn('msgSecCheck 返回错误码（放行）', { openId, scene, errCode: res.errCode ?? res.errcode, errMsg: res.errMsg ?? res.errmsg })
+      log.warn('msgSecCheck 返回错误码（放行）', {
+        openId,
+        scene,
+        errCode: res.errCode ?? res.errcode,
+        errMsg: res.errMsg ?? res.errmsg
+      })
       continue
     }
     const suggest = res.result?.suggest
@@ -131,7 +142,7 @@ export async function checkText(
 export async function submitImagesForReview(
   openId: string,
   fileIDs: readonly string[],
-  startedAt: number,
+  startedAt: number
 ): Promise<void> {
   const list = fileIDs.filter((id) => id.startsWith('cloud://'))
   if (list.length === 0) return
@@ -143,7 +154,7 @@ export async function submitImagesForReview(
   let urls: TempFileItem[]
   try {
     const res = await storage.getTempFileURL({
-      fileList: list.map((fileID) => ({ fileID, maxAge: 3600 })),
+      fileList: list.map((fileID) => ({ fileID, maxAge: 3600 }))
     })
     urls = res.fileList ?? []
   } catch (err) {
@@ -153,7 +164,11 @@ export async function submitImagesForReview(
 
   for (const item of urls) {
     if (item.status !== 0 || !item.tempFileURL) {
-      log.warn('临时 URL 获取失败，图片未送审', { openId, fileID: item.fileID, errMsg: item.errMsg })
+      log.warn('临时 URL 获取失败，图片未送审', {
+        openId,
+        fileID: item.fileID,
+        errMsg: item.errMsg
+      })
       continue
     }
     try {
@@ -163,10 +178,14 @@ export async function submitImagesForReview(
         version: 2,
         scene: SecScene.Forum,
         openid: openId,
-        title: `img:${item.fileID}`,
+        title: `img:${item.fileID}`
       })
       if (callFailed(res)) {
-        log.warn('mediaCheckAsync 提交失败', { openId, fileID: item.fileID, errCode: res.errCode ?? res.errcode })
+        log.warn('mediaCheckAsync 提交失败', {
+          openId,
+          fileID: item.fileID,
+          errCode: res.errCode ?? res.errcode
+        })
       }
     } catch (err) {
       log.warn('mediaCheckAsync 抛错', { openId, fileID: item.fileID, error: messageOf(err) })

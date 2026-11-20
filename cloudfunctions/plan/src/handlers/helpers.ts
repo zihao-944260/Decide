@@ -20,7 +20,7 @@ import {
   type PlanRow,
   type PlanSummary,
   type UserDoc,
-  type UserInfo,
+  type UserInfo
 } from 'common'
 
 /** 契约上的四种「我的」筛选，取值与 src/constants/plan.ts 的 MyFilter 一致 */
@@ -58,18 +58,26 @@ export async function assembleSummaryPage(
   rows: readonly PlanRow[],
   cursor: Cursor | null,
   size: number,
-  viewerOpenId: string,
+  viewerOpenId: string
 ): Promise<PageResult<PlanSummary>> {
   const now = Date.now()
-  const page = buildPage(rows, { cursor, size, limit: size + 1 }, (row) => ({ sort: row.createdAt, id: row._id }))
+  const page = buildPage(rows, { cursor, size, limit: size + 1 }, (row) => ({
+    sort: row.createdAt,
+    id: row._id
+  }))
   const [map, votes] = await Promise.all([
     authorMap(page.list),
-    voteDao.mapByPlanIds(viewerOpenId, page.list.map((row) => row._id)),
+    voteDao.mapByPlanIds(
+      viewerOpenId,
+      page.list.map((row) => row._id)
+    )
   ])
   return {
-    list: page.list.map((row) => toPlanSummary(row, authorOf(map, row.openId), now, votes[row._id]?.optionId ?? '')),
+    list: page.list.map((row) =>
+      toPlanSummary(row, authorOf(map, row.openId), now, votes[row._id]?.optionId ?? '')
+    ),
     nextCursor: page.nextCursor,
-    hasMore: page.hasMore,
+    hasMore: page.hasMore
   }
 }
 
@@ -85,11 +93,11 @@ export async function assembleJoinedPage(
   rows: readonly ParticipationCursorRow[],
   cursor: Cursor | null,
   size: number,
-  viewerOpenId: string,
+  viewerOpenId: string
 ): Promise<PageResult<PlanSummary>> {
   const page = buildPage(rows, { cursor, size, limit: size + 1 }, (row) => ({
     sort: row.lastActionAt,
-    id: row._id,
+    id: row._id
   }))
   const planIds: string[] = []
   for (const row of page.list) {
@@ -110,11 +118,16 @@ export async function assembleJoinedPage(
   const now = Date.now()
   const [map, votes] = await Promise.all([
     authorMap(ordered),
-    voteDao.mapByPlanIds(viewerOpenId, ordered.map((row) => row._id)),
+    voteDao.mapByPlanIds(
+      viewerOpenId,
+      ordered.map((row) => row._id)
+    )
   ])
   return {
-    list: ordered.map((row) => toPlanSummary(row, authorOf(map, row.openId), now, votes[row._id]?.optionId ?? '')),
+    list: ordered.map((row) =>
+      toPlanSummary(row, authorOf(map, row.openId), now, votes[row._id]?.optionId ?? '')
+    ),
     nextCursor: page.nextCursor,
-    hasMore: page.hasMore,
+    hasMore: page.hasMore
   }
 }

@@ -8,7 +8,7 @@ import type {
   PlanSummary,
   UserInfo,
   UserStats,
-  VoteCounts,
+  VoteCounts
 } from '@/types/models'
 
 export type CloudFunctionName = 'user' | 'plan' | 'vote' | 'comment'
@@ -97,7 +97,7 @@ export const IDEMPOTENT_ACTIONS: readonly CloudAction[] = [
   'plan.list',
   'plan.myList',
   'user.stats',
-  'comment.list',
+  'comment.list'
 ] as const
 
 export function functionNameOf(action: CloudAction): CloudFunctionName {

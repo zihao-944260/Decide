@@ -18,7 +18,7 @@ const AUTHOR_FIELDS: Record<string, boolean> = {
   status: true,
   stats: true,
   createdAt: true,
-  updatedAt: true,
+  updatedAt: true
 }
 
 export const userDao = {
@@ -54,5 +54,5 @@ export const userDao = {
   async update(openId: string, data: Record<string, unknown>): Promise<number> {
     const raw = await collection(Collection.Users).doc(openId).update({ data })
     return updatedOf(raw)
-  },
+  }
 }

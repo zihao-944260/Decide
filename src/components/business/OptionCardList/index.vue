@@ -12,7 +12,7 @@ const props = withDefaults(defineProps<Props>(), {
   votable: false,
   myOption: '',
   locked: false,
-  closed: false,
+  closed: false
 })
 const emit = defineEmits<Emits>()
 

@@ -30,7 +30,10 @@ function onLongPress(): void {
     @tap="onTap"
     @longpress="onLongPress"
   >
-    <view class="editor-divider-block__line" :class="{ 'editor-divider-block__line--focused': focused }" />
+    <view
+      class="editor-divider-block__line"
+      :class="{ 'editor-divider-block__line--focused': focused }"
+    />
   </view>
 </template>
 

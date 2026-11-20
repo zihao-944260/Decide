@@ -8,7 +8,7 @@ const props = withDefaults(defineProps<Props>(), {
   closable: false,
   duration: 300,
   zIndex: 1000, // 与 $z-popup 保持一致（SCSS 变量无法在 TS 默认值中引用）
-  maskClosable: true,
+  maskClosable: true
 })
 const emit = defineEmits<Emits>()
 
@@ -60,14 +60,18 @@ watch(
       host.value = false
       emit('closed')
     }, props.duration + 80)
-  },
+  }
 )
 
 onUnmounted(clearTimers)
 
 const rootStyle = computed(() => `z-index: ${props.zIndex};`)
-const maskStyle = computed(() => `z-index: ${props.zIndex}; transition-duration: ${props.duration}ms;`)
-const panelStyle = computed(() => `z-index: ${props.zIndex + 1}; transition-duration: ${props.duration}ms;`)
+const maskStyle = computed(
+  () => `z-index: ${props.zIndex}; transition-duration: ${props.duration}ms;`
+)
+const panelStyle = computed(
+  () => `z-index: ${props.zIndex + 1}; transition-duration: ${props.duration}ms;`
+)
 
 function close(): void {
   emit('update:visible', false)
@@ -96,7 +100,7 @@ function onMaskTouchMove(): void {}
       :class="[
         `base-popup__panel--${position}`,
         shown ? `base-popup__panel--on-${position}` : '',
-        round ? `base-popup__panel--round-${position}` : '',
+        round ? `base-popup__panel--round-${position}` : ''
       ]"
       :style="panelStyle"
     >
@@ -141,7 +145,9 @@ function onMaskTouchMove(): void {}
   @include flex-column;
   position: absolute;
   background-color: $color-bg-card;
-  transition: transform $duration-base, opacity $duration-base;
+  transition:
+    transform $duration-base,
+    opacity $duration-base;
 }
 
 .base-popup__panel--bottom {

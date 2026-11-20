@@ -5,16 +5,16 @@
 
 ## 0. 验证环境
 
-| 项 | 值 |
-| --- | --- |
-| 工程 | `/Users/duan/Desktop/Decide`（验证期在 `src/spike/` 隔离目录，验证后已删除，见 §5） |
-| uni-app | `3.0.0-5030420261029002`，vite 5.2.8，vue 3.4.21 |
-| 编译产物 | `dist/build/mp-weixin/` |
-| AppID | `wx93aa8833f25d90b0`（正式注册；早期用 `touristappid` 被 CLI 拒绝，见 §0.1） |
-| 云环境 | `cloud1-d2g9acyyhb220d834`（见 §3） |
+| 项         | 值                                                                                           |
+| ---------- | -------------------------------------------------------------------------------------------- |
+| 工程       | `/Users/duan/Desktop/Decide`（验证期在 `src/spike/` 隔离目录，验证后已删除，见 §5）          |
+| uni-app    | `3.0.0-5030420261029002`，vite 5.2.8，vue 3.4.21                                             |
+| 编译产物   | `dist/build/mp-weixin/`                                                                      |
+| AppID      | `wx93aa8833f25d90b0`（正式注册；早期用 `touristappid` 被 CLI 拒绝，见 §0.1）                 |
+| 云环境     | `cloud1-d2g9acyyhb220d834`（见 §3）                                                          |
 | 开发者工具 | 36.6.0（Electron 版，`Contents/Resources/app.asar`），自动化端口 `cli auto --auto-port 9420` |
-| 运行时环境 | 模拟器 iPhone 12/13，基础库 3.17.5，Skyline 1.4.23 |
-| 验证脚本 | `scripts/spike-*.mjs`（Skyline）、`scripts/cloud-verify*.mjs`（云能力），均已删除，见 §5 |
+| 运行时环境 | 模拟器 iPhone 12/13，基础库 3.17.5，Skyline 1.4.23                                           |
+| 验证脚本   | `scripts/spike-*.mjs`（Skyline）、`scripts/cloud-verify*.mjs`（云能力），均已删除，见 §5     |
 
 ### 0.1 环境阻塞记录：CLI 自动化必须有真实 AppID
 
@@ -40,16 +40,16 @@ node -e "require('miniprogram-automator').connect({wsEndpoint:'ws://localhost:92
 
 **不能做的，别再试**：
 
-| 手段 | 结果 |
-| --- | --- |
-| `page.$('.some-class')` 类选择器 | 恒为 0；Skyline 下 `attributes('class')` 也取不到值 |
-| `page.$('tag')` / `page.$$('父tag 子tag')` 标签与后代选择器 | ✅ 页面层级可用；但**自定义组件内部的后代查询恒为 0**（`user-header view`、`plan-list view` 都实测为 0，只有组件宿主节点本身能拿到 `offset()`）——组件内部的布局验证只能靠截图或外围推断 |
-| `Element.tap()` | ✅ 可用（实测点中 `1 天` 档位后截止时间真的变了、草稿条文案变成「草稿已自动保存」），但只能点到**已布局**的节点：未挂载的分支 `offset()` 返回 `null`；且 tap 打在组件宿主节点上**不会**触发内部子节点的 `@tap`（事件不向下派发） |
-| `page.selectComponent('deadline-picker')` | 返回 null，uni-app 的自定义组件不按标签注册 |
-| `$vm.$children[i].openSheet()` | `<script setup>` 的绑定不暴露到公开实例；可调的是编译后的 `.$scope.eN_xxx`，但 `eN_` 后缀是哈希，只能靠模板里绑定的先后顺序猜，不稳 |
-| 关闭 `page-container` 之后继续发命令 | automator 连接超时/断开，实测复现两次 |
-| `screenshot()` 截图 | ⚠️ **合成器残影**：reLaunch 后 DOM 已换新（选择器与日志可证），截图却连 minutes 级回放旧帧，甚至出现「A 页内容 + B 页 tab 高亮」的杂交帧（20:45 实录）。只有 switchTab/navigateTo 这类**真导航**才触发新合成。逐页冒烟以**选择器 + console 日志**为准，截图只当参考 |
-| 直调 store | ✅ `evaluate(() => getApp().$vm.$pinia._s.get('user'))` 能拿到 Pinia store 实例并直接调方法（实测 `store.login()` 走通且 state 响应式翻转）——绕开「组件内部节点不可选」做状态级验证 |
+| 手段                                                        | 结果                                                                                                                                                                                                                                                                |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `page.$('.some-class')` 类选择器                            | 恒为 0；Skyline 下 `attributes('class')` 也取不到值                                                                                                                                                                                                                 |
+| `page.$('tag')` / `page.$$('父tag 子tag')` 标签与后代选择器 | ✅ 页面层级可用；但**自定义组件内部的后代查询恒为 0**（`user-header view`、`plan-list view` 都实测为 0，只有组件宿主节点本身能拿到 `offset()`）——组件内部的布局验证只能靠截图或外围推断                                                                             |
+| `Element.tap()`                                             | ✅ 可用（实测点中 `1 天` 档位后截止时间真的变了、草稿条文案变成「草稿已自动保存」），但只能点到**已布局**的节点：未挂载的分支 `offset()` 返回 `null`；且 tap 打在组件宿主节点上**不会**触发内部子节点的 `@tap`（事件不向下派发）                                    |
+| `page.selectComponent('deadline-picker')`                   | 返回 null，uni-app 的自定义组件不按标签注册                                                                                                                                                                                                                         |
+| `$vm.$children[i].openSheet()`                              | `<script setup>` 的绑定不暴露到公开实例；可调的是编译后的 `.$scope.eN_xxx`，但 `eN_` 后缀是哈希，只能靠模板里绑定的先后顺序猜，不稳                                                                                                                                 |
+| 关闭 `page-container` 之后继续发命令                        | automator 连接超时/断开，实测复现两次                                                                                                                                                                                                                               |
+| `screenshot()` 截图                                         | ⚠️ **合成器残影**：reLaunch 后 DOM 已换新（选择器与日志可证），截图却连 minutes 级回放旧帧，甚至出现「A 页内容 + B 页 tab 高亮」的杂交帧（20:45 实录）。只有 switchTab/navigateTo 这类**真导航**才触发新合成。逐页冒烟以**选择器 + console 日志**为准，截图只当参考 |
+| 直调 store                                                  | ✅ `evaluate(() => getApp().$vm.$pinia._s.get('user'))` 能拿到 Pinia store 实例并直接调方法（实测 `store.login()` 走通且 state 响应式翻转）——绕开「组件内部节点不可选」做状态级验证                                                                                 |
 
 另：`on('console')` 会收到**全部级别**（含 debug）。只过滤 error/warn 会把「请求成功」的轮次误读成「没发请求」——`plan.list` 成功只在 debug 级留一行 `2382ms 0`，这行是判断「链路真的通了」的关键证据。
 
@@ -57,55 +57,55 @@ node -e "require('miniprogram-automator').connect({wsEndpoint:'ws://localhost:92
 
 **2026-11-13 增补（#34，组件边界 + WebView 页 + 刷新状态机）**：
 
-| 手段 | 结果 |
-| --- | --- |
-| `page.$('.x')` 想拿自定义组件内部节点 | ❌ 不跨组件边界；✅ 两级：先 `page.$('plan-list')` 拿宿主，再 `host.$('.plan-list')` 进组件内部（Skyline 页实测，`offset()` 可量间距） |
-| 页面级 `createSelectorQuery` 看组件内部 | ❌；✅ `>>>` 跨组件选择器，**一个 `>>>` 只穿一层边界**：page→OptionsSection→BaseButton 要链两个（`.plan-edit__section >>> .options-section >>> .base-button--block`，WebView 页 mp.evaluate 内实测） |
-| `page.callMethod('setupFn')` | ❌ uni-app vue3 的 setup 函数不是页面方法（"this.xxx is not a function"）；状态级验证改走草稿种子 + 真导航，种子键带 `decide:` 前缀（`decide:plan_draft_<openId>`，漏前缀不恢复） |
-| `ScrollViewElement.scrollTo(x, y)` | ✅ WebView 页 scroll-view 可用（`page.$('.plan-edit__scroll')` 拿句柄后直调）；`.context()` 的 ScrollViewContext scrollTo ❌ 不滚；❌ **Skyline `type="list"` 页不滚**（2026-11-18 复测：调用不报错、前后截图逐像素相同）→ 滚到底让位只能几何判定（§2.2） |
-| `sv.trigger('refresherrefresh')` + `sv.attribute('refresher-triggered')` | ✅ 下拉刷新状态机验收口径：mid `{triggered:true, skeleton:true, items:false}` → after `{triggered:false, skeleton:false, items:true}` |
-| `c.switchTab()` / `c.reLaunch()` 切页 | ❌ 本构建（Skyline + `tabBar.custom:true`）抛 `Uncaught [object Object]` 且页面不动；✅ 切 tab 用 `Element.tap()` 点 `.base-tabbar__item`，`wx.switchTab` 从 service 侧调用也不动高亮（高亮归 store，由 tap 驱动）。**教训**：给导航调用套 `.catch(() => {})` 会把「没切页」伪装成「切了页」——上一轮三条一模一样的 tab 数据就是这么来的 |
-| 切页后继续用旧页面的元素句柄 | ❌ 页面隐藏后句柄失效（"no frames"）；✅ tap 之后重新 `currentPage()` + 重新 `host.$()` 取句柄 |
-| 进页面即测 `.plan-list__item` 数量 | ⚠️ 首页首屏是骨架屏，`.plan-list__item` 为 0 不是空列表；轮询到真卡出现再量（骨架与真卡同宽同距，见 #64） |
+| 手段                                                                     | 结果                                                                                                                                                                                                                                                                                                                                    |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `page.$('.x')` 想拿自定义组件内部节点                                    | ❌ 不跨组件边界；✅ 两级：先 `page.$('plan-list')` 拿宿主，再 `host.$('.plan-list')` 进组件内部（Skyline 页实测，`offset()` 可量间距）                                                                                                                                                                                                  |
+| 页面级 `createSelectorQuery` 看组件内部                                  | ❌；✅ `>>>` 跨组件选择器，**一个 `>>>` 只穿一层边界**：page→OptionsSection→BaseButton 要链两个（`.plan-edit__section >>> .options-section >>> .base-button--block`，WebView 页 mp.evaluate 内实测）                                                                                                                                    |
+| `page.callMethod('setupFn')`                                             | ❌ uni-app vue3 的 setup 函数不是页面方法（"this.xxx is not a function"）；状态级验证改走草稿种子 + 真导航，种子键带 `decide:` 前缀（`decide:plan_draft_<openId>`，漏前缀不恢复）                                                                                                                                                       |
+| `ScrollViewElement.scrollTo(x, y)`                                       | ✅ WebView 页 scroll-view 可用（`page.$('.plan-edit__scroll')` 拿句柄后直调）；`.context()` 的 ScrollViewContext scrollTo ❌ 不滚；❌ **Skyline `type="list"` 页不滚**（2026-11-18 复测：调用不报错、前后截图逐像素相同）→ 滚到底让位只能几何判定（§2.2）                                                                               |
+| `sv.trigger('refresherrefresh')` + `sv.attribute('refresher-triggered')` | ✅ 下拉刷新状态机验收口径：mid `{triggered:true, skeleton:true, items:false}` → after `{triggered:false, skeleton:false, items:true}`                                                                                                                                                                                                   |
+| `c.switchTab()` / `c.reLaunch()` 切页                                    | ❌ 本构建（Skyline + `tabBar.custom:true`）抛 `Uncaught [object Object]` 且页面不动；✅ 切 tab 用 `Element.tap()` 点 `.base-tabbar__item`，`wx.switchTab` 从 service 侧调用也不动高亮（高亮归 store，由 tap 驱动）。**教训**：给导航调用套 `.catch(() => {})` 会把「没切页」伪装成「切了页」——上一轮三条一模一样的 tab 数据就是这么来的 |
+| 切页后继续用旧页面的元素句柄                                             | ❌ 页面隐藏后句柄失效（"no frames"）；✅ tap 之后重新 `currentPage()` + 重新 `host.$()` 取句柄                                                                                                                                                                                                                                          |
+| 进页面即测 `.plan-list__item` 数量                                       | ⚠️ 首页首屏是骨架屏，`.plan-list__item` 为 0 不是空列表；轮询到真卡出现再量（骨架与真卡同宽同距，见 #64）                                                                                                                                                                                                                               |
 
 **2026-11-13 增补（#35，watcher 缓存 + WebView 合成 tap 边界 + 事件槽直调）**：
 
-| 手段 | 结果 |
-| --- | --- |
-| dev watcher 改 `types.ts` 后不重启 | ❌ 内容级缓存：编译 render 已引用 `_ctx.section` 但 props 声明仍旧版 → 新 prop 运行时被丢（标题 fw 400 暴露）。touch 无效；**重启 watcher** 并 grep 产物 `section: { type: Boolean` 确认 |
-| 单行 grep `selector{[^}]*}` 查 dev wxss | ❌ 假阴性：dev 产物是多行格式化（带空格）；用 `grep -rl` 或 -A 上下文匹配 |
-| WebView 页 `Element.tap()`（宿主或 `>>>` 拿到的内层 view 句柄） | ❌ 不派发 Vue `@tap`（Skyline 页部分节点可用见上表；WebView 渲染页合成 tap 实测无效，tapped=true 但无 toast）——按钮接线证明改走下一行 |
-| 事件槽直调（逻辑层接线证明） | ✅ 编译 WXML `<base-button bindclick="{{aD}}">` → `getCurrentPages()[last].data.aD` 是页面实例上的事件函数名（`eN_hash`）→ `p[name].call(p, {type,detail,target,currentTarget})` 即真实点击的编译回调；实测触发 onSubmit → toast「先给计划起个标题」截图闭环 |
-| `p.selectComponent('base-button')` / `selectAllComponents` | ❌ uni-app 页返回 null/0（与 WXML 存在该宿主矛盾）；`vm.$.subTree` 为 null（mp 页不挂 vnode 子树），vnode 树遍历找组件实例不可行 |
-| `vm.$.setupState.onSubmit` | ❌ setup 返回 render 函数时 setupState 为空，绑定在闭包里；公开实例同样没有 onSubmit |
+| 手段                                                            | 结果                                                                                                                                                                                                                                                         |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| dev watcher 改 `types.ts` 后不重启                              | ❌ 内容级缓存：编译 render 已引用 `_ctx.section` 但 props 声明仍旧版 → 新 prop 运行时被丢（标题 fw 400 暴露）。touch 无效；**重启 watcher** 并 grep 产物 `section: { type: Boolean` 确认                                                                     |
+| 单行 grep `selector{[^}]*}` 查 dev wxss                         | ❌ 假阴性：dev 产物是多行格式化（带空格）；用 `grep -rl` 或 -A 上下文匹配                                                                                                                                                                                    |
+| WebView 页 `Element.tap()`（宿主或 `>>>` 拿到的内层 view 句柄） | ❌ 不派发 Vue `@tap`（Skyline 页部分节点可用见上表；WebView 渲染页合成 tap 实测无效，tapped=true 但无 toast）——按钮接线证明改走下一行                                                                                                                        |
+| 事件槽直调（逻辑层接线证明）                                    | ✅ 编译 WXML `<base-button bindclick="{{aD}}">` → `getCurrentPages()[last].data.aD` 是页面实例上的事件函数名（`eN_hash`）→ `p[name].call(p, {type,detail,target,currentTarget})` 即真实点击的编译回调；实测触发 onSubmit → toast「先给计划起个标题」截图闭环 |
+| `p.selectComponent('base-button')` / `selectAllComponents`      | ❌ uni-app 页返回 null/0（与 WXML 存在该宿主矛盾）；`vm.$.subTree` 为 null（mp 页不挂 vnode 子树），vnode 树遍历找组件实例不可行                                                                                                                             |
+| `vm.$.setupState.onSubmit`                                      | ❌ setup 返回 render 函数时 setupState 为空，绑定在闭包里；公开实例同样没有 onSubmit                                                                                                                                                                         |
 
 **2026-11-13 增补（#37，type="list" 渲染器归属 + 合成触摸边界）**：
 
-| 手段 | 结果 |
-| --- | --- |
-| WebView 渲染页（详情页）留 `type="list"` | ❌ 触摸滚不动：该属性是 Skyline 专属虚拟列表（官方 scroll-view 文档），WebView 下留着触摸失效；程序化 `scrollTo` 仍可用，故静态/程序化验收暴露不了。移除后恢复（真手指拖动待用户复验） |
-| 合成触摸拖动（dispatch touchstart/touchmove/touchend） | ❌ 驱动不了 WebView 原生滚动（详情页与编辑页对照实测 scrollTop 恒 0）；`ScrollViewElement.scrollTo` ✅ 可用。真触摸验收只能用户在模拟器手拖 |
-| Skyline 页（首页/我的 PlanList）`type="list"` | ✅ 保留不变；虚拟化与零测量红线照旧（§2.3） |
+| 手段                                                   | 结果                                                                                                                                                                                   |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| WebView 渲染页（详情页）留 `type="list"`               | ❌ 触摸滚不动：该属性是 Skyline 专属虚拟列表（官方 scroll-view 文档），WebView 下留着触摸失效；程序化 `scrollTo` 仍可用，故静态/程序化验收暴露不了。移除后恢复（真手指拖动待用户复验） |
+| 合成触摸拖动（dispatch touchstart/touchmove/touchend） | ❌ 驱动不了 WebView 原生滚动（详情页与编辑页对照实测 scrollTop 恒 0）；`ScrollViewElement.scrollTo` ✅ 可用。真触摸验收只能用户在模拟器手拖                                            |
+| Skyline 页（首页/我的 PlanList）`type="list"`          | ✅ 保留不变；虚拟化与零测量红线照旧（§2.3）                                                                                                                                            |
 
 **2026-11-13 增补（#38，事件槽实参解包 + payload 抓取 + 部署快照核对）**：
 
-| 手段 | 结果 |
-| --- | --- |
+| 手段                                                                     | 结果                                                                                                                                                                                                                                                              |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 组件 v-model 事件槽直调（ImageUploader `bindupdateModelValue="{{ah}}"`） | ✅ 但实参不走 `detail.value`：vendor `createInvoker` 见 `detail.__args__` 就展开为真实参 → 喂 `{type:'updateModelValue', detail:{__args__:[[fileID]]}, target/currentTarget}` 才写进 `model.images`；普通事件槽（`bindinput` 等）无 `__args__` 时整事件对象作单参 |
-| 包 `wx.cloud.callFunction` 抓提交 payload | ✅ 客户端修复的直接证据：evaluate 里换装原函数、stash `opts.data.payload`，比草稿推断强（草稿末尾空段是光标占位、预期保留，滤除只作用于 payload） |
-| 判「修复未生效 vs 云端另拒」 | **先读 toast 截图**再下结论：本轮一度把「计划配图不能为空」误读成空块修复未生效；截图措辞才是分流依据 |
-| 核对已部署 bundle 与盘上 `dist-cloud/` | ⚠️ dist-cloud 中文串是 `\uXXXX` 转义，按中文原文 grep 假阴性；须按转义形搜或直读调用点。本轮据此证实云上跑旧快照（无送审容错、配图必填），重部署 dist-cloud 同解两题（用户闸门） |
+| 包 `wx.cloud.callFunction` 抓提交 payload                                | ✅ 客户端修复的直接证据：evaluate 里换装原函数、stash `opts.data.payload`，比草稿推断强（草稿末尾空段是光标占位、预期保留，滤除只作用于 payload）                                                                                                                 |
+| 判「修复未生效 vs 云端另拒」                                             | **先读 toast 截图**再下结论：本轮一度把「计划配图不能为空」误读成空块修复未生效；截图措辞才是分流依据                                                                                                                                                             |
+| 核对已部署 bundle 与盘上 `dist-cloud/`                                   | ⚠️ dist-cloud 中文串是 `\uXXXX` 转义，按中文原文 grep 假阴性；须按转义形搜或直读调用点。本轮据此证实云上跑旧快照（无送审容错、配图必填），重部署 dist-cloud 同解两题（用户闸门）                                                                                  |
 
 **2026-11-18 增补（底部导航三项改动：滚动归零 / 包络像素扫描 / 切 tab 句柄）**：
 
-| 手段 | 结果 |
-| --- | --- |
-| `scroll-into-view` 做「列表归零」（业务页 `PlanList` 内层 `type="list"`） | ✅ 生效，且是 Skyline list 容器上唯一可用的程序化滚动；⚠️ **只在值变化时起作用** —— 第二次赋同一个 id 不动，实现必须「清空 → nextTick → 再指回锚点」。`scroll-top` ❌ 复测同 §2.2 |
-| 滚动后查询/点击列表内子节点 | ❌ `type="list"` 回收视口外节点：滚到底后 `host.$('.marker-top')` 返回 **null**（不是返回旧盒）；`Element.offset()` **不反映滚动**，所以按它算的坐标 tap 列表里的卡片会落空（实测点卡片不跳转）。要触发一个动作就用**滚动流之外**的节点（首页 `.home__fab`），要归位就先点「看得见的那一端」 |
-| 像素扫描判断「某个色块在不在屏幕上」 | ⚠️ devtools 截图有色域转换：`#ff00ff` 落笔成 **(233,51,246)**、`#f2f3f5` 与导航透明化后透出的列表底色同档 —— 精确色相等判定恒为 0 命中（一度把整条导航带读成「全屏都是滑块」）。正解：色相窗口谓词，或把被测节点**临时换成标记色**再扫，测完还原 |
-| 逐帧测 transform 动画的空间包络 | ✅ `Element.offset()/size()` 反映动画中的 transform（逐帧连续变化可证）；但一次截图 ≈ 1.15s，500ms 的动画抓不满 → 临时把时长放慢到 3s 只改采样密度、不改包络。**采样命不中峰值帧时要写清楚**：极值取 keyframes 数值 + 实测下界，不能把「采样到的最小间隙」说成「全程最小间隙」 |
-| 切 tab 后继续用旧 `$$('.base-tabbar__item')` 数组 | ❌ `Uncaught: page is not on top of page stack`。✅ 每次 tap 前重新 `currentPage()` → `$('base-tab-bar')` → `$$('.base-tabbar__item')`（与 #34「切页后句柄失效」同一条，报错形状不同） |
-| 从非 tab 页返回以区分「切 tab 的 onShow」与「返回的 onShow」 | ✅ 编辑页根节点是 `page-meta`，`page.$('base-navbar')` 为 null，导航只能 `mp.navigateBack()`；但**已经在根页时再调 navigateBack 会抛错**，调用前必须读 `currentPage().path` 判定真的处于被 push 的页面 |
+| 手段                                                                      | 结果                                                                                                                                                                                                                                                                                         |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scroll-into-view` 做「列表归零」（业务页 `PlanList` 内层 `type="list"`） | ✅ 生效，且是 Skyline list 容器上唯一可用的程序化滚动；⚠️ **只在值变化时起作用** —— 第二次赋同一个 id 不动，实现必须「清空 → nextTick → 再指回锚点」。`scroll-top` ❌ 复测同 §2.2                                                                                                            |
+| 滚动后查询/点击列表内子节点                                               | ❌ `type="list"` 回收视口外节点：滚到底后 `host.$('.marker-top')` 返回 **null**（不是返回旧盒）；`Element.offset()` **不反映滚动**，所以按它算的坐标 tap 列表里的卡片会落空（实测点卡片不跳转）。要触发一个动作就用**滚动流之外**的节点（首页 `.home__fab`），要归位就先点「看得见的那一端」 |
+| 像素扫描判断「某个色块在不在屏幕上」                                      | ⚠️ devtools 截图有色域转换：`#ff00ff` 落笔成 **(233,51,246)**、`#f2f3f5` 与导航透明化后透出的列表底色同档 —— 精确色相等判定恒为 0 命中（一度把整条导航带读成「全屏都是滑块」）。正解：色相窗口谓词，或把被测节点**临时换成标记色**再扫，测完还原                                             |
+| 逐帧测 transform 动画的空间包络                                           | ✅ `Element.offset()/size()` 反映动画中的 transform（逐帧连续变化可证）；但一次截图 ≈ 1.15s，500ms 的动画抓不满 → 临时把时长放慢到 3s 只改采样密度、不改包络。**采样命不中峰值帧时要写清楚**：极值取 keyframes 数值 + 实测下界，不能把「采样到的最小间隙」说成「全程最小间隙」               |
+| 切 tab 后继续用旧 `$$('.base-tabbar__item')` 数组                         | ❌ `Uncaught: page is not on top of page stack`。✅ 每次 tap 前重新 `currentPage()` → `$('base-tab-bar')` → `$$('.base-tabbar__item')`（与 #34「切页后句柄失效」同一条，报错形状不同）                                                                                                       |
+| 从非 tab 页返回以区分「切 tab 的 onShow」与「返回的 onShow」              | ✅ 编辑页根节点是 `page-meta`，`page.$('base-navbar')` 为 null，导航只能 `mp.navigateBack()`；但**已经在根页时再调 navigateBack 会抛错**，调用前必须读 `currentPage().path` 判定真的处于被 push 的页面                                                                                       |
 
 ---
 
@@ -185,6 +185,7 @@ Skyline 只支持 class / ID / 标签选择器，不支持属性选择器——�
 编译器不拦，但 Skyline 运行时按官方文档不支持。**这三类是否真的失效、失效时是否静默，属于运行时项（见 §2.1）。**
 
 **编码规范先行约束（不等验证结果也要执行）：**
+
 - 禁止后代 / 子代选择器，一律平铺 class；
 - 禁止 `::before` / `::after`，装饰性内容用真实节点或图片；
 - 这条已写入技术方案 §15「开发规范约定」。
@@ -198,11 +199,11 @@ scoped 产物是 `.row__label.data-v-6da001a3{`。若复合类选择器失效，
 
 `@dcloudio/types/uni-app/uni-patches/wx/index.d.ts`：
 
-| API | 位置 | 签名 |
-| --- | --- | --- |
-| `wx.getSkylineInfoSync()` | 18167 | `→ { isSupported: boolean; version?: string; reason?: string }` |
-| `wx.getSkylineInfo()` | 19295 | 异步版 |
-| `wx.getRendererUserAgent()` | 18179 | `→ Promise<string>` |
+| API                         | 位置  | 签名                                                            |
+| --------------------------- | ----- | --------------------------------------------------------------- |
+| `wx.getSkylineInfoSync()`   | 18167 | `→ { isSupported: boolean; version?: string; reason?: string }` |
+| `wx.getSkylineInfo()`       | 19295 | 异步版                                                          |
+| `wx.getRendererUserAgent()` | 18179 | `→ Promise<string>`                                             |
 
 `reason` 枚举：`'client not supported' | 'baselib not supported' | 'a-b test not enabled' | 'SwitchRender option set to webview'`。
 
@@ -213,7 +214,8 @@ scoped 产物是 `.row__label.data-v-6da001a3{`。若复合类选择器失效，
 `@dcloudio/uni-cli-shared/dist/json/mp/project.js`：
 
 ```js
-weixinSkyline(config) === config.renderer === 'skyline' && config.lazyCodeLoading === 'requiredComponents'
+;(weixinSkyline(config) === config.renderer) === 'skyline' &&
+  config.lazyCodeLoading === 'requiredComponents'
 ```
 
 两个条件必须同时满足，缺一则不走 Skyline 分支。产物已验证两者都在。
@@ -239,69 +241,69 @@ weixinSkyline(config) === config.renderer === 'skyline' && config.lazyCodeLoadin
 
 ### 2.1 环境自检（S0，`spike/index`）
 
-| 项 | 结论 | 证据 |
-| --- | --- | --- |
-| `wx.getSkylineInfoSync()` | ✅ `isSupported=true, version=1.4.23` | results.json |
+| 项                          | 结论                                                | 证据                              |
+| --------------------------- | --------------------------------------------------- | --------------------------------- |
+| `wx.getSkylineInfoSync()`   | ✅ `isSupported=true, version=1.4.23`               | results.json                      |
 | `wx.getRendererUserAgent()` | ⚠️ 经 automator `evaluate` 调用超时，不作为判定依据 | Promise 型 API 在自动化通道不可靠 |
-| 裸文字 vs 包 `<text>` | 两者高度相同（37.5）→ 本版本裸文字**会渲染** | 截图 s1-css-top |
+| 裸文字 vs 包 `<text>`       | 两者高度相同（37.5）→ 本版本裸文字**会渲染**        | 截图 s1-css-top                   |
 
 裸文字虽渲染，编码规范仍强制包 `<text>`（官方约束，且真机行为可能不同）。
 
 ### 2.2 CSS / 布局（S1，`spike/css`）
 
-| 项 | 结论 | 证据 |
-| --- | --- | --- |
-| `display: inline-block` | ❌ 不并排（top 125 / 154.2，纵向堆叠） | 测量 + 截图 |
-| `-webkit-line-clamp: 2` | ❌ **不截断**（截图显示 4 行全文） | 截图 s1-css-top；原「比值 2.03 pass」系基线取错，作废 |
-| `word-break: break-all` | ✅ 长串换行 2 行 | 截图；原 fail 系基线取错，作废 |
-| `scroll-view` 的 `scroll-top` | ❌ 设置 99999 后页面未滚动 | 截图 s1-css-bottom 前后对比 |
-| `scroll-view` 的 `scroll-into-view` | ✅ 两页均生效 | 截图 s2-scroll-jump、s1-css-bottom |
-| `fields({ computedStyle })` | ❌ 返回 `{}`，自动化读不到计算样式 | results.json |
-| `position: fixed` | ✅ top=740 ≈ windowHeight−22，滚动后仍钉在视口 | 测量 + 截图 |
-| `text-overflow: ellipsis` | ✅ 单行省略号 | 截图 |
-| `flex: 1` | ✅ 等分 130.6 / 130.6 | 测量 |
-| `rpx` | ✅ 实测 104.1 vs 理论 104.0 | 测量 |
-| `vw` | ✅ 50vw = 195 | 测量 |
-| `transform: translateX` | ✅ left=176.5 | 测量 |
-| `transform: translateX(格数 * 100%)`（百分比相对自身宽） | ✅ 122.6px 槽位（136rpx 胶囊 / 402 屏宽）逐格 left：首页格 29.0、我的格 262.4（2026-11-18 重测；124rpx 那版是 118.9px 槽 / 30.1·149.1·268.1） | 2026-11-18 逐帧测量（BaseTabBar 滑块） |
-| `transition` + 过冲 bezier（控制点 >1） | ✅ 峰值输出 1.0204 → 跳两格越过终点 5.0px 再回落（实测过冲帧色块离胶囊右沿 9.29px，静置 12.66px）；旧参数 `.34,1.56,.64,1` 峰值 1.0978，越过 23px | 同上，峰值由 bezier 数值解算 + 逐帧实测互校 |
-| `@keyframes` 动画 `transform: scale()` | ✅ 静置色块 99×49，采样到的区间 96.6~100.5 宽 / 47.7~49.4 高。**峰值帧未被采样命中**（截图约 1.15s/张），故形变极值以关键帧表 + 包络下界为准，不写成实测结论 | 同上（动画临时拉到 3000ms 提高采样密度，测完还原） |
-| 色块离胶囊沿**四边等距** | ✅ 只有一个内衬 token（`$tabbar-pill-inset: 22rpx` = 11.79px）时实测：首页格 左 11.80 / 上 11.80 / 下 11.70，我的格 右 11.44 / 上 11.91 / 下 11.81，最大偏差 0.35px（1/3 槽宽非整除 + 弧线抗锯齿）。❌ 横 26rpx / 纵 14rpx 两个 token 时是 横向 13.6 / 纵向 7.3 —— 「首项左边距与上下不一样」的成因就是这两个值，不是像素误差 | 2026-11-18 `Element.offset()` + 品红标记色像素扫描互校 |
-| 多段 `box-shadow`（逗号两层） | ✅ 悬浮胶囊 `0 2rpx 6rpx …, 0 12rpx 32rpx …` 两层都在截图中出得来（贴合近影 + 散开远影），没有被静默丢弃 | 2026-11-18 截图 |
-| 同段 keyframes 换动画名重启 | ✅ `--odd`/`--even` 两类轮换，四个方向连跳每跳都重播同一段形变 | 同上 |
-| `overflow:hidden` 裁剪绝对定位 + transform 的子节点 | ✅ 旧参数下布局盒 left 冲到 −5，红色探针像素最左仍止于胶囊沿 17 | 探针（临时涂红 + 动画放慢到 4s）+ 截图 |
-| automator `Element.offset()/size()` 是否含动画进行中的 transform | ✅ 含（静置与逐帧数值不同，据此可逐帧采样动效） | 逐帧测量 |
-| `position: fixed` 全宽**无底色**悬浮层（只让子盒画胶囊） | ✅ 外层盒 402×72.9（136rpx 这版，2026-11-18 重测；124rpx 版是 402×66.5）铺满宽但透明，列表从胶囊左右与下方带里透出；`bottom: calc(16rpx + env(safe-area-inset-bottom))` 实测胶囊顶 758.6 / 离屏底 42.5 | 2026-11-18 测量（BaseTabBar 去底色 + 胶囊长高）+ 三 tab 截图 |
-| 悬浮层不占流 → 滚动内容尾部垫让位 | ✅ 视口铺到窗口底（`.plan-list` bottom 874.0 = windowHeight），尾部垫实测高 188.4 = 带高 81.5(152rpx) + `$space-3` + `$fab-size` + `$space-2` + 安全区 34.1（124rpx 版是 182.0，差的 6.4 就是胶囊长高的 6.4） | 同上 |
-| automator `ScrollViewElement.scrollTo` 在 **Skyline `type="list"`** | ❌ 调用不报错但视口不动（前后截图逐像素相同）→ 滚到底只能几何判定（同 §0.2 WebView 那条相反） | 测量 + 前后截图对比 |
-| margin 折叠 | 不折叠（20+20=40） | 测量 |
-| 后代选择器 `.a .b` | ✅ 模拟器生效（红字） | 截图 |
-| 子代选择器 `.a > .b` | ✅ 模拟器生效（蓝字） | 截图 |
-| `::after` | ✅ 模拟器生效（`[AFTER]`） | 截图 |
-| `box-shadow` / `linear-gradient` | ✅ | 截图 |
-| `border-radius` + `overflow:hidden` 裁剪 | ✅ 子块被圆角裁掉 | 截图 s1-css-bottom |
-| `z-index` | ✅ 上层覆盖下层 | 截图 s1-css-bottom |
-| `opacity` | ✅ 0.4 半透明 | 截图 s1-css-bottom |
+| 项                                                                  | 结论                                                                                                                                                                                                                                                                                                                          | 证据                                                         |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `display: inline-block`                                             | ❌ 不并排（top 125 / 154.2，纵向堆叠）                                                                                                                                                                                                                                                                                        | 测量 + 截图                                                  |
+| `-webkit-line-clamp: 2`                                             | ❌ **不截断**（截图显示 4 行全文）                                                                                                                                                                                                                                                                                            | 截图 s1-css-top；原「比值 2.03 pass」系基线取错，作废        |
+| `word-break: break-all`                                             | ✅ 长串换行 2 行                                                                                                                                                                                                                                                                                                              | 截图；原 fail 系基线取错，作废                               |
+| `scroll-view` 的 `scroll-top`                                       | ❌ 设置 99999 后页面未滚动                                                                                                                                                                                                                                                                                                    | 截图 s1-css-bottom 前后对比                                  |
+| `scroll-view` 的 `scroll-into-view`                                 | ✅ 两页均生效                                                                                                                                                                                                                                                                                                                 | 截图 s2-scroll-jump、s1-css-bottom                           |
+| `fields({ computedStyle })`                                         | ❌ 返回 `{}`，自动化读不到计算样式                                                                                                                                                                                                                                                                                            | results.json                                                 |
+| `position: fixed`                                                   | ✅ top=740 ≈ windowHeight−22，滚动后仍钉在视口                                                                                                                                                                                                                                                                                | 测量 + 截图                                                  |
+| `text-overflow: ellipsis`                                           | ✅ 单行省略号                                                                                                                                                                                                                                                                                                                 | 截图                                                         |
+| `flex: 1`                                                           | ✅ 等分 130.6 / 130.6                                                                                                                                                                                                                                                                                                         | 测量                                                         |
+| `rpx`                                                               | ✅ 实测 104.1 vs 理论 104.0                                                                                                                                                                                                                                                                                                   | 测量                                                         |
+| `vw`                                                                | ✅ 50vw = 195                                                                                                                                                                                                                                                                                                                 | 测量                                                         |
+| `transform: translateX`                                             | ✅ left=176.5                                                                                                                                                                                                                                                                                                                 | 测量                                                         |
+| `transform: translateX(格数 * 100%)`（百分比相对自身宽）            | ✅ 122.6px 槽位（136rpx 胶囊 / 402 屏宽）逐格 left：首页格 29.0、我的格 262.4（2026-11-18 重测；124rpx 那版是 118.9px 槽 / 30.1·149.1·268.1）                                                                                                                                                                                 | 2026-11-18 逐帧测量（BaseTabBar 滑块）                       |
+| `transition` + 过冲 bezier（控制点 >1）                             | ✅ 峰值输出 1.0204 → 跳两格越过终点 5.0px 再回落（实测过冲帧色块离胶囊右沿 9.29px，静置 12.66px）；旧参数 `.34,1.56,.64,1` 峰值 1.0978，越过 23px                                                                                                                                                                             | 同上，峰值由 bezier 数值解算 + 逐帧实测互校                  |
+| `@keyframes` 动画 `transform: scale()`                              | ✅ 静置色块 99×49，采样到的区间 96.6~100.5 宽 / 47.7~49.4 高。**峰值帧未被采样命中**（截图约 1.15s/张），故形变极值以关键帧表 + 包络下界为准，不写成实测结论                                                                                                                                                                  | 同上（动画临时拉到 3000ms 提高采样密度，测完还原）           |
+| 色块离胶囊沿**四边等距**                                            | ✅ 只有一个内衬 token（`$tabbar-pill-inset: 22rpx` = 11.79px）时实测：首页格 左 11.80 / 上 11.80 / 下 11.70，我的格 右 11.44 / 上 11.91 / 下 11.81，最大偏差 0.35px（1/3 槽宽非整除 + 弧线抗锯齿）。❌ 横 26rpx / 纵 14rpx 两个 token 时是 横向 13.6 / 纵向 7.3 —— 「首项左边距与上下不一样」的成因就是这两个值，不是像素误差 | 2026-11-18 `Element.offset()` + 品红标记色像素扫描互校       |
+| 多段 `box-shadow`（逗号两层）                                       | ✅ 悬浮胶囊 `0 2rpx 6rpx …, 0 12rpx 32rpx …` 两层都在截图中出得来（贴合近影 + 散开远影），没有被静默丢弃                                                                                                                                                                                                                      | 2026-11-18 截图                                              |
+| 同段 keyframes 换动画名重启                                         | ✅ `--odd`/`--even` 两类轮换，四个方向连跳每跳都重播同一段形变                                                                                                                                                                                                                                                                | 同上                                                         |
+| `overflow:hidden` 裁剪绝对定位 + transform 的子节点                 | ✅ 旧参数下布局盒 left 冲到 −5，红色探针像素最左仍止于胶囊沿 17                                                                                                                                                                                                                                                               | 探针（临时涂红 + 动画放慢到 4s）+ 截图                       |
+| automator `Element.offset()/size()` 是否含动画进行中的 transform    | ✅ 含（静置与逐帧数值不同，据此可逐帧采样动效）                                                                                                                                                                                                                                                                               | 逐帧测量                                                     |
+| `position: fixed` 全宽**无底色**悬浮层（只让子盒画胶囊）            | ✅ 外层盒 402×72.9（136rpx 这版，2026-11-18 重测；124rpx 版是 402×66.5）铺满宽但透明，列表从胶囊左右与下方带里透出；`bottom: calc(16rpx + env(safe-area-inset-bottom))` 实测胶囊顶 758.6 / 离屏底 42.5                                                                                                                        | 2026-11-18 测量（BaseTabBar 去底色 + 胶囊长高）+ 三 tab 截图 |
+| 悬浮层不占流 → 滚动内容尾部垫让位                                   | ✅ 视口铺到窗口底（`.plan-list` bottom 874.0 = windowHeight），尾部垫实测高 188.4 = 带高 81.5(152rpx) + `$space-3` + `$fab-size` + `$space-2` + 安全区 34.1（124rpx 版是 182.0，差的 6.4 就是胶囊长高的 6.4）                                                                                                                 | 同上                                                         |
+| automator `ScrollViewElement.scrollTo` 在 **Skyline `type="list"`** | ❌ 调用不报错但视口不动（前后截图逐像素相同）→ 滚到底只能几何判定（同 §0.2 WebView 那条相反）                                                                                                                                                                                                                                 | 测量 + 前后截图对比                                          |
+| margin 折叠                                                         | 不折叠（20+20=40）                                                                                                                                                                                                                                                                                                            | 测量                                                         |
+| 后代选择器 `.a .b`                                                  | ✅ 模拟器生效（红字）                                                                                                                                                                                                                                                                                                         | 截图                                                         |
+| 子代选择器 `.a > .b`                                                | ✅ 模拟器生效（蓝字）                                                                                                                                                                                                                                                                                                         | 截图                                                         |
+| `::after`                                                           | ✅ 模拟器生效（`[AFTER]`）                                                                                                                                                                                                                                                                                                    | 截图                                                         |
+| `box-shadow` / `linear-gradient`                                    | ✅                                                                                                                                                                                                                                                                                                                            | 截图                                                         |
+| `border-radius` + `overflow:hidden` 裁剪                            | ✅ 子块被圆角裁掉                                                                                                                                                                                                                                                                                                             | 截图 s1-css-bottom                                           |
+| `z-index`                                                           | ✅ 上层覆盖下层                                                                                                                                                                                                                                                                                                               | 截图 s1-css-bottom                                           |
+| `opacity`                                                           | ✅ 0.4 半透明                                                                                                                                                                                                                                                                                                                 | 截图 s1-css-bottom                                           |
 
 **编码决策**：后代/子代/伪元素在模拟器可用但官方声明不支持 → 规范仍按「不支持」执行（平铺 class、真实节点代替伪元素），避免真机翻车。多行截断改 JS 截字或单行 ellipsis。滚动定位只用 `scroll-into-view`。
 
 ### 2.3 滚动容器与 Skyline 专属组件（S2，`spike/scroll`，首屏内逐个隔离挂载）
 
-| 组件 | 结论 | 证据 |
-| --- | --- | --- |
-| `scroll-view type="list"` | ✅ h=752，120 项流畅 | 测量 |
-| `scroll-into-view` | ✅ 跳到第 100 项 | 截图 s2-scroll-jump |
-| `page-container` | ✅ h=208，但**一个页面只允许存在一个实例**（见 §2.3.1） | 测量 + 编辑页运行时 |
-| `root-portal` | ✅ w=193 h=33.7 | 测量 |
-| `share-element` | ✅ w=365 h=45.8 | 测量 |
-| `draggable-sheet` | ✅ h=124.8 | 测量 |
-| `snapshot` | ✅ h=45.8 | 测量 |
-| `open-container` | ✅ h=45.8 | 测量 |
-| `scroll-view type="nested"` + header/body | ✅ h=37.5 | 测量 |
-| `list-view` | ❌ 渲染为 0×0 | 测量 |
-| `grid-view` | ❌ 渲染为 0×0 | 测量 |
-| `sticky-section` / `sticky-header` | ❌ 渲染为 0×0 | 测量 |
-| `list-item` | ❌ 随 `list-view`，节点未进布局树 | 探针查询挂起 |
+| 组件                                      | 结论                                                    | 证据                |
+| ----------------------------------------- | ------------------------------------------------------- | ------------------- |
+| `scroll-view type="list"`                 | ✅ h=752，120 项流畅                                    | 测量                |
+| `scroll-into-view`                        | ✅ 跳到第 100 项                                        | 截图 s2-scroll-jump |
+| `page-container`                          | ✅ h=208，但**一个页面只允许存在一个实例**（见 §2.3.1） | 测量 + 编辑页运行时 |
+| `root-portal`                             | ✅ w=193 h=33.7                                         | 测量                |
+| `share-element`                           | ✅ w=365 h=45.8                                         | 测量                |
+| `draggable-sheet`                         | ✅ h=124.8                                              | 测量                |
+| `snapshot`                                | ✅ h=45.8                                               | 测量                |
+| `open-container`                          | ✅ h=45.8                                               | 测量                |
+| `scroll-view type="nested"` + header/body | ✅ h=37.5                                               | 测量                |
+| `list-view`                               | ❌ 渲染为 0×0                                           | 测量                |
+| `grid-view`                               | ❌ 渲染为 0×0                                           | 测量                |
+| `sticky-section` / `sticky-header`        | ❌ 渲染为 0×0                                           | 测量                |
+| `list-item`                               | ❌ 随 `list-view`，节点未进布局树                       | 探针查询挂起        |
 
 **两个坑（写进规范）**：
 
@@ -339,13 +341,13 @@ weixinSkyline(config) === config.renderer === 'skyline' && config.lazyCodeLoadin
 
 **修法（已落地，BasePopup 整体重写）**：
 
-| 件 | 形状 | 证据 |
-| --- | --- | --- |
-| `BasePopup` | 弃 `page-container`，改 **fixed 全屏根 + 遮罩 + 面板**；遮罩 `@touchmove.stop.prevent`（编译为 `catchtouchmove`）断掉触摸冒泡；面板进/退场走 transform/opacity 过渡（§2.2 实测 ✅） | dist wxml：`catchtouchmove="{{e}}"`；components 产物 `page-container` 计数 0 |
-| 节点生命周期 | 保留 host/shown 两态：`visible=true` 才挂节点、30ms 后翻 shown（过渡有起点）、退场 `duration+80ms` 后卸载 | `BasePopup/index.vue` |
-| 编辑页锁文档 | `<page-meta :page-style="pageLockStyle" />` 为模板首节点；picker 或 ActionSheet 任一打开 → `overflow:hidden` | dist edit wxml/js：page-meta + pageLockStyle |
-| 选择器两列 | **显式定高 440rpx**（`$tap-min-height * 5`），不再走百分比链；初始定位仍 `scroll-into-view`（只在打开时给一次） | dist wxss：`.deadline-picker__col{flex:1;height:440rpx;...}` |
-| `BaseActionSheet` 内滚动 | 去 `type="list"` 改普通 `scroll-view :scroll-y="true"`（WebView 下 type=list 触摸滚动失效，#73 同根因；普通 scroll-view 不显式给 scroll-y 就完全不滚）。唯一宿主是编辑页 | dist wxml |
+| 件                       | 形状                                                                                                                                                                                | 证据                                                                         |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `BasePopup`              | 弃 `page-container`，改 **fixed 全屏根 + 遮罩 + 面板**；遮罩 `@touchmove.stop.prevent`（编译为 `catchtouchmove`）断掉触摸冒泡；面板进/退场走 transform/opacity 过渡（§2.2 实测 ✅） | dist wxml：`catchtouchmove="{{e}}"`；components 产物 `page-container` 计数 0 |
+| 节点生命周期             | 保留 host/shown 两态：`visible=true` 才挂节点、30ms 后翻 shown（过渡有起点）、退场 `duration+80ms` 后卸载                                                                           | `BasePopup/index.vue`                                                        |
+| 编辑页锁文档             | `<page-meta :page-style="pageLockStyle" />` 为模板首节点；picker 或 ActionSheet 任一打开 → `overflow:hidden`                                                                        | dist edit wxml/js：page-meta + pageLockStyle                                 |
+| 选择器两列               | **显式定高 440rpx**（`$tap-min-height * 5`），不再走百分比链；初始定位仍 `scroll-into-view`（只在打开时给一次）                                                                     | dist wxss：`.deadline-picker__col{flex:1;height:440rpx;...}`                 |
+| `BaseActionSheet` 内滚动 | 去 `type="list"` 改普通 `scroll-view :scroll-y="true"`（WebView 下 type=list 触摸滚动失效，#73 同根因；普通 scroll-view 不显式给 scroll-y 就完全不滚）。唯一宿主是编辑页            | dist wxml                                                                    |
 
 **验收边界（诚实口径）**：automator 跨不过自定义组件边界（setupState 空、vnode 树空、`>>>` 0 命中），**弹层无法程序化打开**，所以「弹层内触摸滚动 / 穿透是否消失 / 震感手感」只能真机复验。模拟器已验的是：产物形状、文档级滚动数字（§2.6.2）、Skyline 首页/我的回归、console 0 报错。**不宣称弹层交互已真机通过。**
 
@@ -353,61 +355,61 @@ weixinSkyline(config) === config.renderer === 'skyline' && config.lazyCodeLoadin
 
 ### 2.4 textarea 选区（S3，`spike/textarea`）—— §8.1 的决策依据
 
-| 项 | 结论 |
-| --- | --- |
-| `canIUse('textarea.bindselectionchange')` / `bind.selectionchange` | ❌ false / false |
-| `selection-start` / `selection-end` 属性 | canIUse true，但设置 2~5 并聚焦后**无任何选区高亮**（截图 s3-textarea-after） |
-| `auto-height` / `bindlinechange` / `bindkeyboardheightchange` / `adjust-position` / `cursor-spacing` / `hold-keyboard` / `disable-default-padding` | ✅ 全部 true；`lineCount=1 height=44` |
-| 2000 字长文本 | ✅ auto-height 撑开 6 行，多块共存正常（截图） |
-| `selectionchange` 事件流 | 拖动/输入均未收到（`start=-1 end=-1`） |
+| 项                                                                                                                                                 | 结论                                                                          |
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `canIUse('textarea.bindselectionchange')` / `bind.selectionchange`                                                                                 | ❌ false / false                                                              |
+| `selection-start` / `selection-end` 属性                                                                                                           | canIUse true，但设置 2~5 并聚焦后**无任何选区高亮**（截图 s3-textarea-after） |
+| `auto-height` / `bindlinechange` / `bindkeyboardheightchange` / `adjust-position` / `cursor-spacing` / `hold-keyboard` / `disable-default-padding` | ✅ 全部 true；`lineCount=1 height=44`                                         |
+| 2000 字长文本                                                                                                                                      | ✅ auto-height 撑开 6 行，多块共存正常（截图）                                |
+| `selectionchange` 事件流                                                                                                                           | 拖动/输入均未收到（`start=-1 end=-1`）                                        |
 
 **决策（已回填技术方案 §8.1）**：采用**段落级样式**。`Mark` 区间类型删除，`Block.text` 块携带 `bold?/color?/level/align`，工具栏作用于当前聚焦块整段。不提供「选中部分文字加粗」。
 
 ### 2.5 worklet 动画（S4，`spike/worklet` + 原生组件）
 
-| 项 | 结论 |
-| --- | --- |
-| `wx.worklet` | ✅ 存在；API：`runOnJS, runOnUI, cancelAnimation, shared, derived, delay, repeat, sequence, timing, spring, decay, Easing, snapshotContext, scrollViewContext, getBoundingClientRect` |
-| `worklet.measure` / `DerivedValue` / `useAnimatedStyle` | ❌ undefined（后两者本就不在 `wx.worklet` 上） |
-| Vue 模板 style 承载 SharedValue | ❌ 拼接结果 `transform: translateX([object Object]px)` |
-| CSS `transition: transform 600ms` | ✅ 方块平滑位移（截图 s4-css-transition） |
-| 原生组件 `runOnUI + timing`（未绑定节点） | ❌ BOX 不动 |
-| 原生组件 `applyAnimatedStyle`（官方正解） | ⚠️ **未验证**：自动化 tap 未送达原生组件按钮（msg 停留「未开始」），真机阶段补验 |
-| `pan-gesture-handler` | ✅ 可渲染 h=45.8 |
+| 项                                                      | 结论                                                                                                                                                                                  |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `wx.worklet`                                            | ✅ 存在；API：`runOnJS, runOnUI, cancelAnimation, shared, derived, delay, repeat, sequence, timing, spring, decay, Easing, snapshotContext, scrollViewContext, getBoundingClientRect` |
+| `worklet.measure` / `DerivedValue` / `useAnimatedStyle` | ❌ undefined（后两者本就不在 `wx.worklet` 上）                                                                                                                                        |
+| Vue 模板 style 承载 SharedValue                         | ❌ 拼接结果 `transform: translateX([object Object]px)`                                                                                                                                |
+| CSS `transition: transform 600ms`                       | ✅ 方块平滑位移（截图 s4-css-transition）                                                                                                                                             |
+| 原生组件 `runOnUI + timing`（未绑定节点）               | ❌ BOX 不动                                                                                                                                                                           |
+| 原生组件 `applyAnimatedStyle`（官方正解）               | ⚠️ **未验证**：自动化 tap 未送达原生组件按钮（msg 停留「未开始」），真机阶段补验                                                                                                      |
+| `pan-gesture-handler`                                   | ✅ 可渲染 h=45.8                                                                                                                                                                      |
 
 **决策（已回填技术方案 §2.2-5 / §8.8）**：交互动画默认 CSS transition；确需跟手 worklet 的场景封装 `wxcomponents` 原生组件 + `applyAnimatedStyle`，并在真机阶段补验。首页 FAB 收起改用 `scroll` 事件节流，不跟手。
 
 ### 2.6 rich-text 与 editor（S5，`spike/richtext`）
 
-| 项 | 结论 | 证据 |
-| --- | --- | --- |
-| `rich-text` HTML 字符串 | ✅ 渲染 h=138.5，颜色/加粗/斜体/base64 图均生效 | 截图 s5-richtext-top |
-| `rich-text` nodes 数组 | ✅ h=97.5 | 截图 |
-| `rich-text` 本地路径图片 | ✅ h=92.5 | 截图 |
-| `rich-text` 内联流 | ❌ **被打断**：HTML 中每个行内节点独占一行（「蓝色 span」「斜体」各占一行） | 截图 |
-| 自研块渲染器（原生 `<text>` 分片 + 内联样式） | ✅ 内联流正常、混排样式保真 | 截图第 4 区 |
-| `<editor>` 渲染 | 盒子 h=124.8，`canIUse('editor')=true` | 测量 |
-| `<editor>` 可用性 | ❌ `bindready` 4s 内不触发，`EditorContext` 取不到 → 无法读写内容 | results2.json |
+| 项                                            | 结论                                                                        | 证据                 |
+| --------------------------------------------- | --------------------------------------------------------------------------- | -------------------- |
+| `rich-text` HTML 字符串                       | ✅ 渲染 h=138.5，颜色/加粗/斜体/base64 图均生效                             | 截图 s5-richtext-top |
+| `rich-text` nodes 数组                        | ✅ h=97.5                                                                   | 截图                 |
+| `rich-text` 本地路径图片                      | ✅ h=92.5                                                                   | 截图                 |
+| `rich-text` 内联流                            | ❌ **被打断**：HTML 中每个行内节点独占一行（「蓝色 span」「斜体」各占一行） | 截图                 |
+| 自研块渲染器（原生 `<text>` 分片 + 内联样式） | ✅ 内联流正常、混排样式保真                                                 | 截图第 4 区          |
+| `<editor>` 渲染                               | 盒子 h=124.8，`canIUse('editor')=true`                                      | 测量                 |
+| `<editor>` 可用性                             | ❌ `bindready` 4s 内不触发，`EditorContext` 取不到 → 无法读写内容           | results2.json        |
 
 **决策（已回填技术方案 §8.1）**：编辑器与详情页正文共用自研块渲染器，**不走 `rich-text`**（内联流断裂）；`<editor>` 彻底排除。
 
 **2026-11-12 复测（SDK 3.17.6，spike 已删、证据截图存 /tmp/rt/spike-richtext.png）**：
 
-| 项 | 结论 | 说明 |
-| --- | --- | --- |
-| mp-html v2.5.2（uni-app 发行版）块级渲染 | ✅ h2/h3/p/blockquote/ul/li/hr/a/img（本地路径）全部正常 | 它对无子节点的叶子走 `rich-text`（node.vue:76），所以**行内流断裂照样继承** —— 段内加粗/变色仍不可用，与原生 rich-text 同源 |
-| 原生 `<text>` 兄弟节点拼接 | ❌ 各占一行 | Skyline 布局模型：行内流只存在于 `<text>` 容器内部；view 下 text 是块级（解释了 T0 自研分片「正常」的实际含义 = 段落级换行） |
-| `<editor>` 复测 | ❌ 0×0、`bindready` 仍未触发 | T0 结论在 3.17.6 上维持，编辑侧继续走块编辑器 |
-| CSS 变量 `var()` | ✅ 组件样式定义生效；**穿自定义组件边界到 mp-html 内联样式也生效** | tokens 桥接方案成立：根节点挂 `--cr-*`，tag-style/内联样式消费，SCSS 变量够不着的第三方组件也能吃到 tokens |
+| 项                                       | 结论                                                               | 说明                                                                                                                         |
+| ---------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| mp-html v2.5.2（uni-app 发行版）块级渲染 | ✅ h2/h3/p/blockquote/ul/li/hr/a/img（本地路径）全部正常           | 它对无子节点的叶子走 `rich-text`（node.vue:76），所以**行内流断裂照样继承** —— 段内加粗/变色仍不可用，与原生 rich-text 同源  |
+| 原生 `<text>` 兄弟节点拼接               | ❌ 各占一行                                                        | Skyline 布局模型：行内流只存在于 `<text>` 容器内部；view 下 text 是块级（解释了 T0 自研分片「正常」的实际含义 = 段落级换行） |
+| `<editor>` 复测                          | ❌ 0×0、`bindready` 仍未触发                                       | T0 结论在 3.17.6 上维持，编辑侧继续走块编辑器                                                                                |
+| CSS 变量 `var()`                         | ✅ 组件样式定义生效；**穿自定义组件边界到 mp-html 内联样式也生效** | tokens 桥接方案成立：根节点挂 `--cr-*`，tag-style/内联样式消费，SCSS 变量够不着的第三方组件也能吃到 tokens                   |
 
 **决策修订（用户裁定 2026-11-12）**：渲染层改走成熟三方库 **mp-html**（不再手写渲染器）；因为契约 §8.1 冻结为段落级样式，行内流断裂这条平台限制**碰不到我们的内容**，mp-html 的块级覆盖（语义标签/引用/列表/分割线/图）完整可用。序列化（`blocksToHtml`）与段落样式仍收敛在 `utils/blocks.ts` 单一源。`<editor>` 结论不变。
 
 ### 2.6.1 WebView 渲染页两个盒模型/显示坑（运行时，2026-11-13 编辑页实测）
 
-| 项 | 结论 | 证据与修复 |
-| --- | --- | --- |
-| 默认 box-sizing | ⚠️ Skyline 默认 border-box；**WebView 渲染页默认 content-box** → `width:100% + 左右 padding` 只在 WebView 页溢出父容器 | 工具栏/添加选项按钮实测溢出；`global.scss` 标签选择器统一 `box-sizing: border-box`；组件运行时 `styleIsolation: 'apply-shared'`（dist common/vendor.js 证实）使 app.wxss 进组件内部，一条规则全修 |
-| `v-show` / `hidden` | ⚠️ v-show 编译为 `hidden="{{!x}}"`；WebView 下类 `display:flex` 与框架 `[hidden]` 同优先级、后写赢 → 永不收起（Skyline 原生处理 hidden，不暴露） | OptionsSection 改显式类 `--off { display:none }`（两渲染器都收得起；保活实例不用 v-if）；OFF 实测 section H61、无按钮 |
+| 项                  | 结论                                                                                                                                             | 证据与修复                                                                                                                                                                                        |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 默认 box-sizing     | ⚠️ Skyline 默认 border-box；**WebView 渲染页默认 content-box** → `width:100% + 左右 padding` 只在 WebView 页溢出父容器                           | 工具栏/添加选项按钮实测溢出；`global.scss` 标签选择器统一 `box-sizing: border-box`；组件运行时 `styleIsolation: 'apply-shared'`（dist common/vendor.js 证实）使 app.wxss 进组件内部，一条规则全修 |
+| `v-show` / `hidden` | ⚠️ v-show 编译为 `hidden="{{!x}}"`；WebView 下类 `display:flex` 与框架 `[hidden]` 同优先级、后写赢 → 永不收起（Skyline 原生处理 hidden，不暴露） | OptionsSection 改显式类 `--off { display:none }`（两渲染器都收得起；保活实例不用 v-if）；OFF 实测 section H61、无按钮                                                                             |
 
 ### 2.6.2 WebView 渲染页高度链裁剪 → 文档级滚动模式（#79，2026-11-13 模拟器实测）
 
@@ -415,22 +417,22 @@ weixinSkyline(config) === config.renderer === 'skyline' && config.lazyCodeLoadin
 
 **修法（detail/edit 两页已落地）——整页改文档级滚动**：
 
-| 件 | 形状 |
-| --- | --- |
-| page 覆盖 | 页面级**非 scoped** `<style> page { height:auto; overflow:visible; }`。必须非 scoped：scoped 会给选择器加属性限定，`page` 是渲染器注入的根节点、拿不到 scoped 属性，规则直接死信；页面 wxss 晚于 app.wxss 加载、同优先级后写赢 |
-| 导航 | `BaseNavbar fixed`（`position:fixed; z-index:$z-navbar`）+ 页面自留**等高占位** `nav-space`（`appStore.navBarHeight` px，模拟器 87） |
-| 滚动触发 | 页面 `onReachBottom`（pages.json `onReachBottomDistance:120`）取代 scroll-view 的 `@scrolltolower` |
-| 程序化滚动 | `uni.pageScrollTo({ selector:'#id' })` 取代 `scroll-into-view` |
-| 编辑页底部 | 状态行+发布按钮 `position:fixed` 叠层，文档流尾部留 **tail 占位**（`calc(217rpx + env(safe-area-inset-bottom))`）防遮内容 |
-| 弹层锁 | 编辑页 `<page-meta :page-style>` 在弹层打开时 `overflow:hidden`（§2.3.2） |
-| 根 mixin | `page-root-doc`（flex column、width:100%，**不带 height/overflow**） |
+| 件         | 形状                                                                                                                                                                                                                           |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| page 覆盖  | 页面级**非 scoped** `<style> page { height:auto; overflow:visible; }`。必须非 scoped：scoped 会给选择器加属性限定，`page` 是渲染器注入的根节点、拿不到 scoped 属性，规则直接死信；页面 wxss 晚于 app.wxss 加载、同优先级后写赢 |
+| 导航       | `BaseNavbar fixed`（`position:fixed; z-index:$z-navbar`）+ 页面自留**等高占位** `nav-space`（`appStore.navBarHeight` px，模拟器 87）                                                                                           |
+| 滚动触发   | 页面 `onReachBottom`（pages.json `onReachBottomDistance:120`）取代 scroll-view 的 `@scrolltolower`                                                                                                                             |
+| 程序化滚动 | `uni.pageScrollTo({ selector:'#id' })` 取代 `scroll-into-view`                                                                                                                                                                 |
+| 编辑页底部 | 状态行+发布按钮 `position:fixed` 叠层，文档流尾部留 **tail 占位**（`calc(217rpx + env(safe-area-inset-bottom))`）防遮内容                                                                                                      |
+| 弹层锁     | 编辑页 `<page-meta :page-style>` 在弹层打开时 `overflow:hidden`（§2.3.2）                                                                                                                                                      |
+| 根 mixin   | `page-root-doc`（flex column、width:100%，**不带 height/overflow**）                                                                                                                                                           |
 
 **模拟器实测数字（automator `selectViewport().scrollOffset()` + 节点矩形；长内容计划「111」，非用户 123123）**：
 
-| 页 | scrollHeight | 最大 scrollTop | 对账 |
-| --- | --- | --- | --- |
-| detail | 1591 | 747.5 | 1591 − 843.5 = 747.5，精确到底；尾部 `#planDetailTail` rect bottom 844.2 ≈ 视口底 843.5 |
-| edit | 1248 | 404.5 | 1248 − 843.5 = 404.5，精确到底；nav-space（87px）随文档滚出（top −404.5），导航 fixed 钉住 |
+| 页     | scrollHeight | 最大 scrollTop | 对账                                                                                       |
+| ------ | ------------ | -------------- | ------------------------------------------------------------------------------------------ |
+| detail | 1591         | 747.5          | 1591 − 843.5 = 747.5，精确到底；尾部 `#planDetailTail` rect bottom 844.2 ≈ 视口底 843.5    |
+| edit   | 1248         | 404.5          | 1248 − 843.5 = 404.5，精确到底；nav-space（87px）随文档滚出（top −404.5），导航 fixed 钉住 |
 
 编辑页底部 fixed 叠层 rect：top 719.5 / bottom 844 / height 124.5（含模拟器 ~32px 安全区）；tail 占位 ≈144.8px > 124.5px ⇒ **滚到底时最后一块内容不被底部叠层遮住**。全程 console 0 报错；Skyline 首页/我的回归正常（截图 b4-01…09，存 /tmp/rt/shots/）。
 
@@ -449,13 +451,12 @@ T0 的实测面是按当时那版技术方案的组件清单圈的，所以**这
 
 本轮实际踩到两例，都按这条规则处理了：
 
-| 项 | 清单状态 | 本轮决策 |
-| --- | --- | --- |
-| `<picker>` / `<picker-view>`（截止时间自定义选择） | **零条目**，从未实测 | **不用**。改 `BasePopup`（#78 起为 fixed 遮罩+面板，§2.3.2；原 page-container 方案 §2.3 实测 h=208 ✅）+ 两列可点选单元格（显式定高 440rpx）。理由不是「它一定坏」，而是「它的坏法我们没法在模拟器里证明，而编辑器是本项目最高风险模块，不该再叠一层未知」 |
-| `button open-type="chooseAvatar"` / `input type="nickname"`（我的页编辑资料） | **零条目**（属微信原生资料填写能力，与渲染引擎正交，但正交性未经我们实测） | **用**，但必须带兜底：不选头像时只改昵称也要能提交；`avatarUrl` 不许提交成空串。列为真机复核项 |
+| 项                                                                            | 清单状态                                                                   | 本轮决策                                                                                                                                                                                                                                                   |
+| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<picker>` / `<picker-view>`（截止时间自定义选择）                            | **零条目**，从未实测                                                       | **不用**。改 `BasePopup`（#78 起为 fixed 遮罩+面板，§2.3.2；原 page-container 方案 §2.3 实测 h=208 ✅）+ 两列可点选单元格（显式定高 440rpx）。理由不是「它一定坏」，而是「它的坏法我们没法在模拟器里证明，而编辑器是本项目最高风险模块，不该再叠一层未知」 |
+| `button open-type="chooseAvatar"` / `input type="nickname"`（我的页编辑资料） | **零条目**（属微信原生资料填写能力，与渲染引擎正交，但正交性未经我们实测） | **用**，但必须带兜底：不选头像时只改昵称也要能提交；`avatarUrl` 不许提交成空串。列为真机复核项                                                                                                                                                             |
 
 对照 §2.3 的 `list-view`/`grid-view`：那两个是**实测过且坏**（渲染 0×0），所以禁用有证据；`picker` 是**没测过**，所以「不用它」的证据是风险判断而不是实测结论 —— 这个区别必须写清楚，否则下一个人会把它当成「Skyline 不支持 picker」这条（并不存在的）事实引用。
-
 
 ## 3. 云开发能力（T0.2 / T0.7 / T0.8）—— 已实测
 
@@ -465,40 +466,40 @@ T0 的实测面是按当时那版技术方案的组件清单圈的，所以**这
 
 ### 3.1 T0.2 云函数「TS 编译 → 部署 → 调用」链路 ✅
 
-| 项 | 实测结论 |
-| --- | --- |
-| 部署命令 | `cli cloud functions deploy --env <env> --paths <绝对路径> --remote-npm-install --project dist/build/mp-weixin`。用 `--paths` 就**不需要 `cloudfunctionRoot`**（uni-app 产物的 `project.config.json` 里没有这个键；它是 manifest 穿透键，但会相对产物目录解析，指向 `dist/build/mp-weixin/cloudfunctions`，不符合源码目录习惯） |
-| 首次部署 | 函数不存在时先建后传，会报 `FailedOperation.UpdateFunctionCode：当前函数处于 Creating 状态` —— **原样重试一次即成功**，不是配置问题 |
-| 运行时 | `Nodejs16.13`，函数内 `process.version` = `v16.13.1` |
-| 超时 | 默认 **3s**；`config.json` 里写 `timeout: 20` **CLI 部署不生效**（`functions info` 仍是 3），只能控制台改。长任务函数上线前必须手动确认 |
-| 包体 | `--remote-npm-install` 时只上传 6 个文件 / 15.8 KB，依赖在云端装，本地 `node_modules` 不上传 |
-| 客户端调用 | `wx.cloud.callFunction({name:'hello'})` 通；`cloud.getWXContext()` 拿到 OPENID `oprgZxj9nTWd4_GZyYL1GcrSka0s`、APPID、`UNIONID` 为空、`process.env.TCB_ENV` = 环境 ID |
-| TS 工程 | `cloudfunctions/hello/{src/index.ts, tsconfig.json}`，`rootDir: src` + `outDir: .` + `"files": ["src/index.ts"]`。**不能用 `include`**：`outDir` 为 `.` 时它会被加进默认 exclude，直接报 `TS18003 No inputs were found`；`files` 绕过 exclude |
-| SDK 版本 | 用 `wx-server-sdk@4.0.2`（npm latest），不是各教程里的 `~2.6.3`（2.6.3 的 database 类型更残缺） |
-| SDK 类型缺陷 | ① `openapi` 只是 `Record<string, any>`，没有接口级类型；② `DYNAMIC_CURRENT_ENV` 是 symbol，而 `init({env})` 形参只收 string，必须转一次；③ database 的 `add/get/count/remove` 返回 `string \| void \| IXxxResult` 联合（回调与 Promise 重载混写），await 后无法收窄 —— 只能在调用边界各断言一次；④ 没有 `dropCollection` |
-| 数据库能力 | `createCollection` / `add` / `where+orderBy+limit+get` / `count` / `doc.remove` / `serverDate` / `startTransaction`+`update`+`commit` 全部 ✅（计数扣减与投票去重可以放心用事务） |
-| 集合命名 | **不能以下划线开头**（`_t0_probe` 报 `InvalidParameter`），≤96 字符，仅字母/数字/下划线/连字符。技术方案 §5 的 `users/plans/votes/comments/counters/participations` 均合规 |
+| 项           | 实测结论                                                                                                                                                                                                                                                                                                                        |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 部署命令     | `cli cloud functions deploy --env <env> --paths <绝对路径> --remote-npm-install --project dist/build/mp-weixin`。用 `--paths` 就**不需要 `cloudfunctionRoot`**（uni-app 产物的 `project.config.json` 里没有这个键；它是 manifest 穿透键，但会相对产物目录解析，指向 `dist/build/mp-weixin/cloudfunctions`，不符合源码目录习惯） |
+| 首次部署     | 函数不存在时先建后传，会报 `FailedOperation.UpdateFunctionCode：当前函数处于 Creating 状态` —— **原样重试一次即成功**，不是配置问题                                                                                                                                                                                             |
+| 运行时       | `Nodejs16.13`，函数内 `process.version` = `v16.13.1`                                                                                                                                                                                                                                                                            |
+| 超时         | 默认 **3s**；`config.json` 里写 `timeout: 20` **CLI 部署不生效**（`functions info` 仍是 3），只能控制台改。长任务函数上线前必须手动确认                                                                                                                                                                                         |
+| 包体         | `--remote-npm-install` 时只上传 6 个文件 / 15.8 KB，依赖在云端装，本地 `node_modules` 不上传                                                                                                                                                                                                                                    |
+| 客户端调用   | `wx.cloud.callFunction({name:'hello'})` 通；`cloud.getWXContext()` 拿到 OPENID `oprgZxj9nTWd4_GZyYL1GcrSka0s`、APPID、`UNIONID` 为空、`process.env.TCB_ENV` = 环境 ID                                                                                                                                                           |
+| TS 工程      | `cloudfunctions/hello/{src/index.ts, tsconfig.json}`，`rootDir: src` + `outDir: .` + `"files": ["src/index.ts"]`。**不能用 `include`**：`outDir` 为 `.` 时它会被加进默认 exclude，直接报 `TS18003 No inputs were found`；`files` 绕过 exclude                                                                                   |
+| SDK 版本     | 用 `wx-server-sdk@4.0.2`（npm latest），不是各教程里的 `~2.6.3`（2.6.3 的 database 类型更残缺）                                                                                                                                                                                                                                 |
+| SDK 类型缺陷 | ① `openapi` 只是 `Record<string, any>`，没有接口级类型；② `DYNAMIC_CURRENT_ENV` 是 symbol，而 `init({env})` 形参只收 string，必须转一次；③ database 的 `add/get/count/remove` 返回 `string \| void \| IXxxResult` 联合（回调与 Promise 重载混写），await 后无法收窄 —— 只能在调用边界各断言一次；④ 没有 `dropCollection`        |
+| 数据库能力   | `createCollection` / `add` / `where+orderBy+limit+get` / `count` / `doc.remove` / `serverDate` / `startTransaction`+`update`+`commit` 全部 ✅（计数扣减与投票去重可以放心用事务）                                                                                                                                               |
+| 集合命名     | **不能以下划线开头**（`_t0_probe` 报 `InvalidParameter`），≤96 字符，仅字母/数字/下划线/连字符。技术方案 §5 的 `users/plans/votes/comments/counters/participations` 均合规                                                                                                                                                      |
 
 ### 3.2 T0.7 云存储闭环 ✅（`chooseMedia` 的 UI 路径留真机）
 
-| 步骤 | 实测 |
-| --- | --- |
-| 写本地文件 | `FileSystemManager.writeFileSync(path, base64, 'base64')` ✅；模拟器里 `wx.env.USER_DATA_PATH` = `http://usr` |
-| `wx.cloud.uploadFile` | `statusCode: 204`，fileID 形如 `cloud://<env>.636c-<env>-1530577071/t0/probe-<ts>.png` |
-| `getTempFileURL` | `status: 0 / errMsg: ok`，返回带签名的 `https://636c-<env>-1530577071.tcb.qcloud.la/...?sign=&t=`（可直接给 `<image src>`） |
+| 步骤                           | 实测                                                                                                                                                                         |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 写本地文件                     | `FileSystemManager.writeFileSync(path, base64, 'base64')` ✅；模拟器里 `wx.env.USER_DATA_PATH` = `http://usr`                                                                |
+| `wx.cloud.uploadFile`          | `statusCode: 204`，fileID 形如 `cloud://<env>.636c-<env>-1530577071/t0/probe-<ts>.png`                                                                                       |
+| `getTempFileURL`               | `status: 0 / errMsg: ok`，返回带签名的 `https://636c-<env>-1530577071.tcb.qcloud.la/...?sign=&t=`（可直接给 `<image src>`）                                                  |
 | 客户端 `wx.cloud.downloadFile` | 返回 `{tempFilePath, statusCode, dataLength, header, cookies, errMsg}`，**没有 `fileContent`**；`tempFilePath` 形如 `http://tmp/xxx.png`。`fileContent` 只存在于云函数侧 SDK |
-| 云函数侧 `cloud.downloadFile` | `fileContent` 是 Buffer，101498 字节原样取回 ✅ |
-| `deleteFile` | `status: 0 / ok` ✅ |
+| 云函数侧 `cloud.downloadFile`  | `fileContent` 是 Buffer，101498 字节原样取回 ✅                                                                                                                              |
+| `deleteFile`                   | `status: 0 / ok` ✅                                                                                                                                                          |
 
 ### 3.3 T0.8 内容安全接口 ✅
 
-| 接口 | 实测 |
-| --- | --- |
+| 接口                                                                 | 实测                                                                                                                                                   |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `security.msgSecCheck` v2（`{version:2, scene:2, openid, content}`） | 成功。返回 `detail: [{strategy:'keyword',errcode:0}, {strategy:'content_model',suggest:'pass',label:100,prob:90}]`、`result.suggest='pass'`、`traceId` |
-| `security.imgSecCheck`（v1 同步，传 Buffer） | **仍可用**，`errCode: 0`。但官方主推 v2 异步，v1 有下线风险 → 图片审核以 `mediaCheckAsync` 为主，v1 只作降级 |
-| `security.mediaCheckAsync` v2（`media_url` + `media_type:2`） | 提交成功，返回 `traceId`。**审核结果走消息推送异步回调**，需在控制台配置推送目标；本次未配置，故「回调 → 改 plan 状态」这一段未验，留到 T4 |
-| 违规样本 | **未测**。只用正常文本确认接口可用性，避免在正式 AppID 上留下风控记录 |
-| `config.json → permissions.openapi` | 已声明三个接口；实测不声明也调得通（云函数侧 openapi 默认可用），保留声明只为控制台可见 |
+| `security.imgSecCheck`（v1 同步，传 Buffer）                         | **仍可用**，`errCode: 0`。但官方主推 v2 异步，v1 有下线风险 → 图片审核以 `mediaCheckAsync` 为主，v1 只作降级                                           |
+| `security.mediaCheckAsync` v2（`media_url` + `media_type:2`）        | 提交成功，返回 `traceId`。**审核结果走消息推送异步回调**，需在控制台配置推送目标；本次未配置，故「回调 → 改 plan 状态」这一段未验，留到 T4             |
+| 违规样本                                                             | **未测**。只用正常文本确认接口可用性，避免在正式 AppID 上留下风控记录                                                                                  |
+| `config.json → permissions.openapi`                                  | 已声明三个接口；实测不声明也调得通（云函数侧 openapi 默认可用），保留声明只为控制台可见                                                                |
 
 ### 3.4 仍未闭环
 

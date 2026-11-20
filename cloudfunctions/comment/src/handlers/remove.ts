@@ -39,7 +39,7 @@ import {
   type ActionSpec,
   type CommentDoc,
   type Transaction,
-  type UpdatePayload,
+  type UpdatePayload
 } from 'common'
 
 const ID_MAX = 128
@@ -90,7 +90,8 @@ export const remove: ActionSpec = {
 
     const comment = await commentDao.getById(commentId)
     if (!comment) throw new BizError(ErrorCode.NOT_FOUND, '评论不存在或已删除')
-    if (comment.status === CommentStatus.Removed) throw new BizError(ErrorCode.DUPLICATED, '该评论已删除')
+    if (comment.status === CommentStatus.Removed)
+      throw new BizError(ErrorCode.DUPLICATED, '该评论已删除')
 
     if (comment.openId !== openId) {
       const plan = await planDao.getById(comment.planId)
@@ -114,5 +115,5 @@ export const remove: ActionSpec = {
     // 自减只在事务真的翻转成功时发出（上面已保证最多发出一次）
     await planDao.incCommentCount(comment.planId, -1)
     return { ok: true }
-  },
+  }
 }

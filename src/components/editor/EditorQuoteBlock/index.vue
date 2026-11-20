@@ -17,7 +17,7 @@ import type { Emits, Props } from './types'
 
 const props = withDefaults(defineProps<Props>(), {
   maxlength: Limit.BLOCK_TEXT_MAX,
-  placeholder: '引用内容…',
+  placeholder: '引用内容…'
 })
 const emit = defineEmits<Emits>()
 
@@ -26,7 +26,9 @@ const style = computed<BlockStyle>(() => blockStyle(props.block))
 const length = computed(() => props.block.text.length)
 const showCounter = computed(() => props.focused || length.value > 0)
 const isFull = computed(() => length.value >= props.maxlength)
-const isWarn = computed(() => !isFull.value && props.maxlength - length.value <= TextInput.WARN_REMAINING)
+const isWarn = computed(
+  () => !isFull.value && props.maxlength - length.value <= TextInput.WARN_REMAINING
+)
 
 function onInput(event: unknown): void {
   emit('input', props.block.id, readInputValue(event))
@@ -68,7 +70,7 @@ function onLongPress(): void {
         class="editor-quote-block__counter-text"
         :class="{
           'editor-quote-block__counter-text--warn': isWarn,
-          'editor-quote-block__counter-text--full': isFull,
+          'editor-quote-block__counter-text--full': isFull
         }"
       >
         {{ length }}/{{ maxlength }}

@@ -19,12 +19,12 @@ type JobName = 'expire' | 'reconcile'
 /** config.json 里的 triggers.name → job；改触发器名要同时改这张表，否则定时器会静默落到默认分支 */
 const JOB_BY_TRIGGER: Record<string, JobName> = {
   expirePlans: 'expire',
-  reconcileCounts: 'reconcile',
+  reconcileCounts: 'reconcile'
 }
 
 const JOBS: Record<JobName, (startedAt: number) => Promise<Record<string, unknown>>> = {
   expire: expirePlans,
-  reconcile: reconcileCounts,
+  reconcile: reconcileCounts
 }
 
 /**

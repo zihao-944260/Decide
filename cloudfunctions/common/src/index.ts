@@ -20,9 +20,15 @@ export {
   messageOf,
   isCollectionMissing,
   isDuplicateKeyError,
-  isTransactionConflict,
+  isTransactionConflict
 } from './db'
-export { getOpenId, requireOpenId, assertAuthor, assertCommentDeleter, assertWritable } from './auth'
+export {
+  getOpenId,
+  requireOpenId,
+  assertAuthor,
+  assertCommentDeleter,
+  assertWritable
+} from './auth'
 export { log, shortOpenId } from './logger'
 export * from './validate'
 export { encodeCursor, decodeCursor } from './cursor'

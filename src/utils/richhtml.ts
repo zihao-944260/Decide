@@ -77,7 +77,8 @@ function splitImages(inner: string, blocks: Block[], emitText: (raw: string) => 
   emitText(inner.slice(cursor))
 }
 
-const BLOCK_RE = /<(h1|h2|h3|h4|h5|h6|p|blockquote|pre|ul|ol)(\s[^>]*)?>([\s\S]*?)<\/\1>|<hr\s*\/?>|<img\b[^>]*>/gi
+const BLOCK_RE =
+  /<(h1|h2|h3|h4|h5|h6|p|blockquote|pre|ul|ol)(\s[^>]*)?>([\s\S]*?)<\/\1>|<hr\s*\/?>|<img\b[^>]*>/gi
 
 /** editor 输出 HTML → blocks（行内标记保留在 text，段落级属性映射到字段） */
 export function editorHtmlToBlocks(html: string): Block[] {
@@ -136,7 +137,13 @@ export function editorHtmlToBlocks(html: string): Block[] {
   return blocks
 }
 
-function makeText(text: string, level: TextBlock['level'], align: TextBlock['align'], bold?: boolean, color?: string): TextBlock {
+function makeText(
+  text: string,
+  level: TextBlock['level'],
+  align: TextBlock['align'],
+  bold?: boolean,
+  color?: string
+): TextBlock {
   const block: TextBlock = { id: createBlockId(), type: 'text', text, level, align }
   if (bold) block.bold = true
   if (color) block.color = color

@@ -78,7 +78,7 @@ for (const fn of FNS) {
       target: 'node16',
       format: 'cjs',
       external: ['wx-server-sdk'],
-      alias: { common: COMMON_ENTRY },
+      alias: { common: COMMON_ENTRY }
     })
   } catch (err) {
     fail(`${fn} esbuild 打包失败：${err && err.message ? err.message : err}`)
@@ -96,7 +96,7 @@ for (const fn of FNS) {
     version: srcPkg.version || '1.0.0',
     private: true,
     main: 'index.js',
-    dependencies: { 'wx-server-sdk': sdkVersion },
+    dependencies: { 'wx-server-sdk': sdkVersion }
   }
   fs.writeFileSync(path.join(outDir, 'package.json'), `${JSON.stringify(deployPkg, null, 2)}\n`)
 
@@ -114,7 +114,7 @@ for (const fn of FNS) {
   rows.push({
     fn,
     bytes: fs.statSync(outFile).size,
-    sdk: code.includes('require("wx-server-sdk")') ? 'external' : '未引用',
+    sdk: code.includes('require("wx-server-sdk")') ? 'external' : '未引用'
   })
 }
 
@@ -122,7 +122,7 @@ for (const fn of FNS) {
 console.log('\nbundle 产物（dist-cloud/）')
 for (const r of rows) {
   console.log(
-    `  ${r.fn.padEnd(10)} ${String(r.bytes).padStart(7)} bytes  ${kb(r.bytes).padStart(9)}  node --check OK  require("common")=0  wx-server-sdk=${r.sdk}`,
+    `  ${r.fn.padEnd(10)} ${String(r.bytes).padStart(7)} bytes  ${kb(r.bytes).padStart(9)}  node --check OK  require("common")=0  wx-server-sdk=${r.sdk}`
   )
 }
 console.log(`\n✓ 5 个函数已打包到 ${path.relative(ROOT, OUT_DIR)}/，部署目录不含 file:../common`)

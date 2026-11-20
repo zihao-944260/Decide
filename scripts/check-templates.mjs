@@ -22,7 +22,8 @@ const ROOT = resolve(process.argv[2] || 'src')
 
 /** uni-app / 微信内置标签 + Skyline 组件 + Vue 内建保留标签，全部不需要 import */
 const BUILTIN = new Set(
-  ('view text image icon progress button input textarea navigator form label picker picker-view ' +
+  (
+    'view text image icon progress button input textarea navigator form label picker picker-view ' +
     'checkbox checkbox-group radio radio-group switch slider swiper swiper-item scroll-view ' +
     'movable-area movable-view rich-text web-view video audio camera live-player live-pusher ' +
     'editor ' +
@@ -30,9 +31,10 @@ const BUILTIN = new Set(
     'list-view grid-view sticky-view sticky-header sticky-section list-item span ' +
     'share-element draggable-sheet snapshot open-container functional-page-navigator ' +
     // Vue 内建：<template>（含 #slot 用法）、<slot>；<component :is> 是动态的，静态判不了也不该报
-    'template slot component')
+    'template slot component'
+  )
     .split(' ')
-    .filter(Boolean),
+    .filter(Boolean)
 )
 
 function vueFiles(dir, out = []) {
@@ -60,7 +62,9 @@ function importedNames(script) {
     }
   }
   // 组合式函数在 setup 里现造的组件引用（少见，但别误报）：const X = defineComponent(...)
-  for (const m of script.matchAll(/const\s+([\w$]+)\s*=\s*(?:defineAsyncComponent|resolveComponent)/g)) {
+  for (const m of script.matchAll(
+    /const\s+([\w$]+)\s*=\s*(?:defineAsyncComponent|resolveComponent)/g
+  )) {
     names.add(m[1])
   }
   return names
@@ -92,7 +96,9 @@ for (const file of vueFiles(ROOT)) {
     if (BUILTIN.has(lower)) continue
     // 内置标签里带大写的不存在；组件用法只有两种写法：<BaseXxx> 与 <base-xxx>
     if (names.has(raw) || names.has(pascal(raw)) || names.has(pascal(raw).toLowerCase())) continue
-    problems.push(`${relative(process.cwd(), file)}: <${raw}> 在模板里出现，但 <script setup> 没有对应 import`)
+    problems.push(
+      `${relative(process.cwd(), file)}: <${raw}> 在模板里出现，但 <script setup> 没有对应 import`
+    )
   }
 }
 
@@ -101,4 +107,6 @@ if (problems.length) {
   for (const line of new Set(problems)) console.error(`  ${line}`)
   process.exit(1)
 }
-console.log(`✓ 模板标签对账通过：${vueFiles(ROOT).length} 个 .vue，全部标签都能对上 import 或内置清单`)
+console.log(
+  `✓ 模板标签对账通过：${vueFiles(ROOT).length} 个 .vue，全部标签都能对上 import 或内置清单`
+)

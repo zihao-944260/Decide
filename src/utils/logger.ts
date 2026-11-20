@@ -21,5 +21,5 @@ export const logger = {
   debug: (tag: string, ...args: unknown[]) => write('debug', tag, args),
   info: (tag: string, ...args: unknown[]) => write('info', tag, args),
   warn: (tag: string, ...args: unknown[]) => write('warn', tag, args),
-  error: (tag: string, ...args: unknown[]) => write('error', tag, args),
+  error: (tag: string, ...args: unknown[]) => write('error', tag, args)
 }
