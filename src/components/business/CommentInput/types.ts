@@ -51,7 +51,7 @@ export interface Props {
   cursorSpacing?: number
   /** 额外底部偏移（px），例如详情页有 FAB 或多层吸底条时叠加 */
   bottomOffset?: number
-  /** 输入框最大行数（超过内部滚动），默认 4 */
+  /** 输入框最大行数（超过内部滚动、并出现展开按钮），默认 2 */
   maxRows?: number
 }
 
@@ -63,6 +63,8 @@ export type Emits = {
   (e: 'error', payload: PublishResult): void
   /** 键盘高度变化（height=0 即已复位），页面可据此给列表加 padding-bottom */
   (e: 'keyboard-height', payload: KeyboardPayload): void
+  /** 内容超过封顶行数、用户点了展开按钮：页面拉半屏编辑层（draggable-sheet） */
+  (e: 'expand'): void
 }
 
 /** 页面编排用的命令式入口（T3.11） */

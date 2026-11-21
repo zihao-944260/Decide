@@ -17,7 +17,8 @@ view.plan-detail                        ← @include page-root（页面本身不
 │   ├─ [ready]   投票卡：VoteRatioBar(size=lg,show-count) + VoteActions
 │   ├─ [ready]   评论区：CommentList :comments :now :can-remove
 │   └─ 尾部锚点（id=planDetailTail）：给吸底条腾高 + 键盘高度叠加 + scroll-into-view 目标
-└─ CommentInput                         ← ★ scroll-view 的兄弟节点，fixed 吸底在滚动流之外
+├─ CommentInput                         ← ★ fixed 吸底输入条（半屏编辑层打开时隐藏）
+└─ draggable-sheet（展开时挂载）        ← ★ 半屏可拖拽编辑层：满屏 textarea，与吸底条共用 draft
 ```
 
 - 触底加载：页面 `@scrolltolower` → `commentListRef.loadMore()`（`CommentList` 内部**不嵌** scroll-view）。
@@ -28,6 +29,24 @@ view.plan-detail                        ← @include page-root（页面本身不
   不留间距；投票卡是页面主功能，0 票也保留。
 - **配图模块已移除**（2026-11-21）：富文本本身支持上传图片，独立配图区与它功能重复；
   列表卡的封面（`summary.cover`）不受影响，老计划的配图数据也仍在库里。
+- **半屏评论编辑层**（2026-11-21）：吸底条输入框封顶 2 行（约 42 全角字）就出现展开按钮；
+  （两个直角括组成的「全屏」图标），点开后挂载 `draggable-sheet`（Skyline 3.2.0+，初始 0.65，
+  可拖到 1.0，松手吸附；标题行「写评论 / 收起」，**发送固定在输入框底部**与字数同行）——
+  内层是满屏 textarea，与吸底条共用页面同一个 `draft`（v-model 天然同步）。
+  打开时吸底条整条隐藏；`draggable-sheet` 直接挂页根、外层类做绝对定位铺满页根（比例基准）。
+  **拖拽联动必须经内部 `scroll-view`（`associative-container="draggable-sheet"`）**：内容直接塞进面板时
+  手势不会传导，拖不动（首版实测）。本页内容不是列表，用普通 scroll-view（不带 type）即可。
+  输入框 `auto-height=false` + 内层 `height:100%`（`flex:1`）吃满面板高度
+  （注意：Skyline 的 scroll-view 不按视口解析子节点百分比高度，实测会塌到 `min-height` 兜底；
+  内层改 `position:absolute; inset:0` 的做法会导致页面渲染异常，已回滚）；
+  **全屏时顶部加状态栏安全区**（内联 `padding-top = statusBarHeight`，底部走 `safe-area-bottom`），
+  标题行不被刘海压住：**顶部用真实占位节点**（`.composer-safe`，高度=statusBarHeight）顶出安全区，
+  不在内层用 padding；拖拽标识（居中手柄胶囊 + 「拖动调整高度」）就放在这个占位条里；
+  发送固定在输入框底部操作行（字数左、发送右）。
+  **全屏判定与标识/收起隐藏**：弹层打开期间每 250ms 量一次面板可视区高度（`height ≥ 窗口高` 即全屏，
+  闭合即停）—— 拖拽手势落在原生 textarea 上会被吞掉、touchend 不冒泡，拖拽尺寸也没有可用 worklet 回调（§2.5）。
+  全屏 → 隐藏拖拽标识与「收起」；拖回 0.65 吸附点 → 重新出现。
+  展开阈值是**字数估算**（约 21 全角字/行，半角 0.55 宽）：Skyline 取不到 textarea 内容高度（§2.4）。
 
 ## 2. 接线一览（都来自已验收源码的 types.ts，不是猜的）
 
@@ -77,6 +96,8 @@ view.plan-detail                        ← @include page-root（页面本身不
 5. `uni.showActionSheet`（长按评论）在 Skyline 下的表现 —— 兼容清单未覆盖原生弹窗；这也是本页不用 `BaseActionSheet` 的原因，见 §6 第 1 条。
 6. 分享卡片图：`imageUrl` 给的是云存储 `fileID`（`cloud://`），取不到时微信会退回页面截图，需真机确认可接受。
 7. `<image src="cloud://…">` 与 `uni.previewImage({urls:[fileID]})` 在真机是否直接可图（§8.2 已标为待复核）。
+8. **半屏评论编辑层（draggable-sheet）**：① 内容超 4 行出现展开按钮、点击拉起半屏；② 上下拖拽/吸附手感；
+   ③ 弹层 textarea 聚焦后键盘是否遮挡输入区与发送按钮；④ 两输入框内容同步、发送成功后弹层收起并滚到底。
 
 ## 6. 共享层缺口与主 agent 裁决（本页交付后由主 agent 收口）
 

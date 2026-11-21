@@ -2,9 +2,9 @@
 import BaseAvatar from '@/components/base/BaseAvatar/index.vue'
 import { peekNow } from '@/composables'
 import { CommentStatus } from '@/constants/plan'
-import { collapseSpace, relativeTime, truncate } from '@/utils/format'
+import { clipChars, collapseSpace, countChars, relativeTime, truncate } from '@/utils/format'
 import type { Props, Emits } from './types'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = withDefaults(defineProps<Props>(), {
   isSelf: undefined,
@@ -37,6 +37,20 @@ const timeText = computed(() =>
   relativeTime(props.comment.createdAt, props.now > 0 ? props.now : peekNow())
 )
 
+/** 评论正文默认只展示 50 字（按码点），超出给「展开 / 收起」；展开状态是每条的本地状态 */
+const CONTENT_PREVIEW_CHARS = 50
+
+const expanded = ref(false)
+const contentOverflow = computed(() => countChars(props.comment.content) > CONTENT_PREVIEW_CHARS)
+const contentText = computed(() => {
+  if (expanded.value || !contentOverflow.value) return props.comment.content
+  return `${clipChars(props.comment.content, CONTENT_PREVIEW_CHARS)}…`
+})
+
+function toggleExpanded(): void {
+  expanded.value = !expanded.value
+}
+
 function onDelete(): void {
   emit('delete', props.comment.commentId, props.comment)
 }
@@ -64,8 +78,15 @@ function onLongPress(): void {
           <text class="comment-item__nick">{{ nickText }}</text>
           <text v-if="timeText" class="comment-item__time">{{ timeText }}</text>
         </view>
-        <!-- 内容不截行数：自然多行 + word-break 断长串（Skyline 无 line-clamp，兼容清单 §2.2） -->
-        <text class="comment-item__content">{{ comment.content }}</text>
+        <!-- 内容默认 50 字预览（码点截断 + 省略号），超出给展开/收起；不截行数（Skyline 无 line-clamp，§2.2） -->
+        <text class="comment-item__content">{{ contentText }}</text>
+        <text
+          v-if="contentOverflow"
+          class="comment-item__toggle"
+          hover-class="comment-item__toggle--hover"
+          @tap="toggleExpanded"
+          >{{ expanded ? '收起' : '展开' }}</text
+        >
       </view>
       <view
         v-if="canDelete"
@@ -135,6 +156,17 @@ function onLongPress(): void {
   line-height: $line-normal;
   color: $color-text-1;
   word-break: break-all;
+}
+
+// 展开 / 收起：正文下方的文字链，主色可点
+.comment-item__toggle {
+  margin-top: $space-1;
+  font-size: $font-sm;
+  color: $color-primary;
+}
+
+.comment-item__toggle--hover {
+  opacity: 0.7;
 }
 
 .comment-item__delete {

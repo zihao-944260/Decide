@@ -124,9 +124,9 @@ $icon-close-size: 32rpx;
 // 组件尺寸
 $navbar-back-size: 88rpx; // 等于最小可点击尺寸
 $button-height-lg: 96rpx;
-// 评论输入条字段/发送按钮高度（用户裁定 2026-11-13 降高）：低于 $tap-min-height，
-// 详情页 tail 让位与 rows 上限都由它算，改这里三处一起动
-$comment-field-height: 60rpx;
+// 评论输入条字段/发送按钮高度（用户裁定 2026-11-13 降高，2026-11-21 回调一档到 76rpx）：
+// 低于 $tap-min-height，详情页 tail 让位、展开按钮尺寸与 rows 上限都由它算，改这里三处一起动
+$comment-field-height: 76rpx;
 $fab-size: 96rpx; // 悬浮按钮直径：与列表页 FAB 的让位区 padding-bottom 同源，改这里两处一起动
 $avatar-sm: 56rpx;
 $avatar-md: 80rpx;

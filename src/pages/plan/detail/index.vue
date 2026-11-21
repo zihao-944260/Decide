@@ -18,7 +18,7 @@
  * 全部收在 usePageRefresh 里（§7.3），首屏加载就挂在它的首次 onShow 上。
  */
 import { onLoad } from '@dcloudio/uni-app'
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import BaseAvatar from '@/components/base/BaseAvatar/index.vue'
 import BaseEmpty from '@/components/base/BaseEmpty/index.vue'
 import BaseNavbar from '@/components/base/BaseNavbar/index.vue'
@@ -32,7 +32,7 @@ import VoteActions from '@/components/business/VoteActions/index.vue'
 import VoteRatioBar from '@/components/business/VoteRatioBar/index.vue'
 import { fetchPlanDetail } from '@/api/plan'
 import { ApiError } from '@/api/request'
-import { PlanStatus } from '@/constants/plan'
+import { Limit, PlanStatus, TextInput } from '@/constants/plan'
 import { PAGE_KEYS } from '@/constants/pages'
 import {
   invalidatePage,
@@ -49,8 +49,10 @@ import {
 } from '@/composables'
 import { usePlanStore } from '@/stores/plan'
 import { useUserStore } from '@/stores/user'
+import { useAppStore } from '@/stores/app'
 import type { CommentItem as CommentDTO, PlanDetail } from '@/types/models'
 import { logger } from '@/utils/logger'
+import { countChars, clipChars } from '@/utils/format'
 import {
   COMMENT_LOWER_THRESHOLD,
   type CommentListExpose
@@ -63,6 +65,7 @@ import { DETAIL_TAIL_ID, EMPTY_DETAIL_VIEW } from './types'
 
 const planStore = usePlanStore()
 const userStore = useUserStore()
+const appStore = useAppStore()
 const sheet = useActionSheet()
 const modal = useModal()
 
@@ -311,6 +314,103 @@ async function publishComment(content: string): Promise<PublishResult> {
   return ok ? { ok: true } : { ok: false, toast: false }
 }
 
+/* ---------------------------------------------------------------- 半屏评论编辑层（draggable-sheet） */
+
+/**
+ * 吸底条内容超过封顶行数后出现展开按钮，点它拉起半屏编辑层。
+ * 两个输入框共用页面同一个 `draft`：组件都只走 v-model，不各自持有第二份文本。
+ * 打开时吸底条整体隐藏（同一份草稿不需要两个可见输入框，也避开 fixed 条与半屏层的层级竞争）。
+ */
+const composerOpen = ref(false)
+const composerFocused = ref(false)
+const composerCount = computed(() => countChars(draft.value))
+
+/** 安全区占位条的高度：真实占位节点用它撑高，标识放在里面；不用 padding 顶内容 */
+const composerSafeStyle = computed(() => `height: ${appStore.statusBarHeight}px;`)
+
+function openComposer(): void {
+  if (closed.value) return
+  composerFull.value = false
+  composerOpen.value = true
+  // 节点刚挂载就 focus 真机未必生效，隔一帧再置焦
+  nextTick(() => {
+    composerFocused.value = true
+  })
+}
+
+function closeComposer(): void {
+  composerFocused.value = false
+  composerOpen.value = false
+}
+
+/** 收起是全屏隐藏态：节点常驻（不塌行高），隐藏时点击直接忽略 */
+function onCloseComposerTap(): void {
+  if (composerFull.value) return
+  closeComposer()
+}
+
+/**
+ * 顶部拖拽标识 / 收起按钮的显隐：面板高度吃满窗口即视为全屏。
+ * 不用 touchend —— 拖拽手势落在原生 textarea 上时会被输入框吞掉、不冒泡（真机口径），
+ * 拖拽尺寸也没有可用的 worklet 回调（兼容清单 §2.5）。
+ * 因此在弹层打开期间做一次轻量轮询（250ms，仅弹层存活期间存在，闭合即停），
+ * 用 scroll-view 的可视区高度判定；占比 = 0.35 / 0.65 / 1 三档，窗口高与分界差足够大。
+ */
+const composerFull = ref(false)
+let composerPollTimer: ReturnType<typeof setInterval> | null = null
+
+function measureComposerFull(): void {
+  uni
+    .createSelectorQuery()
+    .select('.plan-detail__composer-scroll')
+    .boundingClientRect((res) => {
+      const rect = res as { top?: number; height?: number } | null
+      if (!rect) return
+      const page = appStore.windowHeight
+      if (typeof rect.height === 'number' && rect.height > 0 && page > 0) {
+        composerFull.value = rect.height >= page - 2
+        return
+      }
+      if (typeof rect.top === 'number') composerFull.value = rect.top <= 1
+    })
+    .exec()
+}
+
+function stopComposerPoll(): void {
+  if (composerPollTimer) {
+    clearInterval(composerPollTimer)
+    composerPollTimer = null
+  }
+}
+
+watch(composerOpen, (open) => {
+  stopComposerPoll()
+  if (!open) return
+  measureComposerFull()
+  composerPollTimer = setInterval(measureComposerFull, 250)
+})
+
+onBeforeUnmount(stopComposerPoll)
+
+function onComposerInput(event: unknown): void {
+  const value = (event as { detail?: { value?: unknown } } | null)?.detail?.value
+  // Skyline 的 textarea maxlength 对粘贴不生效，逻辑层再按码点截一次 —— 超过上限直接截断
+  draft.value = typeof value === 'string' ? clipChars(value, Limit.COMMENT_MAX) : ''
+}
+
+async function sendFromComposer(): Promise<void> {
+  if (posting.value) return
+  if (!draft.value.trim()) {
+    showToastMsg('说点什么吧')
+    return
+  }
+  const result = await publishComment(draft.value)
+  if (!result.ok) return
+  draft.value = ''
+  closeComposer()
+  void scrollToBottom()
+}
+
 function onCommentError(message: string): void {
   // 分页失败的提示已由 request 统一 toast（fetchComments 非 silent），页面只留一条埋点
   logger.debug('plan-detail', 'comments paging failed', message)
@@ -479,24 +579,111 @@ useShare(() => ({
       </view>
     </scroll-view>
 
-    <!-- 吸底条 fixed 吸底，在滚动流之外（§8.4） -->
+    <!-- 吸底条 fixed 吸底，在滚动流之外（§8.4）；半屏编辑层打开时整条隐藏 -->
     <CommentInput
       v-model="draft"
       :posting="posting"
       :publish="publishComment"
-      :visible="ready"
+      :visible="ready && !composerOpen"
       :disabled="closed"
       :placeholder="closed ? '该计划已截止，评论已关闭' : '说点什么…'"
       @keyboard-height="onKeyboardHeight"
+      @expand="openComposer"
     />
+
+    <!--
+      半屏评论编辑层（Skyline draggable-sheet，基础库 3.2.0+）：
+      直接挂在页根下 —— 组件的「占父容器比例」以这个整页盒子为基准；绝对定位铺满页根，
+      由组件自己从底部拉起。拖拽联动必须由内部 scroll-view 接管（associative-container="draggable-sheet"），
+      没有它手势不会传导给面板（官方示例同款结构）。输入框与吸底条共用页面同一个 draft，天然同步。
+    -->
+    <draggable-sheet
+      v-if="composerOpen"
+      class="plan-detail__composer"
+      initial-child-size="0.65"
+      min-child-size="0.35"
+      max-child-size="1"
+      :snap="true"
+      :snap-sizes="[0.65]"
+    >
+      <scroll-view
+        class="plan-detail__composer-scroll"
+        :scroll-y="true"
+        associative-container="draggable-sheet"
+        :bounces="false"
+      >
+        <view class="plan-detail__composer-inner">
+          <!-- 安全区占位条（高度=状态栏）：它本身是真实节点，不靠 padding 顶内容；
+               拖拽标识放在这层里，全屏时只隐藏标识、占位条保留，标题行始终避开状态栏 -->
+          <view class="plan-detail__composer-safe" :style="composerSafeStyle">
+            <!-- 常驻节点、只切透明度：全屏瞬间摘节点会引起面板内容回流（真机表现为向上抖一下） -->
+            <view
+              class="plan-detail__composer-grabber"
+              :class="{ 'plan-detail__composer-grabber--hidden': composerFull }"
+            >
+              <view class="plan-detail__composer-grabber-pill" />
+              <text class="plan-detail__composer-grabber-text">拖动调整高度</text>
+            </view>
+          </view>
+          <view class="plan-detail__composer-head">
+            <text class="plan-detail__composer-title">写评论</text>
+            <!-- 全屏后隐藏收起：常驻节点、只切透明度（v-if 会让标题行高度塌一档，整体上跳）；
+                 隐藏态下点击由 onCloseComposerTap 拦截 -->
+            <text
+              class="plan-detail__composer-close"
+              :class="{ 'plan-detail__composer-close--hidden': composerFull }"
+              @tap="onCloseComposerTap"
+              >收起</text
+            >
+          </view>
+          <textarea
+            class="plan-detail__composer-field"
+            :value="draft"
+            :placeholder="closed ? '该计划已截止，评论已关闭' : '说点什么…'"
+            :disabled="closed || posting"
+            :maxlength="Limit.COMMENT_MAX"
+            :auto-height="false"
+            :show-confirm-bar="false"
+            confirm-type="send"
+            :adjust-position="false"
+            :focus="composerFocused"
+            :cursor-spacing="TextInput.CURSOR_SPACING"
+            placeholder-class="plan-detail__composer-placeholder"
+            @input="onComposerInput"
+            @confirm="sendFromComposer"
+          />
+          <view class="plan-detail__composer-foot">
+            <text class="plan-detail__composer-count"
+              >{{ composerCount }}/{{ Limit.COMMENT_MAX }}</text
+            >
+            <view
+              class="plan-detail__composer-send"
+              :class="{ 'plan-detail__composer-send--off': !draft.trim() || posting }"
+              :hover-class="!draft.trim() || posting ? 'none' : 'plan-detail__composer-send--hover'"
+              @tap="sendFromComposer"
+            >
+              <view v-if="posting" class="plan-detail__composer-spinner" />
+              <text
+                v-else
+                class="plan-detail__composer-send-text"
+                :class="{ 'plan-detail__composer-send-text--off': !draft.trim() || posting }"
+                >发送</text
+              >
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+    </draggable-sheet>
   </view>
 </template>
 
 <style lang="scss" scoped>
 // 一个节点一个类名是工程约定（样式不靠多类名叠加，层叠结果可预测）；平台侧的口径见兼容清单 §1.5 末尾澄清
-// Skyline：页面本身不滚动，根节点 flex 列 + 内层 scroll-view 吃剩余高度（首页/我的同款高度链）
+// Skyline：页面本身不滚动，根节点 flex 列 + 内层 scroll-view 吃剩余高度（首页/我的同款高度链）；
+// position: relative 给半屏评论层当绝对定位盒子（draggable-sheet 按「占父容器比例」工作）
 .plan-detail {
   @include page-root;
+  position: relative;
   background-color: $color-bg-page;
 }
 
@@ -630,5 +817,166 @@ useShare(() => ({
 // 键盘高度是运行时事件给的 px（交互量，不是设计尺寸），沿用 CommentInput 上报的原值
 .plan-detail__keyboard {
   width: 100%;
+}
+
+/* ---------------------------------------------------------------- 半屏评论编辑层 */
+
+@keyframes plan-detail-composer-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// 铺满页根的绝对定位盒子：draggable-sheet 按「占父容器比例」工作，必须以整页为基准；
+// 组件自己从底部拉起；拖拽联动由内部 scroll-view（associative-container）接管
+.plan-detail__composer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: $z-popup;
+}
+
+.plan-detail__composer-scroll {
+  width: 100%;
+  height: 100%;
+  background-color: $color-bg-card;
+  border-radius: $radius-lg $radius-lg 0 0;
+  // 向上阴影：半屏面板与背后内容之间需要分离感
+  box-shadow: $shadow-popup;
+}
+
+.plan-detail__composer-inner {
+  @include flex-column;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  // 左右衬保持；顶部安全区由 __safe 占位条提供（真实节点）
+  padding: 0 $space-3 0;
+  // 内容与顶部标识条之间的呼吸位（用户口径：18rpx，只加上 padding）
+  padding-top: 18rpx;
+  // 全屏时底部要避开 Home 指示条
+  @include safe-area-bottom($space-2);
+}
+
+.plan-detail__composer-safe {
+  @include flex-center;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.plan-detail__composer-head {
+  @include flex-between;
+  width: 100%;
+  padding-bottom: $space-3;
+}
+
+// 顶部拖拽标识：居中手柄胶囊 + 提示文案；全屏时只隐藏标识，安全区占位条保留
+.plan-detail__composer-grabber {
+  @include flex-column;
+  align-items: center;
+  transition: opacity $duration-fast;
+}
+
+// 全屏隐藏：透明而非摘节点（避免回流抖动），也不再有可点区域
+.plan-detail__composer-grabber--hidden {
+  opacity: 0;
+}
+
+.plan-detail__composer-grabber-pill {
+  width: 80rpx;
+  height: 8rpx;
+  border-radius: $radius-round;
+  background-color: $color-text-3;
+}
+
+.plan-detail__composer-grabber-text {
+  margin-top: 6rpx;
+  font-size: $font-xs;
+  color: $color-text-3;
+}
+
+.plan-detail__composer-close {
+  padding: $space-1 0;
+  font-size: $font-sm;
+  color: $color-text-2;
+  transition: opacity $duration-fast;
+}
+
+.plan-detail__composer-close--hidden {
+  opacity: 0;
+}
+
+.plan-detail__composer-title {
+  font-size: $font-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-1;
+}
+
+.plan-detail__composer-send {
+  @include flex-center;
+  min-width: 112rpx;
+  min-height: $tap-min-height;
+  padding: 0 $space-3;
+  border-radius: $radius-md;
+  background-color: $color-primary;
+  transition: opacity $duration-fast;
+}
+
+.plan-detail__composer-send--hover {
+  opacity: 0.7;
+}
+
+.plan-detail__composer-send--off {
+  background-color: $color-fill-deep;
+}
+
+.plan-detail__composer-send-text {
+  font-size: $font-sm;
+  color: $color-text-inverse;
+}
+
+.plan-detail__composer-send-text--off {
+  color: $color-text-3;
+}
+
+.plan-detail__composer-spinner {
+  width: $spinner-sm;
+  height: $spinner-sm;
+  border: $border-width-thick solid $color-text-inverse;
+  border-top-color: transparent;
+  border-radius: $radius-round;
+  animation: plan-detail-composer-spin 800ms linear infinite;
+}
+
+// 满屏输入区：吃满标题行与底部操作行之间的剩余高度（auto-height=false，内容在 textarea 内部滚动）；
+// min-height 是高度链失效时的兜底，正常解析时不起作用
+.plan-detail__composer-field {
+  flex: 1;
+  min-height: 560rpx;
+  width: 100%;
+  padding: $space-2;
+  font-size: $font-md;
+  line-height: $line-normal;
+  color: $color-text-1;
+  background-color: $color-fill;
+  border-radius: $radius-md;
+}
+
+.plan-detail__composer-placeholder {
+  color: $color-text-3;
+}
+
+// 底部操作行：字数在左、发送在右（发送固定放在输入框底部，不被标题行/状态栏区域挤压）
+.plan-detail__composer-foot {
+  @include flex-between;
+  width: 100%;
+  margin-top: $space-2;
+}
+
+.plan-detail__composer-count {
+  font-size: $font-xs;
+  color: $color-text-3;
 }
 </style>
