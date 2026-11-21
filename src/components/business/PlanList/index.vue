@@ -5,6 +5,8 @@ import BaseLoadMore from '@/components/base/BaseLoadMore/index.vue'
 import BaseSkeleton from '@/components/base/BaseSkeleton/index.vue'
 import type { BaseLoadMoreStatus } from '@/components/base/BaseLoadMore/types'
 import PlanCard from '@/components/business/PlanCard/index.vue'
+import SwipeDelete from '@/components/business/SwipeDelete/index.vue'
+import type { SwipeAction } from '@/components/business/SwipeDelete/types'
 import { Limit } from '@/constants/plan'
 import { usePagingList } from '@/composables'
 import type { PageResult } from '@/types/api'
@@ -19,6 +21,7 @@ const props = withDefaults(defineProps<Props>(), {
   emptyActionOwned: false,
   animated: true,
   lowerThreshold: 60,
+  minDragDistance: 18,
   floatClearance: false,
   innerTopGap: false
 })
@@ -68,6 +71,20 @@ const {
 const showSkeleton = computed(() => !loaded.value && !error.value)
 const showEmpty = computed(() => loaded.value && list.value.length === 0 && !error.value)
 
+/**
+ * 横滑按钮条的冲突解：任意一张卡横向接管中（SwipeDelete swiping-change），
+ * scroll-view 的竖向滚动整段关断（scroll-y 动态切 false）——原生竖向接管阈值
+ * JS 侧拦不住，这是稳定版基库下能用的唯一冲突解（单键版真机验证过，兼容清单 §2.3）。
+ * 计数制：多卡各自独立拖拽互不干扰；卸载兜底保证扣得回来。
+ * 前提（2026-11-21 三键版踩坑写死）：本计数变化会触发整列表重渲染，重渲染时
+ * 流给 SwipeDelete 的 `actions` 必须是**同一个数组引用**（见 rowActions 的缓存），
+ * 否则子组件跟着重渲染、Skyline 掐断在途手势，左滑整体失效。
+ */
+const swipingCount = ref(0)
+function onSwipingChange(swiping: boolean): void {
+  swipingCount.value = swiping ? swipingCount.value + 1 : Math.max(0, swipingCount.value - 1)
+}
+
 const footerVisible = computed(() => {
   if (loading.value) return list.value.length > 0
   // 首屏失败时列表是空的，也要把重试入口摆出来
@@ -109,12 +126,30 @@ function onCardClick(planId: string, openContainer?: unknown): void {
   emit('click', planId, openContainer)
 }
 
-function onCardLongPress(planId: string): void {
-  emit('long-press', planId)
-}
-
 function onCardExpire(planId: string): void {
   emit('expire', planId)
+}
+
+/**
+ * 某张卡的按钮列表，**按条目对象身份缓存**：条目没换（patch/换页/刷新都会换对象）就恒回
+ * 同一个数组引用。必须稳定——swipingCount 变化会重渲染本组件，若每次新建数组流进
+ * SwipeDelete 的 :actions，子组件跟着重渲染，Skyline 会掐断在途手势（2026-11-21 三键版
+ * 「左滑完全失效」的根因；单键版传的是稳定布尔所以没事）。
+ * 缓存条目随列表项对象生灭，不单独清（mini 程序会话短，量级 = 一屏到几屏的按钮数组）。
+ */
+const actionsCache = new Map<PlanSummary, SwipeAction[]>()
+function rowActions(item: PlanSummary): SwipeAction[] {
+  let acts = actionsCache.get(item)
+  if (!acts) {
+    acts = props.swipeActions?.(item) ?? []
+    actionsCache.set(item, acts)
+  }
+  return acts
+}
+
+/** 左滑按钮被点：带按钮 key 与本卡 planId 上抛，动作分派归页面 */
+function onSwipeAction(item: PlanSummary, key: string): void {
+  emit('action', key, itemId(item))
 }
 
 /**
@@ -173,10 +208,11 @@ defineExpose({
   <scroll-view
     :class="['plan-list', innerTopGap ? 'plan-list--flush-top' : '']"
     type="list"
-    :scroll-y="true"
+    :scroll-y="swipingCount === 0"
     :scroll-into-view="intoView"
     :show-scrollbar="false"
     :lower-threshold="lowerThreshold"
+    :min-drag-distance="minDragDistance"
     :refresher-enabled="true"
     :refresher-triggered="refreshing"
     @refresherrefresh="onRefresher"
@@ -200,13 +236,20 @@ defineExpose({
     <!-- 与骨架/空态互斥：刷新或重取期间不允许骨架屏与真数据同屏 -->
     <template v-else>
       <view v-for="item in list" :key="itemId(item)" class="plan-list__item">
-        <PlanCard
-          :summary="item"
-          :animated="animated"
-          @click="onCardClick"
-          @long-press="onCardLongPress"
-          @expire="onCardExpire"
-        />
+        <!--
+          左滑操作按钮条：rowActions 非空的卡包一层 SwipeDelete（左滑出右侧按钮组，点钮 emit action）。
+          未开的卡（首页/他人卡片）保持原结构一个节点都不加：
+          入场上升与 open-container 链路走原样。
+        -->
+        <SwipeDelete
+          v-if="rowActions(item).length"
+          :actions="rowActions(item)"
+          @action="onSwipeAction(item, $event)"
+          @swiping-change="onSwipingChange"
+        >
+          <PlanCard :summary="item" :animated="animated" @click="onCardClick" @expire="onCardExpire" />
+        </SwipeDelete>
+        <PlanCard v-else :summary="item" :animated="animated" @click="onCardClick" @expire="onCardExpire" />
       </view>
 
       <BaseLoadMore v-if="footerVisible" :status="footerStatus" @retry="onFooterRetry" />

@@ -18,7 +18,10 @@
 | prop | `emptyActionOwned?: boolean`                              | 默认 **false**。true 时点按钮**只 emit `empty-action`**、组件不再内部 reload —— 动作归页面        |
 | prop | `animated?`                                               | 透传给 PlanCard 的比例条动画开关                                                                  |
 | prop | `lowerThreshold?`                                         | 触底预加载距离（px），默认 60                                                                     |
-| emit | `click(planId)` / `long-press(planId)` / `expire(planId)` | 原样转发 PlanCard                                                                                 |
+| prop | `minDragDistance?`                                        | 触发竖向滚动的最小拖动距离（px，透传 scroll-view `min-drag-distance`，手势冲突专用），默认 18 = 微信原生缺省。注：真机实测在设备基库/Skyline `type="list"` 下**未生效**（兼容清单 §2.3），横滑冲突现由下一条机制兜底 |
+| prop | `swipeActions?: (item) => SwipeAction[]`             | 默认不传。给「条目 → 按钮列表」的函数，非空的卡包一层 `SwipeDelete`（左滑出右侧按钮条）；按钮按条目算（我的页 created 桶：未截止三颗、已截止一颗）。不传（首页）任何卡都不包 |
+| emit | `click(planId)` / `expire(planId)`                   | 原样转发 PlanCard                                                                                 |
+| emit | `action(key, planId)`                                 | 左滑按钮条上某颗按钮被点（仅 `swipeActions` 非空时存在）；`key` 是按钮稳定 key（页面分发动作），`planId` 口径与 `getId` 一致 |
 | emit | `empty-action()`                                          | 空态按钮点击，仅在 `emptyActionOwned=true` 时发出（`emptyActionText` 得同时给，否则没有按钮可点） |
 | emit | `scroll(event)`                                           | 转发内部 `scroll-view` 的滚动事件（页面做 FAB 收起等滚动响应）                                    |
 
@@ -95,3 +98,8 @@ const fetcher: PageFetcher<PlanSummary> = (cursor, pageSize) =>
   页面写 `@scroll` 只会在组件宿主标签上生成一个 `bindscroll`，内部 `scroll-view` 不转发就永远不触发。
   页面侧自带节流（首页 120ms + 4px 死区），组件这里逐帧透传、不做判定，免得两处节流口径不一致。
 - `refresher` 在 Skyline 下的默认刷新头表现未实测（兼容清单只验过 `type="list"` 滚动本身），真机阶段随 M0 一起复核。
+- **横滑期间关竖向滚动**：`scroll-y` 绑定为 `swipingCount === 0` —— 任意 SwipeDelete 实例横向接管
+  （`@swiping-change(true)`）计数 +1、手势结束/卸载扣回（计数制，多卡独立），单键版真机验证过。
+  **前提（2026-11-21 三键版踩坑）**：计数变化触发本组件重渲染，重渲染时 `rowActions` 必须回
+  **同一个数组引用**（按条目对象身份缓存）——新数组流进 SwipeDelete 会让子组件重渲染、
+  Skyline 掐断在途手势，左滑整体失效。兼容清单 §2.3 两条目。

@@ -2,7 +2,7 @@
 
 WBS **T5.5**（我的页编排：`UserHeader` + `StatCards` + `PlanList` + `plan.myList` 游标分页 + 三态 + 下拉刷新）
 
-- **T5.6**（我发起的计划长按管理：编辑 / 提前截止 / 删除）。
+- **T5.6**（我发起的计划左滑按钮条管理：编辑 / 提前截止 / 删除，长按弹窗 2026-11-21 取消）。
   结构依据 `技术方案.md` §8.7 与 §11，接线依据 §12 J2 的六条硬约束。**本页不新增组件、不改共享层。**
 
 > 2026-11-18 两处变更：① 筛选切换器**只剩上方那排 `StatCards`**（四张卡，含新增的「已截止」），
@@ -195,20 +195,35 @@ function onProfileUpdated(): void {
 `runNow()` 里 `first` 由 `lastLoadedAt !== 0` 算出，本页此时必然已经加载过 → `first: false` →
 `loadPage` 走 `reload({ force: true })` 绕过 `myLists` 的桶缓存，拿到的才是服务端重新 join 的作者名。
 
-## 5. T5.6：长按管理（编辑 / 提前截止 / 删除）
+## 5. T5.6：左滑按钮条管理（编辑 / 提前截止 / 删除）
 
-`PlanList` 只 `emit('long-press', planId)`，菜单归页面。
+**长按弹窗已取消（2026-11-21 用户裁定）**：`PlanList` 不再转发 `long-press`，`PlanCard` 也摘掉了
+`@longpress` 监听与 `long-press` emit（首页从未消费，链条无其他用户）。管理入口只剩左滑按钮条：
+`swipe-actions` 逐卡给按钮，`@action(key, planId)` 归页面分发动作。
 
 ```ts
-function onLongPress(planId: string): void {
-  if (activeFilter.value !== 'created') return // 只在「我发起的」里给入口（§12 J2-5）
-  if (mutationInFlight) return
+function swipeActionsFor(summary: PlanSummary): SwipeAction[] {
+  const actions: SwipeAction[] = []
+  if (!isClosed(summary)) {
+    actions.push({ key: 'edit', label: MANAGE_LABELS.edit })
+    actions.push({ key: 'closeEarly', label: MANAGE_LABELS.closeEarly })
+  }
+  actions.push({ key: 'remove', label: MANAGE_LABELS.remove, danger: true })
+  return actions
+}
+
+function onSwipeAction(key: string, planId: string): void {
+  if (activeFilter.value !== 'created' || mutationInFlight) return
   const summary = planStore.myLists[activeFilter.value].list.find((i) => i.planId === planId)
   if (!summary) {
     showToastMsg('这条计划已不在当前列表，请下拉刷新')
     return
   }
-  void openManageSheet(summary)
+  switch (key as ManageActionKey) {
+    case 'edit': goEdit(planId); break
+    case 'closeEarly': void closeEarly(planId); break
+    case 'remove': void removeFlow(summary); break
+  }
 }
 ```
 
@@ -219,41 +234,49 @@ function onLongPress(planId: string): void {
   但每条写路径都成对更新（`onPage`/`seed` 同时灌两边、`closeEarly` 是 `patchPlan` + `patchItem`、
   删除是 `dropPlanEverywhere` 里 filter + `removeItem`），所以取到的内容一致；
   而 store 这边类型是干净的 `PlanSummary[]`，组件暴露的 ref 只是渲染态的顺带出口。
-- 找不到条目时**必须给一句话**：静默 return 的表现就是「长按没反应」且零报错，是这一带最难查的缺陷形状。
+- 找不到条目时**必须给一句话**：静默 return 的表现就是「点了没反应」且零报错，是这一带最难查的缺陷形状。
 
-### ActionSheet 的两条路，本页选 `openNative`
+### SwipeDelete：左滑出按钮条（与旧长按菜单同一套写穿路径）
 
-|          | `sheet.openNative()`（`uni.showActionSheet`）      | `sheet.open()` + `<BaseActionSheet>`                                                      |
-| -------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| 宿主节点 | **不需要**                                         | 必须在页面渲染 `<BaseActionSheet>`，漏了就是 Promise 永不 resolve + 零报错（§12 J2 点名） |
-| 能力     | 纯文案 ≤6 项，不能置灰、不能 danger 配色、无副标题 | 受控、可 `disabled`/`danger`/`desc`                                                       |
-| 渲染成本 | 0（原生弹窗，不进页面节点树）                      | 页面多一个常驻节点                                                                        |
-| 本页动作 | 三项纯文案，够用                                   | 用不上增量能力                                                                            |
+`PlanList` 的 `swipe-actions` 只在 `created` 桶传：
+`:swipe-actions="activeFilter === 'created' ? swipeActionsFor : undefined"`，`@action="onSwipeAction"`。
+未截止的计划给三颗（编辑计划 / 提前截止 / 删除计划）、已截止只给一颗删除（`isClosed` 判定见下），
+展开位移 = N × 140rpx。条目查找与 `mutationInFlight` 锁、`showToastMsg` 兜底文案与旧 `onLongPress` 逐项同口径；
+三颗按钮落进与旧菜单同一组写穿路径（`goEdit` / `closeEarly` / `removeFlow`），删完卡片被 `removeItem` 摘除，
+SwipeDelete 随之卸载，不存在「悬在展开态的卡片」。
 
-选 `openNative`。理由：① 三项菜单没有一项需要 `desc`/`danger`/置灰，`open()` 的能力全部落空；
-② 本页是第一次接长按，用原生弹窗把「忘渲染宿主 → 点了没反应」这个坑整个绕掉；
-③ 与详情页（`pages/plan/detail/index.vue:276`）同一条路，两页不会长出两套菜单口径；④ 零渲染成本。
-**代价**：原生菜单不能把「已截止」的项置灰 → 本页改成**不把做不了的动作摆出来**（见下）。
-真机若发现 `showActionSheet` 在 Skyline 下弹不出来，退路是切到 `sheet.open()` 并在 `.mine` 根下、
-`scroll-view` 的兄弟位置渲染 `<BaseActionSheet>`（markup 已隔离，改动是单点）。
+- **未开启时 PlanList 走 v-else 原结构**：不垫行级包裹、不挂触摸监听，首页与 joined/ongoing/ended 桶一个节点不加
+  （入场上升动画与 open-container 链路走原样，卡片间距与裁切不变）。
+- 手势与开合细节归 `components/business/SwipeDelete/README.md`；结构已改为 **flex 行级并排（零 absolute）**
+  （旧 absolute 卡高红条真机高度不跟卡、露红块漏红角，2026-11-21 改版，兼容清单 §2.2 两条目），真机复验中。
+- 横滑与竖滚的手势冲突：`created` 桶把 `min-drag-distance` 抬到 50（其他桶 18 = 微信缺省，行为不变）——
+  **真机实测未生效**（设备基库/Skyline `type="list"` 不认该属性，兼容清单 §2.3 已记录；保留配置，基库普及后自动生效）。
+  现役解法是 PlanList 内部机制：横滑接管期间 `scroll-y` 动态切 false（SwipeDelete `swiping-change` 计数驱动，
+  单键版真机验证过）。三键版 2026-11-21 左滑整体失效的根因是 `actions` 数组每次重渲染换新引用、
+  子组件跟着重渲染掐断手势——已按条目对象身份缓存（PlanList `rowActions`），带前提恢复该机制（兼容清单 §2.3）。
 
-菜单内容按当前状态生成：
+### 按钮条内容按当前状态生成
 
 ```ts
-function manageActionsFor(summary: PlanSummary): ManageAction[] {
-  const actions: ManageAction[] = []
+function swipeActionsFor(summary: PlanSummary): SwipeAction[] {
+  const actions: SwipeAction[] = []
   if (!isClosed(summary)) {
-    actions.push({ label: MANAGE_LABELS.edit, run: () => goEdit(summary.planId) })
-    actions.push({ label: MANAGE_LABELS.closeEarly, run: () => void closeEarly(summary.planId) })
+    actions.push({ key: 'edit', label: MANAGE_LABELS.edit })
+    actions.push({ key: 'closeEarly', label: MANAGE_LABELS.closeEarly })
   }
-  actions.push({ label: MANAGE_LABELS.remove, run: () => void removeFlow(summary) })
+  actions.push({ key: 'remove', label: MANAGE_LABELS.remove, danger: true })
   return actions
 }
 ```
 
 `isClosed()` = `status !== Ongoing` 或 `deadline > 0 && deadline <= peekNow()`。
 已截止的计划只剩「删除」：编辑与改期都会被云端 `assertPlanUpdatable` 回 3002，
-摆一个必然报错的菜单项是用一次报错当交互。
+摆一颗必然报错的按钮是用一次报错当交互（与旧长按菜单「不列出做不了的动作」同一口径，
+按钮条直接不渲染那两颗，不置灰——按钮条高度跟卡走 stretch，置灰需要第三份视觉态，不值得）。
+
+配色：`danger`（删除）`$color-danger` 红底，编辑 / 提前截止中性灰 `$color-text-2`，文字白。
+（旧长按菜单走 `uni.showActionSheet`，纯文案、无配色；按钮条把「哪颗是破坏性动作」用红底说出来，
+与详情页的 danger 配色同一个语义。）
 
 ### 三个动作各走哪个 api
 
@@ -347,7 +370,7 @@ showToastMsg('已删除')
 
 删除**不** `invalidatePage('home')`：五个桶都已在原地摘掉，再标脏只会让首页多一次无收益的整表重拉
 （还会把滚动位置抖回顶部，§7.3 的原话）。`plan.remove` 不在 `IDEMPOTENT_ACTIONS` 里，超时不会自动重试，
-所以失败路径必须让用户自己再长按一次 —— 这是选择「不自动重试」的已知代价。
+所以失败路径必须让用户自己再左滑点一次删除 —— 这是选择「不自动重试」的已知代价。
 
 ## 7. 三态 / 下拉刷新 / 触底：一条都不在页面里重写
 
@@ -454,8 +477,9 @@ showToastMsg('已删除')
 
 ## 9. 待真机 / 模拟器复核（清单没写 ≠ 可用，§2.8）
 
-1. **`uni.showActionSheet`（长按菜单）在 Skyline 下的表现**：兼容清单零条目。详情页 README §5-5 已列同一条，
-   两页共用一次复核结论。退路：`sheet.open()` + 在 `.mine` 根下渲染 `<BaseActionSheet>`（`scroll-view` 的兄弟节点）。
+1. **`uni.showActionSheet`（详情页评论长按菜单）在 Skyline 下的表现**：本页长按菜单 2026-11-21 取消
+   （改左滑按钮条，见 §5），只剩详情页（`pages/plan/detail`）的评论长按还在用，复核结论归详情页 README §5-5。
+   退路不变：`sheet.open()` + 在页面根下渲染 `<BaseActionSheet>`（`scroll-view` 的兄弟节点）。
 2. **`uni.showModal`（两个二次确认）**：同上，原生弹窗，零条目。退路：`modal.confirmCustom()` + `<BaseModal>`。
 3. **`uni.showLoading` / `hideLoading`（提前截止的两个往返）**：零条目。
    去掉它不影响正确性，只影响「点了之后 2~16s 没有任何反馈」的观感 —— 真机若表现异常就直接删掉这一段。
@@ -497,6 +521,6 @@ showToastMsg('已删除')
 | 自己发 `user.stats` 拉数字              | §12 J2-2 点名禁止；改为上报缺口 1                               |
 | 「立即截止」                            | 云端不接受 `deadline <= now`（缺口 6）                          |
 | 页面自己写 `onShow` / `onHide` / 定时器 | 全部归 `usePageRefresh` + `utils/ticker`                        |
-| 长按菜单接 `<BaseActionSheet>`          | 见 §5 的取舍表；详情页同一条路                                  |
+| 长按入口（含 `<BaseActionSheet>`）       | 2026-11-21 用户裁定取消；管理入口收敛到左滑按钮条（§5）        |
 | 编辑页返回后读它的返回值 diff           | 没有返回值可读（`navigateTo` 不回传），统一 `markStale()` 重拉  |
 | 列表项动画 / worklet                    | 兼容清单 §2.5：SharedValue 无法经 Vue 模板承载                  |

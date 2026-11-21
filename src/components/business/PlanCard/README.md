@@ -10,7 +10,6 @@
 | prop | `status?: number`      | 外层已知的 PlanStatus，覆盖 `summary.status`；只用于置灰，组件不判真实状态                           |
 | prop | `animated?: boolean`   | 默认 true，比例条宽度过渡开关（整屏降级用）                                                          |
 | emit | `click(planId)`        | 点击进详情                                                                                           |
-| emit | `long-press(planId)`   | 长按，菜单由页面挂                                                                                   |
 | emit | `expire(planId)`       | 倒计时归零沿（挂载时已截止不触发）                                                                   |
 | slot | `footer`               | 覆盖底部统计行（默认「赞同 N / 反对 N / 评论 N」）；`optionsEnabled`、`optionCount` 想上卡片就走这里 |
 
@@ -18,8 +17,7 @@
 
 卡片根节点是 `<open-container>`（Skyline 组件，基础库 3.4.0+；`withOpenContainer` 显式触发需 3.12.2+）：
 点卡片后由框架把卡片位置无缝放大成详情页并渐显，返回时反向收回。
-组件不接收任何 ID（文档没有 `container-id` 属性）；`@tap` 挂在 `open-container` 上，
-长按仍在内部卡片上。
+组件不接收任何 ID（文档没有 `container-id` 属性）；`@tap` 挂在 `open-container` 上。
 
 当前参数：底色取页面灰 `#f5f6f8`（closed 态与页面融为一体、open 态衔接详情页底色）、
 closed 圆角 12px（= 卡片 24rpx 的 375 屏实际值）、open 直角无影、`fade` 300ms；
@@ -74,5 +72,5 @@ const myVote = computed(() => planStore.myVotes[planId])
 ## 用法
 
 ```vue
-<PlanCard :summary="item" @click="goDetail" @long-press="openSheet" @expire="onExpire" />
+<PlanCard :summary="item" @click="goDetail" @expire="onExpire" />
 ```

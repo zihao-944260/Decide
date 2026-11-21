@@ -1,6 +1,7 @@
 import type { PageFetcher } from '@/composables'
 import type { PageResult } from '@/types/api'
 import type { PlanSummary } from '@/types/models'
+import type { SwipeAction } from '@/components/business/SwipeDelete/types'
 
 /**
  * PlanList —— 首页 / 我的页共用的分页列表容器（技术方案 §8.7、§10 / WBS T3.4）。
@@ -39,6 +40,12 @@ export interface Props {
   /** 触底预加载距离（px，透传 scroll-view lower-threshold） */
   lowerThreshold?: number
   /**
+   * 触发竖向滚动所需的最小拖动距离（px，透传 scroll-view min-drag-distance，手势冲突专用）。
+   * 默认 18 = 微信原生缺省，不传页面时行为不变；SwipeDelete 开启的桶调大（如 50）：
+   * 横滑卡片时手指带的竖向分量不再轻易把列表竖向滚走。
+   */
+  minDragDistance?: number
+  /**
    * 滚动内容尾部垫「底部悬浮层」让位：悬浮胶囊导航 + 页底那颗 pill（首页发布 / 我的退出登录，同款同位）。
    * 让位必须放在**滚动内容里**而不是页面兄弟节点：兄弟节点会压矮 scroll-view 视口，
    * 末卡在视口底被裁、下方却留一条死空间（#45）。
@@ -50,6 +57,13 @@ export interface Props {
    * 首页用 true（容器顶贴导航、圆角从导航下沿开始）；我的页默认 false（留白走容器 margin-top）。
    */
   innerTopGap?: boolean
+  /**
+   * 左滑操作按钮条：给「条目 → 按钮列表」的函数，非空时该卡包一层 `SwipeDelete`
+   * （左滑出右侧按钮组，点钮 emit `action`）。按钮按条目算：如我的页「我发起的」桶
+   * 未截止给 编辑计划/提前截止/删除计划 三颗、已截止只给 删除计划 一颗。
+   * 不传（首页）任何卡都不包。
+   */
+  swipeActions?: (item: PlanSummary) => SwipeAction[]
 }
 
 /**
@@ -66,10 +80,13 @@ export interface PlanListScrollEvent {
 export type Emits = {
   /** 卡片点击进详情（原样转发 PlanCard 的 planId 与 OpenContainer 实例） */
   (e: 'click', planId: string, openContainer?: unknown): void
-  /** 卡片长按，页面挂 ActionSheet */
-  (e: 'long-press', planId: string): void
   /** 卡片倒计时归零沿，页面可 patchItem 置灰或刷新该条 */
   (e: 'expire', planId: string): void
+  /**
+   * 左滑按钮条上某颗按钮被点（仅 `swipeActions` 非空时存在）。
+   * `key` 是按钮稳定 key（页面按它分发动作），`planId` 口径与 `getId` 一致。
+   */
+  (e: 'action', key: string, planId: string): void
   /** 空态按钮点击，且 `emptyActionOwned` 为 true（动作完全归页面，组件不并发重试） */
   (e: 'empty-action'): void
   /** 内部 scroll-view 的滚动事件转发（页面做 FAB 收起等滚动响应） */

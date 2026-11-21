@@ -15,7 +15,6 @@
 | `autoLoad`    | `false`                                                     | 首屏挂在 `usePageRefresh` 的 `onRefresh` → 组件 `reload()`               |
 | `@click`      | `uni.navigateTo('/pages/plan/detail/index?planId=')`        | query 参数名固定 `planId`（详情页 T3.6 并行）                            |
 | `@expire`     | `planStore.patchPlan(planId, { status: PlanStatus.Ended })` | 不整表刷新；卡片置灰由 `PlanCard` 自理，这里只保证其他消费方看到一致状态 |
-| `@long-press` | **不接**                                                    | 首页没有管理入口，ActionSheet 归我的页 T5.6                              |
 
 `onRefresh` 里的 `reload({ force: !first })` 是 `seed` 与 `invalidatePage('home')` 的交界处，`first` 由
 `usePageRefresh` 给（它才知道本次是首次加载还是过期/跨页失效回来）：

@@ -14,7 +14,7 @@ export const EARLY_CLOSE_GRACE_MS = 60_000
 /** 删除确认弹窗里标题的截断宽度（中文字宽，与 `utils/format` 的 textWidth 同口径） */
 export const TITLE_PREVIEW_WIDTH = 12
 
-/** 长按菜单三项的文案（原生 ActionSheet 与确认弹窗共用，别让两处各写一遍） */
+/** 左滑按钮条三颗按钮的文案（按钮条与二次确认弹窗共用，别让两处各写一遍） */
 export const MANAGE_LABELS = {
   edit: '编辑计划',
   closeEarly: '提前截止',
@@ -32,11 +32,8 @@ export const CONFIRM_LABELS = {
   logout: '退出'
 } as const
 
-/** 长按菜单的一项：`label` 喂原生 ActionSheet，`run` 是选中后执行的动作 */
-export interface ManageAction {
-  label: string
-  run: () => void
-}
+/** 左滑按钮条的动作 key（与 MANAGE_LABELS 的键同集；按钮文案取 MANAGE_LABELS） */
+export type ManageActionKey = 'edit' | 'closeEarly' | 'remove'
 
 /**
  * 四个 filter 各自的空态文案（喂 PlanList 的 `empty-text`）。

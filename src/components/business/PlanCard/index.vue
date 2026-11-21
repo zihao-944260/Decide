@@ -171,10 +171,6 @@ function onClick(): void {
   }
 }
 
-function onLongPress(): void {
-  emit('long-press', planId.value)
-}
-
 function onExpire(): void {
   expired.value = true
   emit('expire', planId.value)
@@ -199,7 +195,7 @@ function onExpire(): void {
       transition-duration="300"
       @tap="onClick"
     >
-      <view :class="rootClass" hover-class="plan-card--hover" @longpress="onLongPress">
+      <view :class="rootClass" hover-class="plan-card--hover">
         <view class="plan-card__head">
           <view class="plan-card__author">
             <view class="plan-card__avatar">

@@ -19,8 +19,6 @@ export type Emits = {
    * withOpenContainer 参数），查询失败/超时为 undefined，页面按普通跳转处理。
    */
   (e: 'click', planId: string, openContainer?: unknown): void
-  /** 长按：页面挂 ActionSheet（删除/收藏等），组件内不做任何菜单 */
-  (e: 'long-press', planId: string): void
   /** 倒计时归零沿（挂载时已截止不触发），页面可顺手 patch/刷新该条 */
   (e: 'expire', planId: string): void
 }

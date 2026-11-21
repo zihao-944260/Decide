@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * 我的页（技术方案 §8.7 / WBS **T5.5 页面编排** + **T5.6 我发起的计划长按管理**）。
+ * 我的页（技术方案 §8.7 / WBS **T5.5 页面编排** + **T5.6 我发起的计划左滑按钮条管理**）。
  * 只做编排，不做实现：三态 / 下拉刷新 / 触底加载全在 PlanList 内部，
  * 生命周期与心跳在 usePageRefresh 内部，资料弹层在 UserHeader 内部 —— 页面一行都不重复写。
  *
@@ -43,7 +43,6 @@ import {
   invalidatePage,
   peekNow,
   showToastMsg,
-  useActionSheet,
   useModal,
   usePageRefresh,
   useTabScrollReset,
@@ -57,6 +56,7 @@ import { usePlanStore } from '@/stores/plan'
 import { useUserStore } from '@/stores/user'
 import type { PageResult } from '@/types/api'
 import type { PlanSummary } from '@/types/models'
+import type { SwipeAction } from '@/components/business/SwipeDelete/types'
 import { logger } from '@/utils/logger'
 import { truncate } from '@/utils/format'
 import {
@@ -68,12 +68,11 @@ import {
   EMPTY_TEXTS,
   MANAGE_LABELS,
   TITLE_PREVIEW_WIDTH,
-  type ManageAction
+  type ManageActionKey
 } from './types'
 
 const userStore = useUserStore()
 const planStore = usePlanStore()
-const sheet = useActionSheet()
 const modal = useModal()
 const toast = useToast()
 
@@ -106,6 +105,12 @@ const fetcher: PageFetcher<PlanSummary> = (cursor, pageSize) =>
 function seed(): PageResult<PlanSummary> | null {
   return planStore.myPage(activeFilter.value)
 }
+
+/**
+ * 竖向滚动接管线（px）：SwipeDelete 的 created 桶抬到 50 —— 横滑卡片时手指带的竖向分量
+ * 不再轻易把列表竖向滚走（默认 18 下「左右滑动容易触发上下滑动」）。其余桶保持原生缺省 18。
+ */
+const minDragDistance = computed(() => (activeFilter.value === 'created' ? 50 : 18))
 
 /** 每页成功回吐给 store：列表态在组件里，跨页一致的缓存在这里（§7.2） */
 function onPage(page: PageResult<PlanSummary>, append: boolean): void {
@@ -254,7 +259,7 @@ function onCardClick(planId: string, openContainer?: unknown): void {
 /**
  * 倒计时归零沿：只把状态写进 store，不整表刷新、不重新请求（§8.5「视觉归前端、真状态归云端」）。
  * 与首页 onExpire 同一条口径。屏幕上的置灰由 `PlanCard` 内部的 `expired` 负责（组件自己的数组不用碰），
- * 这里改的是**桶**：长按菜单的 `isClosed` 判定、首页、下次 `seed` 出来的初值都从桶里读，
+ * 这里改的是**桶**：左滑按钮条的 `isClosed` 判定、首页、下次 `seed` 出来的初值都从桶里读，
  * 不写就会让「视觉上已截止、菜单里仍然给提前截止」这两件事同时成立。
  */
 function onExpire(planId: string): void {
@@ -285,42 +290,44 @@ function isClosed(summary: PlanSummary): boolean {
   return summary.deadline > 0 && summary.deadline <= peekNow()
 }
 
-/** 长按菜单挂在哪个桶上（§12 J2-5：只在「我发起的」里给） */
-function onLongPress(planId: string): void {
-  if (activeFilter.value !== 'created') return
-  if (mutationInFlight) return
+/**
+ * 左滑按钮条按条目算（§12 J2-5：只在「我发起的」里给，PlanList 的 `swipe-actions` 由页面挂）。
+ * 已截止的计划只给「删除」：编辑与改期都会被云端 `assertPlanUpdatable` 回 3002，
+ * 把做不了的动作摆进按钮条等于用一次报错当交互。
+ */
+function swipeActionsFor(summary: PlanSummary): SwipeAction[] {
+  const actions: SwipeAction[] = []
+  if (!isClosed(summary)) {
+    actions.push({ key: 'edit', label: MANAGE_LABELS.edit })
+    actions.push({ key: 'closeEarly', label: MANAGE_LABELS.closeEarly })
+  }
+  actions.push({ key: 'remove', label: MANAGE_LABELS.remove, danger: true })
+  return actions
+}
+
+/**
+ * 左滑按钮被点：与旧长按菜单同一套写穿路径（编辑 goEdit / 提前截止 closeEarly / 删除 removeFlow），
+ * 共享 mutationInFlight 锁，同一时刻只允许一个写操作在途。
+ */
+function onSwipeAction(key: string, planId: string): void {
+  if (activeFilter.value !== 'created' || mutationInFlight) return
   const summary = planStore.myLists[activeFilter.value].list.find((item) => item.planId === planId)
   if (!summary) {
-    // 静默吞掉会长成「长按没反应」且零报错，这里给一句话把用户引回下拉刷新
+    // 静默吞掉会长成「点了没反应」且零报错，这里给一句话把用户引回下拉刷新
     showToastMsg('这条计划已不在当前列表，请下拉刷新')
     return
   }
-  void openManageSheet(summary)
-}
-
-/**
- * 菜单只走 `sheet.openNative()`（uni.showActionSheet），**不渲染 <BaseActionSheet> 宿主**。
- * 两条路的取舍与理由见 README §5；与详情页同一条路，两页不会长出两套菜单口径。
- */
-async function openManageSheet(summary: PlanSummary): Promise<void> {
-  const actions = manageActionsFor(summary)
-  const index = await sheet.openNative(actions.map((action) => action.label))
-  if (index < 0 || index >= actions.length) return
-  actions[index]?.run()
-}
-
-/**
- * 已截止的计划只给「删除」：编辑与改期都会被云端 `assertPlanUpdatable` 回 3002，
- * 把做不了的动作摆进菜单等于用一次报错当交互。
- */
-function manageActionsFor(summary: PlanSummary): ManageAction[] {
-  const actions: ManageAction[] = []
-  if (!isClosed(summary)) {
-    actions.push({ label: MANAGE_LABELS.edit, run: () => goEdit(summary.planId) })
-    actions.push({ label: MANAGE_LABELS.closeEarly, run: () => void closeEarly(summary.planId) })
+  switch (key as ManageActionKey) {
+    case 'edit':
+      goEdit(planId)
+      break
+    case 'closeEarly':
+      void closeEarly(planId)
+      break
+    case 'remove':
+      void removeFlow(summary)
+      break
   }
-  actions.push({ label: MANAGE_LABELS.remove, run: () => void removeFlow(summary) })
-  return actions
 }
 
 /** 编辑：与新建同一个页面，靠 query 里的 planId 区分（路由已在 pages.json 注册） */
@@ -474,8 +481,10 @@ function dropPlanEverywhere(planId: string): void {
       :empty-action-text="emptyActionText"
       :empty-action-owned="emptyActionOwned"
       :float-clearance="true"
+      :swipe-actions="activeFilter === 'created' ? swipeActionsFor : undefined"
+      :min-drag-distance="minDragDistance"
       @click="onCardClick"
-      @long-press="onLongPress"
+      @action="onSwipeAction"
       @expire="onExpire"
       @empty-action="goCreate"
     />
