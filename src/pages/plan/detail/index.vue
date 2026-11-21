@@ -2,11 +2,13 @@
 /**
  * 计划详情页（WBS T3.11 页面编排 + T3.12 与列表的 store 联动）。
  *
- * 结构红线（技术方案 §8.4，#79 改文档级滚动）：本页 WebView 渲染，**不用内层 scroll-view**，
- * 整页走 page 文档原生滚动（真机 WKWebView 上 flex 高度链 + overflow:hidden 会裁底致滚不到底）；
- * 内容区 / 选项区 / 投票区 / 评论区全在文档流里，评论区触底由本页 `onReachBottom`
- * 调 CommentList 的 expose.loadMore()（组件内部不嵌 scroll-view）。
- * `CommentInput` fixed 吸底、在文档流之外；导航 fixed + 等高占位。
+ * 结构红线（技术方案 §8.4；2026-11-21 由文档级滚动改回 Skyline 内层滚动）：
+ * 本页**必须与列表页同为 Skyline** —— open-container 容器转场只在连续 Skyline 页面间生效，
+ * WebView 目标页会被降级成默认路由（真机口径：能跳转、没有放大转场）。
+ * 根节点 flex 列 + 内层 scroll-view 吃剩余高度（与首页/我的同款高度链）；内容区 / 选项区 /
+ * 投票区 / 评论区全在滚动流里，评论区触底由 scroll-view 的 `scrolltolower` 调 CommentList 的
+ * expose.loadMore()（组件内部不嵌 scroll-view）。
+ * `CommentInput` fixed 吸底、在滚动流之外；导航在 flex 列内、不 fixed、无需等高占位。
  *
  * 一致性红线（T3.12 的验收标准「投票后返回列表比例即时更新」）：跨页靠的是 planStore，
  * 不是重新请求。所以本页**刻意不在卸载时清 `voteCounts[planId]` / `myVotes[planId]`** ——
@@ -15,11 +17,10 @@
  * 生命周期不在这里手写 onShow/onHide，也不直接调 pauseTick/resumeTick：
  * 全部收在 usePageRefresh 里（§7.3），首屏加载就挂在它的首次 onShow 上。
  */
-import { onLoad, onReachBottom } from '@dcloudio/uni-app'
-import { computed, ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
+import { computed, nextTick, ref } from 'vue'
 import BaseAvatar from '@/components/base/BaseAvatar/index.vue'
 import BaseEmpty from '@/components/base/BaseEmpty/index.vue'
-import BaseImage from '@/components/base/BaseImage/index.vue'
 import BaseNavbar from '@/components/base/BaseNavbar/index.vue'
 import BaseSkeleton from '@/components/base/BaseSkeleton/index.vue'
 import CommentInput from '@/components/business/CommentInput/index.vue'
@@ -46,23 +47,22 @@ import {
   useShare,
   useVote
 } from '@/composables'
-import { useAppStore } from '@/stores/app'
 import { usePlanStore } from '@/stores/plan'
 import { useUserStore } from '@/stores/user'
 import type { CommentItem as CommentDTO, PlanDetail } from '@/types/models'
 import { logger } from '@/utils/logger'
-import type { CommentListExpose } from '@/components/business/CommentList/types'
+import {
+  COMMENT_LOWER_THRESHOLD,
+  type CommentListExpose
+} from '@/components/business/CommentList/types'
 import type { KeyboardPayload, PublishResult } from '@/components/business/CommentInput/types'
 import type { DetailQuery, DetailView, LoadPhase } from './types'
-import { DETAIL_TAIL_ID, EMPTY_DETAIL_VIEW, GALLERY_RATIO } from './types'
+import { DETAIL_TAIL_ID, EMPTY_DETAIL_VIEW } from './types'
 
 /** 跨页失效标识取自 `@/constants/pages`（唯一字面量来源）；本页是 planDetail，别写成通配 '*' */
 
 const planStore = usePlanStore()
 const userStore = useUserStore()
-const appStore = useAppStore()
-/** 吸顶导航的等高占位：文档级滚动后导航 fixed，内容要从它下面开始（#79） */
-const navSpaceStyle = computed(() => `height: ${appStore.navBarHeight}px;`)
 const sheet = useActionSheet()
 const modal = useModal()
 
@@ -192,7 +192,6 @@ const view = computed<DetailView>(() => {
     blocks: data.blocks,
     // 选项票数与 votes 同源：优先 store（castOption 乐观更新 + 服务端权威值都写这里），空时退回详情快照
     options: vote.optionCounts.value.length > 0 ? vote.optionCounts.value : data.options,
-    images: data.images,
     // 比例与「我的选择」的唯一来源是 store（投票后立刻要跟手），而 store 在每次成功加载里
     // 被 syncStore → applyVoteResult 灌过权威值，所以不需要再退回 detail 快照
     votes: vote.counts.value,
@@ -205,16 +204,10 @@ const view = computed<DetailView>(() => {
   }
 })
 
-const imagesForPreview = computed(() => view.value.images)
-
-function onImageTap(src: string): void {
-  // 与 ContentRenderer 同口径：整组图一次喂进去，用户可左右滑；fileID 预览失败要有反馈
-  uni.previewImage({
-    urls: imagesForPreview.value,
-    current: src,
-    fail: () => showToastMsg('图片预览失败，请稍后重试')
-  })
-}
+/**
+ * 配图模块已移除（用户 2026-11-21 裁定）：富文本本身支持上传图片，独立配图区与它功能重复，
+ * 且 Skyline 下 fileID 直喂 <image> 不可靠，留着只会得到空白卡。列表封面的渲染不受影响。
+ */
 
 /** CountDown 的 expire 带 deadline，比对一下免得改期后的旧归零沿把新计划置灰 */
 function onExpired(deadline: number): void {
@@ -250,13 +243,22 @@ const comments = useComments(() => planId.value, {
  */
 const posting = computed(() => comments.posting.value)
 
-/** 触底加载：文档级滚动后用页面 onReachBottom（阈值在 pages.json onReachBottomDistance，与 CommentList/types.ts 同口径） */
-onReachBottom(() => {
+/** 触底加载：滚动流是本页内层 scroll-view（Skyline），由它的 scrolltolower 驱动（阈值见 CommentList/types.ts） */
+function onScrollLower(): void {
   void commentListRef.value?.loadMore()
-})
+}
 
+/**
+ * 滚到底（发表评论后）：Skyline 下页面本身不滚动，不能再用 uni.pageScrollTo(selector)。
+ * 走 scroll-view 的 `scroll-into-view`，且它只在值发生变化时动作 —— 先清空、隔一帧再挂回同一个锚点，
+ * 连续两次滚底才都有效。
+ */
+const intoView = ref('')
 function scrollToBottom(): void {
-  uni.pageScrollTo({ selector: `#${DETAIL_TAIL_ID}`, duration: 200 })
+  intoView.value = ''
+  nextTick(() => {
+    intoView.value = DETAIL_TAIL_ID
+  })
 }
 
 function onKeyboardHeight(payload: KeyboardPayload): void {
@@ -351,138 +353,133 @@ useShare(() => ({
 
 <template>
   <view class="plan-detail">
-    <BaseNavbar title="计划详情" fixed />
-    <view class="plan-detail__nav-space" :style="navSpaceStyle" />
+    <!-- 导航在 flex 列内、不 fixed：页面本身不滚动，吸顶由结构保证 -->
+    <BaseNavbar class="plan-detail__nav" title="计划详情" />
 
-    <view class="plan-detail__flow">
-      <!-- 三态之一：骨架屏（§11.2 用骨架代替白屏） -->
-      <view v-if="phase === 'loading'" class="plan-detail__state">
-        <BaseSkeleton type="detail" :rows="5" :avatar="true" />
-      </view>
+    <scroll-view
+      class="plan-detail__scroll"
+      :scroll-y="true"
+      :scroll-into-view="intoView"
+      :lower-threshold="COMMENT_LOWER_THRESHOLD"
+      :show-scrollbar="false"
+      @scrolltolower="onScrollLower"
+    >
+      <view class="plan-detail__flow">
+        <!-- 三态之一：骨架屏（§11.2 用骨架代替白屏） -->
+        <view v-if="phase === 'loading'" class="plan-detail__state">
+          <BaseSkeleton type="detail" :rows="5" :avatar="true" />
+        </view>
 
-      <!-- 三态之二：错误 / 缺参重试 -->
-      <view v-if="phase === 'error'" class="plan-detail__state">
-        <BaseEmpty :text="loadError" action-text="重新加载" @action="retry" />
-      </view>
+        <!-- 三态之二：错误 / 缺参重试 -->
+        <view v-if="phase === 'error'" class="plan-detail__state">
+          <BaseEmpty :text="loadError" action-text="重新加载" @action="retry" />
+        </view>
 
-      <!--
+        <!--
         三态之三：内容。每个区块自己挂 v-if="ready"（不用 <template v-else> 包多格），
-        让 scroll-view 的直接子节点就是区块卡片，中间不插 <block> 包装。
+        让滚动流里直接就是区块卡片，中间不插 <block> 包装。
       -->
-      <!-- 第一卡（用户裁定 2026-11-13）：作者行在最上方 → 标题 → 正文，同一色块 -->
-      <view v-if="ready" class="plan-detail__card">
-        <view class="plan-detail__author">
-          <BaseAvatar class="plan-detail__avatar" :src="view.authorAvatar" size="sm" />
-          <text class="plan-detail__author-name">{{ view.authorName }}</text>
-          <CountDown
-            v-if="view.hasDeadline"
-            tone="chip"
-            size="lg"
-            :deadline="view.deadline"
-            :start-at="view.createdAt"
-            @expire="onExpired"
-          />
-        </view>
-        <!-- 作者行下的浅色分割线：width:100% 落在卡内衬里，两边各留 $space-3 不顶边（Skyline 无伪元素，用真实节点 + border） -->
-        <view class="plan-detail__author-divider" />
-        <text class="plan-detail__title">{{ view.title }}</text>
-        <!-- 正文：blocks 原样喂给 ContentRenderer，它内部已经 sanitizeBlocks（§8.1） -->
-        <view class="plan-detail__body">
-          <ContentRenderer :blocks="view.blocks" />
-        </view>
-      </view>
-
-      <!-- 配图独立色块：列表侧只有 cover，多图并排是详情页的职责（§8.5 契约缺口那条） -->
-      <view v-if="ready && view.images.length > 0" class="plan-detail__card">
-        <view class="plan-detail__gallery">
-          <view v-for="src in view.images" :key="src" class="plan-detail__gallery-item">
-            <BaseImage
-              :src="src"
-              mode="aspectFill"
-              :ratio="GALLERY_RATIO"
-              radius="md"
-              :preview="false"
-              @click="onImageTap(src)"
+        <!-- 第一卡（用户裁定 2026-11-13）：作者行在最上方 → 标题 → 正文，同一色块 -->
+        <view v-if="ready" class="plan-detail__card">
+          <view class="plan-detail__author">
+            <BaseAvatar class="plan-detail__avatar" :src="view.authorAvatar" size="sm" />
+            <text class="plan-detail__author-name">{{ view.authorName }}</text>
+            <CountDown
+              v-if="view.hasDeadline"
+              tone="chip"
+              size="lg"
+              :deadline="view.deadline"
+              :start-at="view.createdAt"
+              @expire="onExpired"
             />
           </view>
+          <!-- 作者行下的浅色分割线：width:100% 落在卡内衬里，两边各留 $space-3 不顶边（Skyline 无伪元素，用真实节点 + border） -->
+          <view class="plan-detail__author-divider" />
+          <text class="plan-detail__title">{{ view.title }}</text>
+          <!-- 正文：blocks 原样喂给 ContentRenderer，它内部已经 sanitizeBlocks（§8.1）；
+               空正文整块不渲染，不留出头卡底部的空距 -->
+          <view v-if="view.blocks.length > 0" class="plan-detail__body">
+            <ContentRenderer :blocks="view.blocks" />
+          </view>
         </view>
-      </view>
 
-      <!--
+        <!--
         选项区（#58/#60）：≥2 个选项即选项表决，整卡可点投这一项；投过即锁定，其余项置灰。
         开关关闭 / 选项不足 2 个时组件自己整块不渲染，所以外层只给留白、不给底色，
         空的时候是一格 0 高，页面也不需要再判一次空。
       -->
-      <view v-if="ready && hasOptions" class="plan-detail__options">
-        <OptionCardList
-          :options="view.options"
-          :votable="!view.isAuthor"
-          :my-option="view.myOption"
-          :locked="view.locked"
-          :closed="view.closed"
-          @vote="onOptionVote"
-        />
-      </view>
-
-      <!-- 投票区：比例展示的唯一出口是 VoteRatioBar，所以 VoteActions 不再开 showCount -->
-      <view v-if="ready" class="plan-detail__card">
-        <view class="plan-detail__section-head">
-          <text class="plan-detail__section-title">表决</text>
-          <text v-if="view.closed" class="plan-detail__section-note">已截止</text>
-        </view>
-        <view class="plan-detail__ratio">
-          <VoteRatioBar
-            size="lg"
-            show-count
-            :votes="view.votes"
-            :my-vote="view.myVote"
+        <view v-if="ready && hasOptions" class="plan-detail__options">
+          <OptionCardList
             :options="view.options"
+            :votable="!view.isAuthor"
             :my-option="view.myOption"
-          />
-        </view>
-        <!-- 选项表决时投票入口在上方 OptionCardList，这里不再摆赞同/反对（避免两个矛盾入口）；整块隐藏不留缝 -->
-        <view v-if="!hasOptions" class="plan-detail__actions">
-          <VoteActions
-            :plan-id="planId"
-            :closed="view.closed"
-            :is-author="view.isAuthor"
             :locked="view.locked"
-            @voted="onVoted"
-            @closed="onServerClosed"
+            :closed="view.closed"
+            @vote="onOptionVote"
           />
         </view>
-      </view>
 
-      <!--
+        <!-- 投票区：比例展示的唯一出口是 VoteRatioBar，所以 VoteActions 不再开 showCount -->
+        <view v-if="ready" class="plan-detail__card">
+          <view class="plan-detail__section-head">
+            <text class="plan-detail__section-title">表决</text>
+            <text v-if="view.closed" class="plan-detail__section-note">已截止</text>
+          </view>
+          <view class="plan-detail__ratio">
+            <VoteRatioBar
+              size="lg"
+              show-count
+              :votes="view.votes"
+              :my-vote="view.myVote"
+              :options="view.options"
+              :my-option="view.myOption"
+            />
+          </view>
+          <!-- 选项表决时投票入口在上方 OptionCardList，这里不再摆赞同/反对（避免两个矛盾入口）；整块隐藏不留缝 -->
+          <view v-if="!hasOptions" class="plan-detail__actions">
+            <VoteActions
+              :plan-id="planId"
+              :closed="view.closed"
+              :is-author="view.isAuthor"
+              :locked="view.locked"
+              @voted="onVoted"
+              @closed="onServerClosed"
+            />
+          </view>
+        </view>
+
+        <!--
         评论区在滚动流内（§8.4）：组件不嵌 scroll-view，触底加载由本页 scrolltolower 驱动。
         底色卡片不写左右 padding —— CommentList 自己带 0 $space-3 的留白，叠两层会双倍缩进。
+        0 条评论整块不渲染（发表第一条后 count 变 1、模块出现，吸底输入条始终在）。
       -->
-      <view v-if="ready" class="plan-detail__comments">
-        <view class="plan-detail__comments-head">
-          <text class="plan-detail__section-title">评论</text>
-          <text class="plan-detail__section-count">{{ view.commentCount }}</text>
+        <view v-if="ready && view.commentCount > 0" class="plan-detail__comments">
+          <view class="plan-detail__comments-head">
+            <text class="plan-detail__section-title">评论</text>
+            <text class="plan-detail__section-count">{{ view.commentCount }}</text>
+          </view>
+          <CommentList
+            ref="commentListRef"
+            :comments="comments"
+            :now="now"
+            :can-remove="canRemoveComment"
+            @delete="onDeleteComment"
+            @long-press="onLongPressComment"
+            @error="onCommentError"
+          />
         </view>
-        <CommentList
-          ref="commentListRef"
-          :comments="comments"
-          :now="now"
-          :can-remove="canRemoveComment"
-          @delete="onDeleteComment"
-          @long-press="onLongPressComment"
-          @error="onCommentError"
-        />
-      </view>
 
-      <!--
+        <!--
         尾部锚点：① 给 fixed 吸底输入条腾出等高的空间；② 键盘抬起时再叠加事件给的高度；
-        ③ 是「发表后滚到底」的 uni.pageScrollTo selector 目标（#79 文档级滚动）。
+        ③ 是「发表后滚到底」的 scroll-into-view 目标（Skyline 内层滚动）。
       -->
-      <view :id="DETAIL_TAIL_ID" class="plan-detail__tail">
-        <view v-if="keyboardLift > 0" class="plan-detail__keyboard" :style="keyboardStyle" />
+        <view :id="DETAIL_TAIL_ID" class="plan-detail__tail">
+          <view v-if="keyboardLift > 0" class="plan-detail__keyboard" :style="keyboardStyle" />
+        </view>
       </view>
-    </view>
+    </scroll-view>
 
-    <!-- 吸底条 fixed 吸底，在文档滚动流之外（§8.4） -->
+    <!-- 吸底条 fixed 吸底，在滚动流之外（§8.4） -->
     <CommentInput
       v-model="draft"
       :posting="posting"
@@ -497,14 +494,20 @@ useShare(() => ({
 
 <style lang="scss" scoped>
 // 一个节点一个类名是工程约定（样式不靠多类名叠加，层叠结果可预测）；平台侧的口径见兼容清单 §1.5 末尾澄清
+// Skyline：页面本身不滚动，根节点 flex 列 + 内层 scroll-view 吃剩余高度（首页/我的同款高度链）
 .plan-detail {
-  @include page-root-doc;
+  @include page-root;
   background-color: $color-bg-page;
 }
 
-.plan-detail__nav-space {
-  width: 100%;
+.plan-detail__nav {
   flex-shrink: 0;
+}
+
+.plan-detail__scroll {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
 }
 
 .plan-detail__flow {
@@ -565,24 +568,9 @@ useShare(() => ({
   margin-top: $space-4;
 }
 
-.plan-detail__gallery {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  // 上下补 $space-1：与每格左右 $space-1 对齐，使配图四边距一致（以左右为准）
-  padding: $space-1 0;
-}
-
-// 左右间距挂在每格而不是容器上（PlanList 同口径）：末格的间距不会把三宫格挤成不等宽
-.plan-detail__gallery-item {
-  flex: 1;
-  min-width: 0;
-  padding: 0 $space-1;
-}
-
 .plan-detail__options {
   @include flex-column;
-  // 与主图/其他卡片同一笔上间距（$card-gap）；外层已按 hasOptions 判空，空时整块不渲染不留缝
+  // 与其他卡片同一笔上间距（$card-gap）；外层已按 hasOptions 判空，空时整块不渲染不留缝
   margin-top: $card-gap;
   // 不给底色：组件判空后这里是 0 高，不会留下一张空白卡
   padding: 0 $space-3;
@@ -642,15 +630,5 @@ useShare(() => ({
 // 键盘高度是运行时事件给的 px（交互量，不是设计尺寸），沿用 CommentInput 上报的原值
 .plan-detail__keyboard {
   width: 100%;
-}
-</style>
-
-<!-- 文档级滚动（#79）：放开全局 page 的 height:100%/overflow:hidden。
-     页级 wxss 晚于 app.wxss 加载、同优先级后写赢；非 scoped 才能命中 page 根节点。
-     真机 WKWebView 上旧高度链会把超出视口的内容裁掉致滚不到底，文档原生滚动不依赖高度链。 -->
-<style lang="scss">
-page {
-  height: auto;
-  overflow: visible;
 }
 </style>

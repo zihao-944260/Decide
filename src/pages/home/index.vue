@@ -82,9 +82,14 @@ function onPublish(): void {
   uni.navigateTo({ url: '/pages/plan/edit/index' })
 }
 
-function onCardClick(planId: string): void {
-  // 详情页由 T3.6 并行实现；query 参数名固定为 planId
-  uni.navigateTo({ url: `/pages/plan/detail/index?planId=${planId}` })
+function onCardClick(planId: string, openContainer?: unknown): void {
+  // query 参数名固定为 planId；openContainer 为卡片 open-container 的实例（Skyline 容器转场动画），
+  // 拿不到时（查询失败 / 基础库 < 3.12.2）走普通跳转，不报错
+  const options = {
+    url: `/pages/plan/detail/index?planId=${planId}`
+  } as Parameters<typeof uni.navigateTo>[0] & { withOpenContainer?: unknown }
+  if (openContainer) options.withOpenContainer = openContainer
+  uni.navigateTo(options)
 }
 
 /**

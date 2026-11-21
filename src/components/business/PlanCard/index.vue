@@ -9,7 +9,7 @@ let batchResetTimer: ReturnType<typeof setTimeout> | null = null
 </script>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, getCurrentInstance, onBeforeUnmount, onMounted, ref } from 'vue'
 import BaseAvatar from '@/components/base/BaseAvatar/index.vue'
 import BaseImage from '@/components/base/BaseImage/index.vue'
 import CountDown from '@/components/business/CountDown/index.vue'
@@ -67,6 +67,10 @@ const expired = ref(false)
  *
  * 起点只有 transform：卡片全程可见，不用 opacity 起步（真机曾出现「数据在、卡片全透明」），
  * 也不改 padding / margin / 圆角 / 阴影这些基础样式。
+ *
+ * 动画节点必须在 open-container 外层的普通 view 上（.plan-card__wrap）：
+ * open-container 会按自身圆角裁切子树，位移放在它内部的卡片上会被裁成「在自己的盒子里上滑」，
+ * 看起来不再是相对列表容器上升；外层 wrapper 做位移时容器整体跟着走，且不改变任何布局。
  */
 const RISE_START_DELAY = 50
 /** 相邻两张卡的开播间隔：100ms，肉眼能看出「一张接一张」，又不会等到最后才动 */
@@ -113,9 +117,13 @@ const closed = computed(() => {
 const rootClass = computed(() => {
   const cls = ['plan-card']
   if (closed.value) cls.push('plan-card--closed')
-  if (riseState.value === 'ready') cls.push('plan-card--rise')
   return cls
 })
+
+/** 入场上升挂在 open-container 的外层（见上方注释：容器内部位移会被裁切） */
+const wrapClass = computed(() =>
+  riseState.value === 'ready' ? 'plan-card__wrap plan-card--rise' : 'plan-card__wrap'
+)
 
 // 列表契约只有 cover（§8.5 裁决 1）：v1 卡片只展示 1 张封面，三图并排是详情页职责
 const hasCover = computed(() => !!props.summary.cover)
@@ -124,8 +132,43 @@ const agreeText = computed(() => `赞同 ${compactCount(votes.value.agree)}`)
 const disagreeText = computed(() => `反对 ${compactCount(votes.value.disagree)}`)
 const commentText = computed(() => `评论 ${compactCount(props.summary.commentCount)}`)
 
+/** OpenContainer 实例查询的兜底窗口：查不到也必须放行点击，绝不把导航卡死 */
+const OPEN_CONTAINER_QUERY_TIMEOUT = 200
+
+/**
+ * 容器转场动画的触发方式（实测口径）：
+ * 「点 open-container → 页面 navigateTo」的隐式关联在 本组件 → PlanList → 页面 这条链路上
+ * 真机不触发动画（能跳转、无放大转场），因此改用官方显式 API：把 SelectorQuery 拿到的
+ * OpenContainer 实例交给页面，由页面调 navigateTo({ withOpenContainer })（基础库 3.12.2+，
+ * 低版本该参数被忽略、退化为普通跳转）。
+ * 查询完成/失败/超时才 emit，保证页面拿到的实例是同一帧的节点；超时兜底不能省。
+ */
 function onClick(): void {
-  emit('click', planId.value)
+  const vm = getCurrentInstance()
+  let settled = false
+  let timer: ReturnType<typeof setTimeout> | null = null
+
+  const settle = (node?: unknown): void => {
+    if (settled) return
+    settled = true
+    if (timer) {
+      clearTimeout(timer)
+      timer = null
+    }
+    emit('click', planId.value, node)
+  }
+
+  timer = setTimeout(() => settle(), OPEN_CONTAINER_QUERY_TIMEOUT)
+  try {
+    uni
+      .createSelectorQuery()
+      .in(vm?.proxy)
+      .select('.plan-card__open')
+      .node((res: { node?: unknown }) => settle(res?.node))
+      .exec()
+  } catch {
+    settle()
+  }
 }
 
 function onLongPress(): void {
@@ -139,59 +182,84 @@ function onExpire(): void {
 </script>
 
 <template>
-  <view :class="rootClass" hover-class="plan-card--hover" @tap="onClick" @longpress="onLongPress">
-    <view class="plan-card__head">
-      <view class="plan-card__author">
-        <view class="plan-card__avatar">
-          <BaseAvatar :src="summary.author.avatarUrl" size="sm" />
+  <!-- 容器转场动画：点卡片后页面调 wx.navigateTo（withOpenContainer 显式触发），
+       框架把卡片位置无缝放大成详情页。数字是 px（12 = 卡片 24rpx 在 375 屏上的实际圆角）；
+       底色取页面灰：closed 态与页面融为一体，open 态与详情页底色一致。
+       @tap 挂在 open-container 上；入场上升的位移在它外层的 __wrap 上（容器会裁切子树，位移不能放里面）。 -->
+  <view :class="wrapClass">
+    <open-container
+      class="plan-card__open"
+      closed-color="#f5f6f8"
+      closed-border-radius="12"
+      closed-elevation="0"
+      open-color="#f5f6f8"
+      open-border-radius="0"
+      open-elevation="0"
+      transition-type="fade"
+      transition-duration="300"
+      @tap="onClick"
+    >
+      <view :class="rootClass" hover-class="plan-card--hover" @longpress="onLongPress">
+        <view class="plan-card__head">
+          <view class="plan-card__author">
+            <view class="plan-card__avatar">
+              <BaseAvatar :src="summary.author.avatarUrl" size="sm" />
+            </view>
+            <text class="plan-card__nick">{{ summary.author.nickName }}</text>
+          </view>
+          <view class="plan-card__count">
+            <CountDown
+              :deadline="summary.deadline"
+              :start-at="summary.createdAt"
+              tone="chip"
+              size="sm"
+              @expire="onExpire"
+            />
+          </view>
         </view>
-        <text class="plan-card__nick">{{ summary.author.nickName }}</text>
+
+        <text class="plan-card__title">{{ summary.title }}</text>
+        <!-- 摘要已由云端截到 60 字（common/mapper buildSummary），前端只做单行 ellipsis，绝不裁行数 -->
+        <text class="plan-card__desc">{{ summary.summary }}</text>
+
+        <view v-if="hasCover" class="plan-card__cover">
+          <BaseImage :src="summary.cover" mode="aspectFill" :ratio="16 / 9" radius="md" />
+        </view>
+
+        <view class="plan-card__ratio">
+          <VoteRatioBar
+            :votes="votes"
+            :my-vote="myVote"
+            :options="options"
+            :my-option="summary.myOption"
+            size="sm"
+            :show-count="false"
+            :animated="animated"
+          />
+        </view>
+
+        <view class="plan-card__foot">
+          <slot name="footer">
+            <text v-if="!hasOptions" class="plan-card__stat">{{ agreeText }}</text>
+            <text v-if="!hasOptions" class="plan-card__stat">{{ disagreeText }}</text>
+            <text class="plan-card__stat">{{ commentText }}</text>
+          </slot>
+        </view>
       </view>
-      <view class="plan-card__count">
-        <CountDown
-          :deadline="summary.deadline"
-          :start-at="summary.createdAt"
-          tone="chip"
-          size="sm"
-          @expire="onExpire"
-        />
-      </view>
-    </view>
-
-    <text class="plan-card__title">{{ summary.title }}</text>
-    <!-- 摘要已由云端截到 60 字（common/mapper buildSummary），前端只做单行 ellipsis，绝不裁行数 -->
-    <text class="plan-card__desc">{{ summary.summary }}</text>
-
-    <view v-if="hasCover" class="plan-card__cover">
-      <BaseImage :src="summary.cover" mode="aspectFill" :ratio="16 / 9" radius="md" />
-    </view>
-
-    <view class="plan-card__ratio">
-      <VoteRatioBar
-        :votes="votes"
-        :my-vote="myVote"
-        :options="options"
-        :my-option="summary.myOption"
-        size="sm"
-        :show-count="false"
-        :animated="animated"
-      />
-    </view>
-
-    <view class="plan-card__foot">
-      <slot name="footer">
-        <text v-if="!hasOptions" class="plan-card__stat">{{ agreeText }}</text>
-        <text v-if="!hasOptions" class="plan-card__stat">{{ disagreeText }}</text>
-        <text class="plan-card__stat">{{ commentText }}</text>
-      </slot>
-    </view>
+    </open-container>
   </view>
 </template>
 
 <style lang="scss" scoped>
-// 首次出现上升（#63）：起点只有一段位移 —— 不参与布局、不改任何可见样式（卡片始终可见）；
-// 摘类后由 .plan-card 的 transition 在 800ms 内缓慢回到原位。
+// 入场上升（#63）：动画节点是 open-container 外层的普通 view —— 位移放在容器内部会被裁切
+// （真机表现：每张卡在自己的盒子内上滑，而不是相对列表容器上升）。
+// 起点只有一段位移，不参与布局、不改任何可见样式（卡片始终可见）；
 // 64rpx = 卡间距 40rpx + 卡内底 padding 24rpx：起点最多压到下一张卡的背景，不遮挡正文。
+.plan-card__wrap {
+  width: 100%;
+  transition: transform 800ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
 .plan-card--rise {
   transform: translateY(64rpx);
 }
@@ -200,10 +268,8 @@ function onExpire(): void {
   @include card;
   width: 100%;
   box-shadow: $shadow-card;
-  // 只补一条 transform 过渡作为动画入口，opacity 仍是原来的快档；不改任何间距/尺寸样式
-  transition:
-    opacity $duration-fast,
-    transform 800ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  // 位移动画在 __wrap 上；卡片自身只保留 opacity 的快档
+  transition: opacity $duration-fast;
 }
 
 .plan-card--hover {

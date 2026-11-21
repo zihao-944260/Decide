@@ -242,8 +242,13 @@ function onProfileUpdated(): void {
 
 // ── 列表事件 ──────────────────────────────────────────────────────────
 
-function onCardClick(planId: string): void {
-  uni.navigateTo({ url: `${DETAIL_PAGE_URL}?planId=${planId}` })
+function onCardClick(planId: string, openContainer?: unknown): void {
+  // openContainer：卡片 open-container 的实例（Skyline 容器转场动画），拿不到时普通跳转
+  const options = {
+    url: `${DETAIL_PAGE_URL}?planId=${planId}`
+  } as Parameters<typeof uni.navigateTo>[0] & { withOpenContainer?: unknown }
+  if (openContainer) options.withOpenContainer = openContainer
+  uni.navigateTo(options)
 }
 
 /**

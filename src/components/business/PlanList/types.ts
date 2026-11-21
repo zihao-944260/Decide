@@ -64,8 +64,8 @@ export interface PlanListScrollEvent {
 }
 
 export type Emits = {
-  /** 卡片点击进详情（原样转发 PlanCard） */
-  (e: 'click', planId: string): void
+  /** 卡片点击进详情（原样转发 PlanCard 的 planId 与 OpenContainer 实例） */
+  (e: 'click', planId: string, openContainer?: unknown): void
   /** 卡片长按，页面挂 ActionSheet */
   (e: 'long-press', planId: string): void
   /** 卡片倒计时归零沿，页面可 patchItem 置灰或刷新该条 */

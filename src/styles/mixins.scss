@@ -63,7 +63,7 @@
   flex-direction: column;
 }
 
-// 编辑页四模块（标题/配图/截止时间/添加选项）标题行统一规格（用户裁定 2026-11-13，同日追加）：
+// 编辑页模块（标题/截止时间/添加选项）标题行统一规格（用户裁定 2026-11-13，同日追加）：
 // 不设 min-height，行高由内容撑开，padding-bottom $space-3 提供标题→内容间距；
 // 标题 30rpx semibold 主文本色；卡内衬统一 $space-3。
 @mixin section-head {

@@ -48,7 +48,6 @@ plan-edit（@include page-root：flex 纵向，页面本身不滚动）
 ├─ scroll-view  plan-edit__scroll  flex:1 + min-height:0  :scroll-into-view="scrollTarget"（仅选项校验定位用）
 │  ├─ [loading] BaseSkeleton / [error] BaseEmpty 重试 / [blocked] BaseEmpty 权限/截止拦停
 │  ├─ 标题卡：标题 textarea + 创建人 + 「详情」标签 + 两行图标工具栏 + 单一 <editor>
-│  ├─ ImageUploader（计划配图，v-model="model.images"）
 │  ├─ DeadlinePicker（截止快捷三项 + 自定义弹层）
 │  ├─ OptionsSection（选项开关 + 选项卡）
 │  └─ plan-edit__tail 留白
@@ -57,8 +56,10 @@ plan-edit（@include page-root：flex 纵向，页面本身不滚动）
 └─ BaseActionSheet    菜单宿主（退出确认用；缺了它 open() 的 Promise 永不 resolve）
 ```
 
-逻辑分层沿用旧版裁决：标题/草稿/extra 在 `useEditor`，四件表单（images/deadline/optionsEnabled/options）
-在 `useForm`，菜单/弹窗在 `useActionSheet`/`useModal`，配图上传在组件内的 `useUpload`。
+逻辑分层沿用旧版裁决：标题/草稿/extra 在 `useEditor`，表单（deadline/optionsEnabled/options）在 `useForm`，
+菜单/弹窗在 `useActionSheet`/`useModal`。
+`images` 字段仍然留在模型与提交载荷里、但页面上没有入口（2026-11-21 配图模块移除，富文本已支持插图）：
+编辑老计划时原样带回，避免一次「更新」把历史配图/列表封面清掉；新计划的 `images` 恒为 `[]`。
 页面里**没有** action 字面量、没有 `setInterval`、没有节点测量。提交唯一出口 `writeAction`，
 提示只有一条（`api/request.ts` 统一弹）。
 

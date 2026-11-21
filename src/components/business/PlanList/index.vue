@@ -105,8 +105,8 @@ function onEmptyAction(): void {
   void reload({ force: true })
 }
 
-function onCardClick(planId: string): void {
-  emit('click', planId)
+function onCardClick(planId: string, openContainer?: unknown): void {
+  emit('click', planId, openContainer)
 }
 
 function onCardLongPress(planId: string): void {

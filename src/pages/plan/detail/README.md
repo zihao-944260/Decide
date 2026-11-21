@@ -7,12 +7,12 @@ WBS **T3.11**（详情页整体编排：滚动容器 / 评论区触底加载 / �
 
 ```
 view.plan-detail                        ← @include page-root（页面本身不滚动，flex 纵向）
-├─ BaseNavbar                           ← navigationStyle: custom，可返回
-├─ scroll-view（不带 type）             ← ★ 全页唯一滚动流（WebView 渲染；type="list" 是 Skyline 专属，#37 移除）
+├─ BaseNavbar                           ← navigationStyle: custom，可返回；在 flex 列内、不 fixed
+├─ scroll-view（不带 type）             ← ★ 全页唯一滚动流（Skyline；type="list" 是虚拟列表，本页内容异构，不用）
 │   ├─ [loading] BaseSkeleton type="detail"
 │   ├─ [error]   BaseEmpty（文案 + 重新加载）
-│   ├─ [ready]   头部卡：标题 / BaseAvatar + 昵称 / CountDown(tone=chip,size=lg) / 配图三宫格
-│   ├─ [ready]   正文卡：ContentRenderer :blocks（组件内部 sanitizeBlocks，页面不清洗第二遍）
+│   ├─ [ready]   头部卡：BaseAvatar + 昵称 / CountDown(tone=chip,size=lg) → 分割线 → 标题 → 正文
+│   ├─ [ready]   正文：ContentRenderer :blocks（组件内部 sanitizeBlocks，页面不清洗第二遍）
 │   ├─ [ready]   选项区：OptionCardList :options（组件自己判空，页面不包第二层）
 │   ├─ [ready]   投票卡：VoteRatioBar(size=lg,show-count) + VoteActions
 │   ├─ [ready]   评论区：CommentList :comments :now :can-remove
@@ -23,8 +23,11 @@ view.plan-detail                        ← @include page-root（页面本身不
 - 触底加载：页面 `@scrolltolower` → `commentListRef.loadMore()`（`CommentList` 内部**不嵌** scroll-view）。
   `:lower-threshold` 绑 `COMMENT_LOWER_THRESHOLD`（`@/components/business/CommentList/types` 导出），页面里没有魔法数。
 - 状态分支用 `v-if="ready"` 挂在**每个区块自己**身上，不用 `<template v-else>` 包多格：
-  scroll-view 的直接子节点就是平铺区块，中间不插 `<block>` 包装（历史上为 `type="list"` 的单元格；
-  本页现为 WebView 普通 scroll-view，平铺结构保留）。
+  scroll-view 的直接子节点就是平铺区块，中间不插 `<block>` 包装。
+- **空模块整块隐藏**（用户 2026-11-21 口径）：正文 `blocks` 为空、评论 0 条时，对应卡片整块不渲染、
+  不留间距；投票卡是页面主功能，0 票也保留。
+- **配图模块已移除**（2026-11-21）：富文本本身支持上传图片，独立配图区与它功能重复；
+  列表卡的封面（`summary.cover`）不受影响，老计划的配图数据也仍在库里。
 
 ## 2. 接线一览（都来自已验收源码的 types.ts，不是猜的）
 
@@ -92,3 +95,10 @@ view.plan-detail                        ← @include page-root（页面本身不
 - **标题行规格**（与编辑页 #35/#36 同口径）：投票卡 `__section-head` / `__section-title` include `section-head` / `section-title` mixin——`padding: 0 0 $space-3`、无 min-height；标题 30rpx / 600 / 1.3 / `$color-text-1`。`__ratio` 的 margin-top 删除，标题→内容间距单点在 head 的 padding-bottom。评论卡 `__comments-head` 同规格，上/左右衬对齐卡内衬 `$space-3`。
 - **评论首项**：`CommentItem` 新增 `first` prop，`CommentList` 传 `:first="index === 0"` 把首项顶 padding 归零——head 的 pb 已提供间距，叠加会双倍。
 - 运行时实测：head pb 12px、标题 15px/600/rgb(26,29,36)、ratio.top == head.bottom；scrollHeight 952 > 视口 757、scrollTo 可用；截图 `/tmp/rt/rt-detail-top.png` / `rt-detail-prog.png`。真手指拖动待用户验收。
+
+## 8. 2026-11-21：切回 Skyline，启用 open-container 容器转场
+
+- **动机**：列表卡片 → 详情要「卡片放大成详情页」的转场。open-container 只在**连续 Skyline 页面间**生效，WebView 目标页会被降级为默认路由（真机实测：能跳转、无放大转场）。详情页因此去掉 `renderer: webview`，继承全局 Skyline。
+- **滚动**：#79 的「文档级滚动 + fixed 导航 + pageScrollTo」整套回退 —— 根节点 `page-root` + 内层 scroll-view 吃剩余高度；导航回到 flex 列内不 fixed；`onReachBottom` → scroll-view `scrolltolower`；`uni.pageScrollTo(selector)` → `scroll-into-view`（先清空、隔一帧再挂回锚点，连滚两次才都有效）。
+- **触发方式**：PlanCard 不用「点容器再 navigateTo」的隐式关联（组件 → PlanList → 页面 这条链路真机不触发），改用官方显式 API：SelectorQuery `.node()` 取 OpenContainer 实例随 click 事件交给页面，`uni.navigateTo({ withOpenContainer })`（基础库 3.12.2+，低版本忽略该参数、退化为普通跳转；查询 200ms 超时兜底，绝不卡住导航）。
+- **待真机验证**：① 卡片放大转场 / 返回收回；② 详情页整页滚动、评论触底加载、键盘避让（#79 回归面）。

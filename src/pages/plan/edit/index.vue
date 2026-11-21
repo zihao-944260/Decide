@@ -17,10 +17,8 @@ import BaseEmpty from '@/components/base/BaseEmpty/index.vue'
 import BaseNavbar from '@/components/base/BaseNavbar/index.vue'
 import BaseSkeleton from '@/components/base/BaseSkeleton/index.vue'
 import DeadlinePicker from '@/components/editor/DeadlinePicker/index.vue'
-import ImageUploader from '@/components/editor/ImageUploader/index.vue'
 import OptionsSection from '@/components/editor/OptionsSection/index.vue'
 import type { ActionSheetItem } from '@/components/base/BaseActionSheet/types'
-import type { UploaderChange } from '@/components/editor/ImageUploader/types'
 import {
   firstInvalidOptionIndex,
   optionCardId,
@@ -90,7 +88,6 @@ const navSpaceStyle = computed(() => `height: ${appStore.navBarHeight}px;`)
 /* ------------------------------------------------------------------ 表单（页面管的四件） */
 
 const form = useForm<EditModel>(createEditModel, {
-  images: [{ max: Limit.IMAGE_MAX, message: `配图最多 ${Limit.IMAGE_MAX} 张` }],
   deadline: [
     { validator: (value: number) => value > 0 && value > peekNow(), message: '请选择截止时间' }
   ]
@@ -143,8 +140,6 @@ let published = false
 const touchedExtra = ref(false)
 let extraTimer: ReturnType<typeof setTimeout> | null = null
 
-const imagesUploading = ref(false)
-const imagesFailed = ref(0)
 const optionsUploading = ref(false)
 /** 时间选择弹层开合（DeadlinePicker @sheet）；与 ActionSheet 一起决定 page-meta 锁滚动 */
 const pickerOpen = ref(false)
@@ -188,8 +183,6 @@ const creatorName = computed(() => {
 })
 
 const gateProblem = computed<string>(() => {
-  if (imagesFailed.value > 0) return `${imagesFailed.value} 张配图没传上去，请重试或先删掉`
-  if (imagesUploading.value) return '配图还在上传，稍等一下再发布'
   if (optionsUploading.value) return '选项配图还在上传，稍等一下再发布'
   if (inlineUploading.value) return '正文图片还在上传，稍等一下再发布'
   return ''
@@ -627,13 +620,7 @@ function onSheetVisible(value: boolean): void {
   if (!value) sheet.close()
 }
 
-/* ------------------------------------------------------------------ 配图 / 截止 / 选项 */
-
-function onUploaderChange(payload: UploaderChange): void {
-  imagesUploading.value = payload.uploading
-  imagesFailed.value = payload.failed
-  if (!payload.uploading && !payload.failed) form.clearError('images')
-}
+/* ------------------------------------------------------------------ 截止 / 选项 */
 
 function onDeadlineChange(value: number): void {
   model.value.deadline = value
@@ -735,8 +722,6 @@ function afterWritten(): void {
   clearExtraTimer()
   draftSavedAt.value = 0
   touchedExtra.value = false
-  imagesUploading.value = false
-  imagesFailed.value = 0
   optionsUploading.value = false
   invalidatePage(PAGE_KEYS.home)
   invalidatePage(PAGE_KEYS.mine)
@@ -917,11 +902,6 @@ const toolbarDisabled = computed(() => submitting.value || !ready.value)
           @input="onEditorInput"
           @statuschange="onStatusChange"
         />
-      </view>
-
-      <view v-if="ready" class="plan-edit__card">
-        <ImageUploader v-model="model.images" :disabled="submitting" @change="onUploaderChange" />
-        <text v-if="errors.images" class="plan-edit__error">{{ errors.images }}</text>
       </view>
 
       <view v-if="ready" class="plan-edit__section">

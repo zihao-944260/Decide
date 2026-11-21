@@ -36,8 +36,6 @@ export interface DetailView {
   blocks: Block[]
   /** 原样透传给 OptionCardList（开关关闭 / 不足 2 个时组件自己不渲染，页面不判空第二层，§8.6） */
   options: PlanOption[]
-  /** 计划配图（≤ Limit.IMAGE_MAX）；列表侧只有 cover，多图并排是详情页职责（§8.5 契约缺口那条） */
-  images: string[]
   /** 来自 useVote → planStore，不是 detail 快照：投完票比例条要立刻跟着动 */
   votes: VoteCounts
   /** undefined = 未投票（VoteRatioBar 不画「我的选择」标记）。store 的值域里没有 0 */
@@ -63,7 +61,6 @@ export const EMPTY_DETAIL_VIEW: DetailView = {
   hasDeadline: false,
   blocks: [],
   options: [],
-  images: [],
   votes: { agree: 0, disagree: 0 },
   myOption: '',
   locked: false,
@@ -75,13 +72,7 @@ export const EMPTY_DETAIL_VIEW: DetailView = {
 /**
  * 触底锚点节点 id。滚到底只用 `scroll-into-view`：
  * 兼容清单 §2.2 实测 Skyline 下 `scroll-top` 设置后不滚动，而取矩形在
- * `scroll-view type="list"` 里会永久挂起（§2.3）。本页为 WebView 普通 scroll-view
- * （#37 移除 type="list"），scroll-into-view 约定保留，与 Skyline 页同口径。
+ * `scroll-view type="list"` 里会永久挂起（§2.3）。本页为 Skyline 普通 scroll-view，
+ * scroll-into-view 约定保留。
  */
 export const DETAIL_TAIL_ID = 'planDetailTail'
-
-/**
- * 配图缩略格的容器比例（宽/高，与 BaseImage.ratio、utils/blocks.imageBlockRatio 同口径）。
- * 三宫格取方图：详情配图没有稳定尺寸，方格最不容易在 aspectFill 下切掉主体。
- */
-export const GALLERY_RATIO = 1

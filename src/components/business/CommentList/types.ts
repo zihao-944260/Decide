@@ -2,10 +2,11 @@ import type { CommentsController } from '@/composables'
 import type { CommentItem as CommentDTO } from '@/types/models'
 
 /**
- * 详情页走 page 文档级滚动（WebView 渲染，#79 弃用内层 scroll-view），评论区在文档流内（§8.4），
- * 所以 CommentList 自己不嵌 scroll-view，触底由页面 `onReachBottom` 调 `commentListRef.loadMore()`。
- * 阈值统一用这个常量：pages.json 详情页 `onReachBottomDistance` 与它同口径（120px），
- * 改这里要同步改 pages.json；页面里不要写魔法数，也不要挂定时器。
+ * 详情页的滚动流是页面内的 scroll-view（Skyline，2026-11-21 起；页面与列表页同渲染器，
+ * open-container 容器转场才生效），评论区在滚动流内（§8.4）：
+ * CommentList 自己不嵌 scroll-view，触底由页面把 scroll-view 的 `scrolltolower` 转给
+ * `commentListRef.loadMore()`。阈值统一用这个常量（scroll-view 的 lower-threshold，单位 px），
+ * 页面里不要写魔法数，也不要挂定时器。
  */
 export const COMMENT_LOWER_THRESHOLD = 120
 

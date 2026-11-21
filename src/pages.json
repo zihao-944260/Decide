@@ -25,9 +25,7 @@
       "path": "pages/plan/detail/index",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "计划详情",
-        "renderer": "webview",
-        "onReachBottomDistance": 120
+        "navigationBarTitleText": "计划详情"
       }
     },
     {

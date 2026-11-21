@@ -14,6 +14,30 @@
 | emit | `expire(planId)`       | 倒计时归零沿（挂载时已截止不触发）                                                                   |
 | slot | `footer`               | 覆盖底部统计行（默认「赞同 N / 反对 N / 评论 N」）；`optionsEnabled`、`optionCount` 想上卡片就走这里 |
 
+## 容器转场动画（open-container）
+
+卡片根节点是 `<open-container>`（Skyline 组件，基础库 3.4.0+；`withOpenContainer` 显式触发需 3.12.2+）：
+点卡片后由框架把卡片位置无缝放大成详情页并渐显，返回时反向收回。
+组件不接收任何 ID（文档没有 `container-id` 属性）；`@tap` 挂在 `open-container` 上，
+长按仍在内部卡片上。
+
+当前参数：底色取页面灰 `#f5f6f8`（closed 态与页面融为一体、open 态衔接详情页底色）、
+closed 圆角 12px（= 卡片 24rpx 的 375 屏实际值）、open 直角无影、`fade` 300ms；
+阴影由卡片自身 `box-shadow` 提供，容器不再叠一层。
+
+入场上升的位移挂在 **open-container 外层的普通 view**（`.plan-card__wrap`）上，不能放在容器里的卡片上：
+open-container 会按自身圆角裁切子树，位移放在内部会变成「每张卡在自己的盒子内上滑」，
+不再是相对列表容器上升（真机实测）。
+
+触发方式（2026-11-21 真机口径修正）：「点容器 → navigateTo」的隐式关联在 组件 → PlanList → 页面
+这条链路上**不触发**动画（能跳转、无放大转场），改为显式 API：点击时用 SelectorQuery
+（`.in(组件 proxy)` + `.select('.plan-card__open')`）拿 OpenContainer 实例，随 `click` 事件
+交给页面，页面调 `uni.navigateTo({ withOpenContainer })`。基础库 3.12.2+ 生效，低版本忽略该参数；
+查询 200ms 超时兜底，拿不到实例也照常跳转。
+
+前置条件：转场只在**连续 Skyline 页面**间生效 —— 列表页与详情页都必须是 Skyline
+（详情页 2026-11-21 已切回，见 `pages/plan/detail/README.md` §8）。
+
 ## 与 §8.5 mock 的差异（均为已裁决项）
 
 1. **封面只有 1 张**：冻结契约 `PlanSummary` 用 `cover` 而非 `images[3]`（协作记录 §5 裁决 1），三图并排属详情页。要 `+N` 角标需先给 `PlanSummary` 补 `imageCount`。
